@@ -1,0 +1,98 @@
+<mat-card class="card-oas">
+  <mat-card-header style="place-content: center;">
+    <mat-card-title>Seguimiento al Plan de Acción</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <form [formGroup]="formGestionSeguimiento">
+      <br>
+      <div class="container-border">
+        <h4>Información básica del Plan de Acción</h4>
+        <div class="contenedor">
+          <div class="row1">
+            <mat-label id="desc-input-label">Unidad académico y/o administrativa: </mat-label>
+            <input class="unidad" type="text" matInput formControlName="unidad" required readonly>
+          </div>
+          <div class="state">
+            <div class="col2" style="width:35%">
+              Estado reporte
+            </div>
+            <input style="width:65%" class="state" type="text" matInput formControlName="estado" placeholder="Estado"
+              readonly>
+
+          </div>
+          <div class="row2">
+            <mat-label id="desc-input-label">Plan de Acción ID: </mat-label>
+            <input class="plan" type="text" matInput formControlName="plan" required readonly>
+          </div>
+        </div>
+        <div class="mat-elevation-z8">
+        </div>
+      </div>
+      <br>
+
+      <br>
+      <div class="container-border">
+        <h4>Listado actividades</h4>
+        <u class="textGuide">
+          A continuación encontrará el listado de las actividades asociadas al Plan de Acción a las cuales
+          podrá realizar el seguimiento para el periodo respectivo.
+        </u>
+        <div class="mat-elevation-z8">
+          <table mat-table [dataSource]="dataSource" matSort>
+            <ng-container matColumnDef="index">
+              <th mat-header-cell *matHeaderCellDef class="idColumna"> ID </th>
+              <td mat-cell *matCellDef="let row" class="idColumna">{{row.index}}</td>
+            </ng-container>
+            <ng-container matColumnDef="dato">
+              <th mat-header-cell *matHeaderCellDef> Actividad </th>
+              <td mat-cell *matCellDef="let row" style="text-align: justify;">{{row.dato}}</td>
+            </ng-container>
+            <ng-container matColumnDef="activo">
+              <th mat-header-cell *matHeaderCellDef class="estadoColumna"> Estado </th>
+              <td mat-cell [ngClass]="row.estado.color" *matCellDef="let row" class="estadoColumna">
+                {{row.estado.nombre}}</td>
+            </ng-container>
+            <ng-container matColumnDef="gestion">
+              <th mat-header-cell *matHeaderCellDef class="gestionColumna"> Gestión </th>
+              <td mat-cell *matCellDef="let row" class="td-align-center" class="gestionColumna">
+                <button mat-icon-button (click)="revisar(row)">
+                  <mat-icon>search</mat-icon>
+                </button>
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="displayedColumns" style="background: var(--primary);"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+            <tr class="mat-row" *matNoDataRow>
+              <td class="mat-cell" colspan="4"></td>
+            </tr>
+          </table>
+          <mat-paginator #paginator pageSize="5" [length]="dataSource.data.length" [pageSizeOptions]="[5, 10, 25, 100]"
+            (page)=" OnPageChange($event)" aria-label="Select page of users">
+          </mat-paginator>
+        </div>
+      </div>
+      <div class="container-button">
+        <button class="background-button" mat-raised-button color="primary" (click)="backClicked()"
+          style="color:white;">Regresar</button>
+
+        <button *ngIf="rol=='JEFE_DEPENDENCIA' && this.estado === 'Habilitado'" class="background-button"
+          mat-raised-button color="primary" (click)="reportar()">Enviar
+          reporte</button>
+
+        <button *ngIf="rol=='JEFE_DEPENDENCIA' && this.estado == 'Con observaciones'" class="background-button"
+          mat-raised-button color="primary" (click)="reportar()">Enviar corrección</button>
+
+        <button *ngIf="(rol=='PLANEACION' || rol=='JEFE_UNIDAD_PLANEACION') && estado=='Enviado a revisión'"
+          class="background-button" mat-raised-button color="primary" (click)="iniciarRevision()">Iniciar
+          revisión</button>
+
+        <button *ngIf="rol=='JEFE_UNIDAD_PLANEACION' && estado=='En reporte'" class="background-button"
+          mat-raised-button color="primary" (click)="verificarRevision()">Verificar revisión</button>
+
+        <button *ngIf="rol=='PLANEACION' && estado=='En revisión OAPC'" class="background-button" mat-raised-button
+          color="primary" (click)="finalizarRevision()">Finalizar revisión</button>
+
+      </div>
+    </form>
+  </mat-card-content>
+</mat-card>

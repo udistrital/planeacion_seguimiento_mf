@@ -19,15 +19,15 @@ import Trimestre from 'src/app/models/Trimestre';
 import { ImplicitAutenticationService } from 'src/app/services/implicit_autentication.service';
 import { environment } from 'src/environments/environment';
 import Swal from 'sweetalert2';
-import { RequestManager } from '../../../services/requestManager';
-import { UserService } from '../../../services/userService';
+import { RequestManager } from '../../../services/requestManager.service';
+import { UserService } from '../../../services/userService.service';
 
 @Component({
   selector: 'app-seguimiento',
   templateUrl: './seguimiento.component.html',
   styleUrls: ['./seguimiento.component.scss'],
 })
-export class SeguimientoComponentList implements OnInit, AfterViewInit {
+export class ListComponent implements OnInit, AfterViewInit {
   displayedColumns: string[] = [
     'unidad',
     'vigencia',
@@ -901,10 +901,7 @@ export class SeguimientoComponentList implements OnInit, AfterViewInit {
   gestionSeguimiento(plan: any) {
     if (plan.trimestre != undefined) {
       this.router.navigate([
-        'pages/seguimiento/gestion-seguimiento/' +
-          plan._id +
-          '/' +
-          plan.trimestre,
+        'gestion-seguimiento/' + plan._id + '/' + plan.trimestre,
       ]);
     } else {
       Swal.fire({

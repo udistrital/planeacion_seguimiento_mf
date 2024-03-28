@@ -14,10 +14,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
-import { SeguimientoComponentList } from './components/seguimiento/listar-plan-accion-anual/seguimiento.component';
+import { ListComponent } from './components/seguimiento/listar-plan-accion-anual/seguimiento.component';
+import { GestionComponent } from './components/seguimiento/gestion/gestion.component';
 
 @NgModule({
-  declarations: [AppComponent, SeguimientoComponentList],
+  declarations: [AppComponent, ListComponent, GestionComponent],
   imports: [
     BrowserModule,
     AppRoutingModule,
