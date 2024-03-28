@@ -156,7 +156,7 @@ export class SeguimientoComponentList implements OnInit, AfterViewInit {
 
   async loadPeriodos() {
     Swal.fire({
-      title: 'Cargando períodos',
+      title: 'Cargando períodos de la vigencia',
       timerProgressBar: true,
       showConfirmButton: false,
       willOpen: () => {
@@ -169,15 +169,15 @@ export class SeguimientoComponentList implements OnInit, AfterViewInit {
           environment.PARAMETROS_SERVICE,
           `periodo?query=CodigoAbreviacion:VG,activo:true`
         )
-        .subscribe(
-          (data: any) => {
+        .subscribe({
+          next: (data: any) => {
             if (data) {
               this.vigencias = data.Data;
               Swal.close();
               resolve(this.vigencias);
             }
           },
-          (error) => {
+          error: (error) => {
             Swal.fire({
               title: 'Error en la operación',
               text: `No se encontraron datos registrados ${JSON.stringify(
@@ -188,8 +188,8 @@ export class SeguimientoComponentList implements OnInit, AfterViewInit {
               timer: 2500,
             });
             reject(error);
-          }
-        );
+          },
+        });
     });
   }
 
@@ -453,7 +453,7 @@ export class SeguimientoComponentList implements OnInit, AfterViewInit {
                           )
                           .subscribe({
                             next: async (data: any) => {
-                              if (data && data.Data != '') {
+                              if (data?.Data != '') {
                                 let seguimiento = data.Data[0];
 
                                 let fechaInicio = new Date(
@@ -463,83 +463,33 @@ export class SeguimientoComponentList implements OnInit, AfterViewInit {
                                   seguimiento['fecha_fin'].replace('Z', '')
                                 );
 
-                                if (i == 0) {
-                                  const fechaControl1 =
-                                    this.formFechas.get('fecha1');
-                                  const fechaControl2 =
-                                    this.formFechas.get('fecha2');
-                                  if (
-                                    fechaControl1 !== null &&
-                                    fechaControl1 !== undefined
-                                  ) {
-                                    fechaControl1.setValue(
-                                      fechaInicio.toLocaleDateString()
-                                    );
-                                  }
-                                  if (
-                                    fechaControl2 !== null &&
-                                    fechaControl2 !== undefined
-                                  ) {
-                                    fechaControl2.setValue(
-                                      fechaFin.toLocaleDateString()
-                                    );
-                                  }
-                                  this.trimestres[0] = {
-                                    id: seguimiento._id,
-                                    fecha_inicio: fechaInicio,
-                                    fecha_fin: fechaFin,
-                                  };
-                                } else if (i == 1) {
-                                  const fechaControl3 =
-                                    this.formFechas.get('fecha3');
-                                  const fechaControl4 =
-                                    this.formFechas.get('fecha4');
-                                  if (
-                                    fechaControl3 !== null &&
-                                    fechaControl3 !== undefined
-                                  ) {
-                                    fechaControl3.setValue(
-                                      fechaInicio.toLocaleDateString()
-                                    );
-                                  }
-                                  if (
-                                    fechaControl4 !== null &&
-                                    fechaControl4 !== undefined
-                                  ) {
-                                    fechaControl4.setValue(
-                                      fechaFin.toLocaleDateString()
-                                    );
-                                  }
-                                  this.trimestres[1] = {
-                                    id: seguimiento._id,
-                                    fecha_inicio: fechaInicio,
-                                    fecha_fin: fechaFin,
-                                  };
-                                } else if (i == 2) {
-                                  this.formFechas
-                                    .get('fecha5')!
-                                    .setValue(fechaInicio.toLocaleDateString());
-                                  this.formFechas
-                                    .get('fecha6')!
-                                    .setValue(fechaFin.toLocaleDateString());
-                                  this.trimestres[2] = {
-                                    id: seguimiento._id,
-                                    fecha_inicio: fechaInicio,
-                                    fecha_fin: fechaFin,
-                                  };
-                                } else if (i == 3) {
-                                  this.formFechas
-                                    .get('fecha7')!
-                                    .setValue(fechaInicio.toLocaleDateString());
-                                  this.formFechas
-                                    .get('fecha8')!
-                                    .setValue(fechaFin.toLocaleDateString());
-                                  this.trimestres[3] = {
-                                    id: seguimiento._id,
-                                    fecha_inicio: fechaInicio,
-                                    fecha_fin: fechaFin,
-                                  };
+                                const fechaControlAux1 = this.formFechas.get(
+                                  `fecha${i * 2 + 1}`
+                                );
+                                const fechaControlAux2 = this.formFechas.get(
+                                  `fecha${i * 2 + 2}`
+                                );
+                                if (
+                                  fechaControlAux1 !== null &&
+                                  fechaControlAux1 !== undefined
+                                ) {
+                                  fechaControlAux1.setValue(
+                                    fechaInicio.toLocaleDateString()
+                                  );
                                 }
+                                if (
+                                  fechaControlAux2 !== null &&
+                                  fechaControlAux2 !== undefined
+                                ) {
+                                  fechaControlAux2.setValue(
+                                    fechaFin.toLocaleDateString()
+                                  );
+                                }
+                                this.trimestres[i] = {
+                                  id: seguimiento._id,
+                                  fecha_inicio: fechaInicio,
+                                  fecha_fin: fechaFin,
+                                };
 
                                 if (
                                   Object.keys(this.trimestres[0]).length !==
@@ -563,9 +513,8 @@ export class SeguimientoComponentList implements OnInit, AfterViewInit {
                                   ) {
                                     await this.evaluarFechasPlan();
                                   }
-                                  Swal.close();
-                                  resolve(true);
                                 }
+                                resolve(true);
                               } else {
                                 Swal.fire({
                                   title: 'Error en la operación',
@@ -594,6 +543,7 @@ export class SeguimientoComponentList implements OnInit, AfterViewInit {
                           });
                       });
                     }
+                    Swal.close();
                     resolve(true);
                   } else {
                     Swal.fire({
@@ -648,11 +598,8 @@ export class SeguimientoComponentList implements OnInit, AfterViewInit {
   }
   async onChangeP(plan: any) {
     this.plan = plan;
-    if (
-      plan == undefined ||
-      (plan == undefined && this.vigencia == undefined)
-    ) {
-      this.dataSource.data = this.planes;
+    if (plan == undefined) {
+      this.dataSource.data = [];
     } else {
       this.dataSource.data = this.searchP(plan.nombre);
       if (this.rol != undefined && this.rol == 'PLANEACION') {
@@ -684,14 +631,14 @@ export class SeguimientoComponentList implements OnInit, AfterViewInit {
             environment.OIKOS_SERVICE,
             `dependencia?query=Id:` + this.planes[i].dependencia_id
           )
-          .subscribe(
-            (data: any) => {
+          .subscribe({
+            next: (data: any) => {
               if (data) {
                 let unidad: any = data[0];
                 this.planes[i].unidad = unidad.Nombre;
               }
             },
-            (error) => {
+            error: (error) => {
               Swal.fire({
                 title: 'Error en la operación',
                 text: 'No se encontraron datos registrados',
@@ -700,8 +647,8 @@ export class SeguimientoComponentList implements OnInit, AfterViewInit {
                 timer: 2500,
               });
               reject(error);
-            }
-          );
+            },
+          });
       }
       resolve(true);
     });
@@ -806,95 +753,108 @@ export class SeguimientoComponentList implements OnInit, AfterViewInit {
 
     this.auxEstadosSeguimientos = [];
 
-    for (let index = 0; index < this.dataSource.data.length; index++) {
-      if (this.rol != undefined && this.rol == 'PLANEACION') {
-        Swal.update({
-          text: `${index + 1} de ${this.dataSource.data.length}`,
-        });
-        Swal.showLoading();
-      }
-      const plan = this.dataSource.data[index];
-      for (let trimestre in this.trimestres) {
-        await new Promise(async (resolve, reject) => {
-          this.request
-            .get(
-              environment.PLANES_CRUD,
-              `seguimiento?query=activo:true,tipo_seguimiento_id:61f236f525e40c582a0840d0,plan_id:` +
-                plan._id +
-                `,periodo_seguimiento_id:` +
-                this.trimestres[trimestre]['id']
-            )
-            .subscribe(async (data: any) => {
-              if (data.Data.length != 0) {
-                let estadoTemp;
-                if (
-                  this.auxEstadosSeguimientos.some(
-                    (estado) => estado.id == data.Data[0].estado_seguimiento_id
-                  ) &&
-                  this.auxEstadosSeguimientos.length > 0
-                ) {
-                  estadoTemp = this.auxEstadosSeguimientos.find(
-                    (estado) => estado.id == data.Data[0].estado_seguimiento_id
-                  ).nombre;
-                } else {
-                  await new Promise((resolve, reject) => {
-                    this.request
-                      .get(
-                        environment.PLANES_CRUD,
-                        `estado-seguimiento/` +
-                          data.Data[0].estado_seguimiento_id
-                      )
-                      .subscribe((estado: any) => {
-                        if (estado && estado.Data != null) {
-                          estadoTemp = estado.Data.nombre;
-                          this.auxEstadosSeguimientos.push({
-                            id: estado.Data._id,
-                            nombre: estado.Data.nombre,
-                          });
-                          resolve(true);
-                        } else {
-                          Swal.fire({
-                            title: 'Error en la operación',
-                            text: `No se encontraron datos de estado`,
-                            icon: 'warning',
-                            showConfirmButton: false,
-                            timer: 2500,
-                          });
-                          reject(false);
-                        }
-                      });
+    // for (let index = 0; index < this.dataSource.data.length; index++) {
+    //   const plan = this.dataSource.data[index];
+
+    //   for (
+    //     let posicionTrimestre = 0;
+    //     posicionTrimestre < this.trimestres.length;
+    //     posicionTrimestre++
+    //   ) {
+    //     const trimestre = this.trimestres[posicionTrimestre];
+    this.dataSource.data.map(async (plan: any, index) => {
+      this.trimestres.map(
+        async (trimestre: Trimestre, posicionTrimestre: number) => {
+          await new Promise(async (resolve, reject) => {
+            this.request
+              .get(
+                environment.PLANES_CRUD,
+                `seguimiento?query=activo:true,tipo_seguimiento_id:61f236f525e40c582a0840d0,plan_id:${plan._id},periodo_seguimiento_id:${trimestre.id}`
+              )
+              .subscribe(async (data: any) => {
+                if (data.Data.length != 0) {
+                  let estadoTemp;
+                  if (
+                    this.auxEstadosSeguimientos.length > 0 &&
+                    this.auxEstadosSeguimientos.some(
+                      (estado) =>
+                        estado.id == data.Data[0].estado_seguimiento_id
+                    )
+                  ) {
+                    estadoTemp = this.auxEstadosSeguimientos.find(
+                      (estado) =>
+                        estado.id == data.Data[0].estado_seguimiento_id
+                    ).nombre;
+                  } else {
+                    await new Promise((resolve, reject) => {
+                      this.request
+                        .get(
+                          environment.PLANES_CRUD,
+                          `estado-seguimiento/` +
+                            data.Data[0].estado_seguimiento_id
+                        )
+                        .subscribe((estado: any) => {
+                          if (estado && estado.Data != null) {
+                            estadoTemp = estado.Data.nombre;
+                            this.auxEstadosSeguimientos.push({
+                              id: estado.Data._id,
+                              nombre: estado.Data.nombre,
+                            });
+                            resolve(true);
+                          } else {
+                            Swal.fire({
+                              title: 'Error en la operación',
+                              text: `No se encontraron datos de estado`,
+                              icon: 'warning',
+                              showConfirmButton: false,
+                              timer: 2500,
+                            });
+                            reject(false);
+                          }
+                        });
+                    });
+                  }
+
+                  let auxFecha = new Date();
+                  let auxFechaCol = auxFecha.toLocaleString('en-US', {
+                    timeZone: 'America/Mexico_City',
                   });
-                }
+                  let strFechaHoy = new Date(auxFechaCol).toISOString();
+                  let fechaHoy = new Date(strFechaHoy);
 
-                let auxFecha = new Date();
-                let auxFechaCol = auxFecha.toLocaleString('en-US', {
-                  timeZone: 'America/Mexico_City',
-                });
-                let strFechaHoy = new Date(auxFechaCol).toISOString();
-                let fechaHoy = new Date(strFechaHoy);
-
-                if (estadoTemp == 'Reporte Avalado') {
-                  this.dataSource.data[index][trimestre + 'class'] = 'verde';
-                  this.dataSource.data[index]['estado'] = estadoTemp;
-                } else if (
-                  fechaHoy >= this.trimestres[trimestre]['fecha_inicio'] &&
-                  fechaHoy <= this.trimestres[trimestre]['fecha_fin']
-                ) {
-                  this.dataSource.data[index][trimestre + 'class'] = 'amarillo';
-                  this.dataSource.data[index]['estado'] = estadoTemp;
+                  if (estadoTemp == 'Reporte Avalado') {
+                    this.dataSource.data[index][
+                      `t${posicionTrimestre + 1}class`
+                    ] = 'verde';
+                    this.dataSource.data[index]['estado'] = estadoTemp;
+                  } else if (
+                    fechaHoy >= trimestre['fecha_inicio'] &&
+                    fechaHoy <= trimestre['fecha_fin']
+                  ) {
+                    this.dataSource.data[index][
+                      `t${posicionTrimestre + 1}class`
+                    ] = 'amarillo';
+                    this.dataSource.data[index]['estado'] = estadoTemp;
+                  } else {
+                    this.dataSource.data[index][
+                      `t${posicionTrimestre + 1}class`
+                    ] = 'gris';
+                  }
+                  this.dataSource.data[index][
+                    `t${posicionTrimestre + 1}estado`
+                  ] = estadoTemp;
+                  this.allPlanes = this.dataSource.data;
+                  resolve(true);
                 } else {
-                  this.dataSource.data[index][trimestre + 'class'] = 'gris';
+                  reject();
                 }
-                this.dataSource.data[index][trimestre + 'estado'] = estadoTemp;
-                this.allPlanes = this.dataSource.data;
-                resolve(true);
-              } else {
-                reject();
-              }
-            });
-        });
-      }
-    }
+              });
+          });
+          //   }
+          // }
+        }
+      );
+    });
     Swal.close();
   }
   /**
@@ -930,11 +890,11 @@ export class SeguimientoComponentList implements OnInit, AfterViewInit {
     this.dataSource.data = this.allPlanes.slice(startIndex, endIndex);
     this.dataSource.data.length = this.allPlanes.length;
   }
-  onTrimestreChange(trimestre: any, id: any) {
+  onTrimestreChange(trimestre: string, id: any) {
     let index = this.dataSource.data.findIndex((row) => row._id == id);
     if (this.vigencia) {
       this.dataSource.data[index]['estado'] =
-        this.dataSource.data[index][trimestre.toLowerCase() + 'estado'];
+        this.dataSource.data[index][`${trimestre.toLowerCase()}estado`];
     }
     this.dataSource.data[index]['trimestre'] = trimestre;
   }
