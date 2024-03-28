@@ -3,9 +3,12 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes, provideRouter } from '@angular/router';
 import { provideHttpClient, withFetch } from '@angular/common/http';
 import { getSingleSpaExtraProviders } from 'single-spa-angular';
+import { SeguimientoComponentList } from './components/seguimiento/listar-plan-accion-anual/seguimiento.component';
 
-// const routes: Routes = [{ path: '', component: EvaluacionComponent }];
-const routes: Routes = [];
+const routes: Routes = [
+  { path: 'listar-plan-accion-anual', component: SeguimientoComponentList },
+  { path: '**', component: SeguimientoComponentList },
+];
 
 @NgModule({
   imports: [RouterModule.forRoot(routes)],

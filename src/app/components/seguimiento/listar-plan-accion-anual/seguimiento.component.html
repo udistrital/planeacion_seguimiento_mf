@@ -1,0 +1,220 @@
+<mat-card class="card-oas" style="width: 95vmax; margin: 0 auto;">
+  <ng-container *ngIf="rol=='JEFE_DEPENDENCIA' || rol=='JEFE_UNIDAD_PLANEACION'">
+    <mat-card-header style="place-content: center;">
+      <mat-card-title>Seguimiento al Plan de Acción</mat-card-title>
+    </mat-card-header>
+    <div style="text-align: center; color: var(--primary);">
+      {{unidad.Nombre}}
+    </div>
+  </ng-container>
+  <ng-container *ngIf="rol=='PLANEACION'">
+    <mat-card-header style="place-content: center;">
+      <mat-card-title>Seguimiento Planes de Acción</mat-card-title>
+    </mat-card-header>
+    <div style="text-align: center;">
+      Listado de unidades académicas y/o administrativas
+    </div>
+  </ng-container>
+  <br>
+  <mat-card-content>
+    <form [formGroup]="formSelect">
+      <ng-container *ngIf="rol=='JEFE_DEPENDENCIA' || rol=='JEFE_UNIDAD_PLANEACION'">
+        <div>
+          <div>
+            <u class="textGuide">
+              A continuación usted encontrará un listado de planes de acción anuales relacionados con cada
+              una de las unidades académico y/o administrativas; para iniciar seleccione el de su interés
+              y posteriormente de click en el trimestre habilitado.
+            </u>
+            <br>
+          </div>
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="rol=='PLANEACION'">
+        <u class="textGuide">
+          A continuación encontrará un listado de Planes de Acción anuales relacionados con cada una de las
+          unidades académicas y/o administrativas; para iniciar, seleccione el de su interés y posteriormente
+          de click en el trimestre habilitado.
+        </u>
+        <br>
+      </ng-container>
+      <br>
+
+      <form [formGroup]="formFechas">
+        <ng-container>
+          <div class="flex">
+            <div class="sameRow" style="vertical-align: middle;" [style.width.%]="100">
+              <h4>Fechas guía para cada trimestre para la vigencia.</h4>
+              <mat-form-field appearance="fill" [style.width.%]="100">
+                <mat-label id="tipo-input-label">Seleccione la vigencia</mat-label>
+                <mat-select (selectionChange)="onChangeV($event.value)" formControlName="selectVigencia">
+                  <mat-option>--</mat-option>
+                  <mat-option *ngFor="let vigencia of vigencias" [value]="vigencia">
+                    {{vigencia.Nombre}}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <div class="contenedor">
+                <div class="contenedorTrimestre">
+                  <mat-label id="desc-input-label">Trimestre 1:
+                  </mat-label>
+                  <br>
+                  <div>
+                    <mat-label>Inicio</mat-label>
+                    <input class="unidad" type="text" matInput formControlName="fecha1" required readonly>
+                    <mat-hint>DD/MM/AAAA</mat-hint>
+                  </div>
+                  <br>
+                  <div>
+                    <mat-label>Fin</mat-label>
+                    <input class="unidad" type="text" matInput formControlName="fecha2" required readonly>
+                    <mat-hint>DD/MM/AAAA</mat-hint>
+                  </div>
+                </div>
+                <div class="contenedorTrimestre">
+                  <mat-label id="desc-input-label">Trimestre 2:
+                  </mat-label>
+                  <br>
+                  <div>
+                    <mat-label>Inicio</mat-label>
+                    <input class="unidad" type="text" matInput formControlName="fecha3" required readonly>
+                    <mat-hint>DD/MM/AAAA</mat-hint>
+                  </div>
+                  <br>
+                  <div>
+                    <mat-label>Fin</mat-label>
+                    <input class="unidad" type="text" matInput formControlName="fecha4" required readonly>
+                    <mat-hint>DD/MM/AAAA</mat-hint>
+                  </div>
+                </div>
+                <div class="contenedorTrimestre">
+                  <mat-label id="desc-input-label">Trimestre 3:
+                  </mat-label>
+                  <br>
+                  <div>
+                    <mat-label>Inicio</mat-label>
+                    <input class="unidad" type="text" matInput formControlName="fecha5" required readonly>
+                    <mat-hint>DD/MM/AAAA</mat-hint>
+                  </div>
+                  <br>
+                  <div>
+                    <mat-label>Fin</mat-label>
+                    <input class="unidad" type="text" matInput formControlName="fecha6" required readonly>
+                    <mat-hint>DD/MM/AAAA</mat-hint>
+                  </div>
+                </div>
+                <div class="contenedorTrimestre">
+                  <mat-label id="desc-input-label">Trimestre 4:
+                  </mat-label>
+                  <br>
+                  <div>
+                    <mat-label>Inicio</mat-label>
+                    <input class="unidad" type="text" matInput formControlName="fecha7" required readonly>
+                    <mat-hint>DD/MM/AAAA</mat-hint>
+                  </div>
+                  <br>
+                  <div>
+                    <mat-label>Fin</mat-label>
+                    <input class="unidad" type="text" matInput formControlName="fecha8" required readonly>
+                    <mat-hint>DD/MM/AAAA</mat-hint>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+      </form>
+      <br>
+      <form [formGroup]="formPlanes" *ngIf="rol=='PLANEACION' && vigencia != undefined">
+        <ng-container>
+          <div class="flex">
+            <div class="sameRow" style="vertical-align: middle;" [style.width.%]="100">
+              <h4>Plan de Acción</h4>
+              <mat-form-field appearance="fill" [style.width.%]="100">
+                <mat-label id="tipo-input-label">Seleccione el plan de interés</mat-label>
+                <mat-select (selectionChange)="onChangeP($event.value)"
+                  placeholder="Escriba el nombre del plan que desea seleccionar" formControlName="selectPlan">
+                  <input (keyup)="onKeyP($any($event.target).value)" class="input-search">
+                  <mat-option>--</mat-option>
+                  <mat-option *ngFor="let plan of auxPlanes" [value]="plan">
+                    {{plan.nombre}}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+          </div>
+        </ng-container>
+      </form>
+      <br>
+
+      <ng-container
+        *ngIf="(rol=='JEFE_DEPENDENCIA' && vigencia != undefined) || (rol=='PLANEACION' && plan != undefined && vigencia != undefined) || (rol=='JEFE_UNIDAD_PLANEACION' && vigencia != undefined)">
+        <div class="flex">
+          <div class="sameRow">
+            <h4>Listado de Planes de Acción</h4>
+            <div class="mat-elevation-z8">
+              <table mat-table [dataSource]="dataSource" matSort>
+                <ng-container *ngIf="rol=='PLANEACION'" matColumnDef="unidad">
+                  <th mat-header-cell *matHeaderCellDef> Unidad Académica y / o Administrativa </th>
+                  <td mat-cell *matCellDef="let row"> {{row.unidad}} </td>
+                </ng-container>
+
+                <ng-container *ngIf="rol=='JEFE_DEPENDENCIA' || rol=='JEFE_UNIDAD_PLANEACION'" matColumnDef="unidad">
+                  <th mat-header-cell *matHeaderCellDef> Nombre del plan </th>
+                  <td mat-cell class="justificarColumna" *matCellDef="let row"> {{row.nombre}} </td>
+                </ng-container>
+                <ng-container matColumnDef="vigencia">
+                  <th mat-header-cell *matHeaderCellDef class="columnaAngosta"> Vigencia </th>
+                  <td mat-cell *matCellDef="let row" class="columnaAngosta">
+                    {{row.vigencia}}
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="estado">
+                  <th mat-header-cell *matHeaderCellDef class="columnaAngosta"> Estado reporte </th>
+                  <td mat-cell *matCellDef="let row" class="columnaAngosta"> {{row.estado}} </td>
+                </ng-container>
+                <ng-container matColumnDef="periodo">
+                  <th mat-header-cell *matHeaderCellDef class="columnaAngosta"> Periodo </th>
+                  <td mat-cell *matCellDef="let row" class="columnaAngosta">
+                    <mat-button-toggle-group #toggleGroup1="matButtonToggleGroup"
+                      (change)="onTrimestreChange($event.value, row._id)">
+                      <mat-button-toggle [ngClass]="row.t1class" value="T1">T1</mat-button-toggle>
+                      <mat-button-toggle [ngClass]="row.t2class" value="T2">T2</mat-button-toggle>
+                      <mat-button-toggle [ngClass]="row.t3class" value="T3">T3</mat-button-toggle>
+                      <mat-button-toggle [ngClass]="row.t4class" value="T4">T4</mat-button-toggle>
+                    </mat-button-toggle-group>
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="seguimiento">
+                  <th mat-header-cell *matHeaderCellDef class="seguimiento"> Ver </th>
+                  <td mat-cell *matCellDef="let row" class="seguimiento">
+                    <button mat-icon-button (click)="gestionSeguimiento(row)">
+                      <mat-icon>search</mat-icon>
+                    </button>
+                  </td>
+                </ng-container>
+
+                <div *ngIf="rol=='JEFE_DEPENDENCIA' || rol=='JEFE_UNIDAD_PLANEACION'">
+                  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                  <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+                </div>
+                <div *ngIf="rol=='PLANEACION'">
+                  <tr mat-header-row *matHeaderRowDef="displayedColumnsPL"></tr>
+                  <tr mat-row *matRowDef="let row; columns: displayedColumnsPL;"></tr>
+                </div>
+                <tr class="mat-row" *matNoDataRow>
+                  <td class="mat-cell" colspan="4"></td>
+                </tr>
+              </table>
+              <mat-paginator #paginator pageSize="5" [length]="dataSource.data.length"
+                [pageSizeOptions]="[5, 10, 25, 100]" (page)=" OnPageChange($event)"
+                aria-label="Select page of users"></mat-paginator>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </form>
+  </mat-card-content>
+</mat-card>
