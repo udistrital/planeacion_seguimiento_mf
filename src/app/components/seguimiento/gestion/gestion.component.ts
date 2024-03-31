@@ -105,8 +105,8 @@ export class GestionComponent implements OnInit {
   backClicked() {
     this.verificarFormulario.estadoLista$.subscribe((estadoLista: boolean) => {
       if (estadoLista === true) {
-        //alert('Ojito!!!');
-        this.router.navigate(['pages/pendientes-seguimiento/']);
+        alert('Ojito!!!');
+        window.location.assign('pages/pendientes-seguimiento/');
       } else {
         this.router.navigate(['listar-plan-accion-anual/']);
       }

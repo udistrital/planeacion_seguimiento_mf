@@ -5,6 +5,7 @@ import { provideHttpClient, withFetch } from '@angular/common/http';
 import { getSingleSpaExtraProviders } from 'single-spa-angular';
 import { ListComponent } from './components/seguimiento/listar-plan-accion-anual/seguimiento.component';
 import { GestionComponent } from './components/seguimiento/gestion/gestion.component';
+import { GenerarTrimestreComponent } from './components/seguimiento/generar-trimestre/generar-trimestre.component';
 
 const routes: Routes = [
   { path: 'listar-plan-accion-anual', component: ListComponent },
@@ -16,10 +17,10 @@ const routes: Routes = [
     path: 'gestion-seguimiento/:plan_id/:trimestre',
     component: GestionComponent,
   },
-  // {
-  //   path: 'generar-trimestre/:plan_id/:index/:trimestre_id',
-  //   component: GenerarTrimestreComponent,
-  // },
+  {
+    path: 'generar-trimestre/:plan_id/:index/:trimestre_id',
+    component: GenerarTrimestreComponent,
+  },
   { path: '**', redirectTo: 'listar-plan-accion-anual' },
 ];
 

@@ -14,8 +14,8 @@ import {
 } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute, Router } from '@angular/router';
-import Plan from 'src/app/models/Plan';
-import Trimestre from 'src/app/models/Trimestre';
+import Plan from 'src/app/models/plan';
+import Trimestre from 'src/app/models/trimestre';
 import { ImplicitAutenticationService } from 'src/app/services/implicit_autentication.service';
 import { environment } from 'src/environments/environment';
 import Swal from 'sweetalert2';

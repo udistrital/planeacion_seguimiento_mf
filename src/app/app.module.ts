@@ -16,9 +16,19 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 import { ListComponent } from './components/seguimiento/listar-plan-accion-anual/seguimiento.component';
 import { GestionComponent } from './components/seguimiento/gestion/gestion.component';
+import { GenerarTrimestreComponent } from './components/seguimiento/generar-trimestre/generar-trimestre.component';
+import { VisualizarDocumentoDialogComponent } from './components/seguimiento/generar-trimestre/visualizar-documento-dialog/visualizar-documento-dialog.component';
+import { EvidenciasDialogComponent } from './components/seguimiento/evidencias/evidencias-dialog.component';
 
 @NgModule({
-  declarations: [AppComponent, ListComponent, GestionComponent],
+  declarations: [
+    AppComponent,
+    ListComponent,
+    GestionComponent,
+    GenerarTrimestreComponent,
+    VisualizarDocumentoDialogComponent,
+    EvidenciasDialogComponent,
+  ],
   imports: [
     BrowserModule,
     AppRoutingModule,
