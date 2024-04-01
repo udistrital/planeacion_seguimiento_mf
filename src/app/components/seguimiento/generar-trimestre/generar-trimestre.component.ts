@@ -315,7 +315,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
 
   backClicked() {
     this.router.navigate([
-      'pages/seguimiento/gestion-seguimiento/' +
+      'gestion-seguimiento/' +
         this.planId +
         '/' +
         this.codigoTrimestre,
