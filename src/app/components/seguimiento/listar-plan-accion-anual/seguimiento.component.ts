@@ -1081,10 +1081,7 @@ export class ListComponent implements OnInit, AfterViewInit {
   gestionSeguimiento(plan: any) {
     if (plan.trimestre != undefined) {
       this.router.navigate([
-        'pages/seguimiento/gestion-seguimiento/' +
-          plan._id +
-          '/' +
-          plan.trimestre,
+        'gestion-seguimiento/' + plan._id + '/' + plan.trimestre,
       ]);
     } else {
       Swal.fire({
