@@ -18,7 +18,6 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { RequestManager } from 'src/app/services/requestManager.service';
 import { ImplicitAutenticationService } from 'src/app/services/implicitAutentication.service';
-import { UserService } from 'src/app/services/userService.service';
 import Plan from 'src/app/models/plan';
 import { DataRequest } from 'src/app/models/dataRequest';
 import Trimestre from 'src/app/models/trimestre';
@@ -81,7 +80,6 @@ export class ListComponent implements OnInit, AfterViewInit {
     private request: RequestManager,
     private router: Router,
     private autenticationService: ImplicitAutenticationService,
-    private userService: UserService,
     private formBuilder: FormBuilder,
     private activatedRoute: ActivatedRoute,
     private codigosEstados: CodigosEstados
@@ -172,7 +170,7 @@ export class ListComponent implements OnInit, AfterViewInit {
       },
     });
     await new Promise((resolve) => {
-      this.userService.user$.subscribe((data: any) => {
+      this.autenticationService.user$.subscribe((data: any) => {
         this.request
           .get(
             environment.TERCEROS_SERVICE,
