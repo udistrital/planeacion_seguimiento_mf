@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, of } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -22,7 +22,6 @@ export class ImplicitAutenticationService {
 
   constructor() {
     const user: any = localStorage.getItem('user');
-    // console.log(user);
     this.userSubject.next(JSON.parse(atob(user)));
   }
 

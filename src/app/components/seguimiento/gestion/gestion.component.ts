@@ -4,7 +4,7 @@ import { PageEvent } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute, Router } from '@angular/router';
 import Indicador from 'src/app/models/indicador';
-import { ImplicitAutenticationService } from 'src/app/services/implicit_autentication.service';
+import { ImplicitAutenticationService } from 'src/app/services/implicitAutentication.service';
 import { RequestManager } from 'src/app/services/requestManager.service';
 import { VerificarFormulario } from 'src/app/services/verificarFormulario.service';
 import { environment } from 'src/environments/environment';

@@ -17,11 +17,12 @@ import Swal from 'sweetalert2';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { RequestManager } from 'src/app/services/requestManager.service';
-import { ImplicitAutenticationService } from 'src/app/services/implicit_autentication.service';
+import { ImplicitAutenticationService } from 'src/app/services/implicitAutentication.service';
 import { UserService } from 'src/app/services/userService.service';
 import Plan from 'src/app/models/plan';
 import { DataRequest } from 'src/app/models/dataRequest';
 import Trimestre from 'src/app/models/trimestre';
+import { CodigosEstados } from 'src/app/services/codigosEstados.service';
 
 @Component({
   selector: 'app-seguimiento',
@@ -82,7 +83,8 @@ export class ListComponent implements OnInit, AfterViewInit {
     private autenticationService: ImplicitAutenticationService,
     private userService: UserService,
     private formBuilder: FormBuilder,
-    private activatedRoute: ActivatedRoute
+    private activatedRoute: ActivatedRoute,
+    private codigosEstados: CodigosEstados
   ) {
     let roles: any = this.autenticationService.getRole();
     if (
@@ -129,6 +131,7 @@ export class ListComponent implements OnInit, AfterViewInit {
   }
 
   async ngOnInit() {
+    this.codigosEstados.cargarIdentificadores();
     if (
       this.rol == 'JEFE_DEPENDENCIA' ||
       this.rol == 'ASISTENTE_DEPENDENCIA' ||
@@ -313,7 +316,7 @@ export class ListComponent implements OnInit, AfterViewInit {
 
   filterPlanes(data: any[]) {
     var dataAux = data.filter(
-      (e) => e.tipo_plan_id != '611af8464a34b3599e3799a2'
+      (e) => e.tipo_plan_id != this.codigosEstados.getIdTipoPlanProyecto()
     );
     return dataAux.filter((e) => e.activo == true);
   }
@@ -392,7 +395,7 @@ export class ListComponent implements OnInit, AfterViewInit {
                         this.request
                           .get(
                             environment.PLANES_CRUD,
-                            `periodo-seguimiento?query=tipo_seguimiento_id:61f236f525e40c582a0840d0,periodo_id:` +
+                            `periodo-seguimiento?query=tipo_seguimiento_id:${this.codigosEstados.getIdSeguimientoPlanAccion()},periodo_id:` +
                               periodos[i].Id
                           )
                           .subscribe({
@@ -554,7 +557,7 @@ export class ListComponent implements OnInit, AfterViewInit {
             this.request
               .get(
                 environment.PLANES_CRUD,
-                `seguimiento?query=activo:true,tipo_seguimiento_id:61f236f525e40c582a0840d0,plan_id:` +
+                `seguimiento?query=activo:true,tipo_seguimiento_id:${this.codigosEstados.getIdSeguimientoPlanAccion()},plan_id:` +
                   plan._id +
                   `,periodo_seguimiento_id:` +
                   trimestre.id
@@ -646,6 +649,7 @@ export class ListComponent implements OnInit, AfterViewInit {
   }
 
   onChangeU(unidad: any) {
+    this.allPlanes = [];
     this.dataSource.data = [];
     if (unidad == undefined) {
       this.unidadSelected = false;
@@ -653,7 +657,6 @@ export class ListComponent implements OnInit, AfterViewInit {
       this.unidadSelected = true;
       this.unidad = unidad;
     }
-    this.allPlanes = this.dataSource.data;
   }
 
   async onChangeP(plan: any) {
@@ -717,7 +720,9 @@ export class ListComponent implements OnInit, AfterViewInit {
         this.request
           .get(
             environment.PLANES_CRUD,
-            `plan?query=activo:true,estado_plan_id:6153355601c7a2365b2fb2a1,vigencia:${this.vigencia.Id},dependencia_id:${this.unidad.Id}`
+            `plan?query=activo:true,estado_plan_id:${this.codigosEstados.getIdPlanEstadoAvalado()},vigencia:${
+              this.vigencia.Id
+            },dependencia_id:${this.unidad.Id}`
           )
           .subscribe({
             next: async (data: DataRequest) => {
@@ -771,7 +776,9 @@ export class ListComponent implements OnInit, AfterViewInit {
         this.request
           .get(
             environment.PLANES_CRUD,
-            `plan?query=activo:true,estado_plan_id:6153355601c7a2365b2fb2a1,vigencia:${this.vigencia.Id},dependencia_id:${this.unidad.Id}`
+            `plan?query=activo:true,estado_plan_id:${this.codigosEstados.getIdPlanEstadoAvalado()},vigencia:${
+              this.vigencia.Id
+            },dependencia_id:${this.unidad.Id}`
           )
           .subscribe({
             next: async (data: DataRequest) => {

@@ -5,8 +5,8 @@ import {
   MatDialogRef,
 } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
-import { GestorDocumentalService } from 'src/app/services/gestor_documental.service';
-import { ImplicitAutenticationService } from 'src/app/services/implicit_autentication.service';
+import { GestorDocumentalService } from 'src/app/services/gestorDocumental.service';
+import { ImplicitAutenticationService } from 'src/app/services/implicitAutentication.service';
 import Swal from 'sweetalert2';
 import { VisualizarDocumentoDialogComponent } from '../generar-trimestre/visualizar-documento-dialog/visualizar-documento-dialog.component';
 

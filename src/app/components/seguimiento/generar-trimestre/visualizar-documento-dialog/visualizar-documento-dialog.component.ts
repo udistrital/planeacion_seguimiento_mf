@@ -1,7 +1,7 @@
 import { Component, OnInit, Inject } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { DomSanitizer } from '@angular/platform-browser';
-import { ImplicitAutenticationService } from 'src/app/services/implicit_autentication.service';
+import { ImplicitAutenticationService } from 'src/app/services/implicitAutentication.service';
 import Swal from 'sweetalert2';
 
 @Component({
