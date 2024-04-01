@@ -41,8 +41,30 @@
       </ng-container>
       <br>
 
-      <form [formGroup]="formFechas">
+      <form [formGroup]="formSelect"
+        *ngIf="rol=='PLANEACION' || rol=='JEFE_DEPENDENCIA' || rol=='ASISTENTE_DEPENDENCIA' || rol=='JEFE_DEPENDENCIA_PLANEACION' || rol=='JEFE_UNIDAD_PLANEACION'">
         <ng-container>
+          <div class="flex">
+            <div class="sameRow" style="vertical-align: middle;" [style.width.%]="100">
+              <h4>Unidades Académica/Administrativa</h4>
+              <mat-form-field appearance="fill" [style.width.%]="100">
+                <mat-label id="tipo-input-label">Seleccione la unidad de interés</mat-label>
+                <mat-select (selectionChange)="onChangeU($event.value)"
+                  placeholder="Escriba el nombre del plan que desea seleccionar" formControlName="selectUnidad">
+                  <input (keyup)="onKey($event.target)" class="input-search">
+                  <mat-option>--</mat-option>
+                  <mat-option *ngFor="let unidad of auxUnidades" [value]="unidad">
+                    {{unidad.Nombre}}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+          </div>
+        </ng-container>
+      </form>
+      <br>
+
+      <form [formGroup]="formFechas" *ngIf="unidadSelected"> <ng-container>
           <div class="flex">
             <div class="sameRow" style="vertical-align: middle;" [style.width.%]="100">
               <h4>Fechas guía para cada trimestre para la vigencia.</h4>
@@ -127,7 +149,8 @@
         </ng-container>
       </form>
       <br>
-      <form [formGroup]="formPlanes" *ngIf="rol=='PLANEACION' && vigencia != undefined">
+      <form [formGroup]="formPlanes"
+        *ngIf="rol=='PLANEACION' || rol=='JEFE_DEPENDENCIA' || rol=='ASISTENTE_DEPENDENCIA' || rol=='JEFE_DEPENDENCIA_PLANEACION' || rol=='JEFE_UNIDAD_PLANEACION' && vigencia != undefined && unidad != undefined">
         <ng-container>
           <div class="sameRow" style="vertical-align: middle;">
             <h4>Plan de Acción</h4>
@@ -148,7 +171,7 @@
       <br>
 
       <ng-container
-        *ngIf="(rol=='JEFE_DEPENDENCIA' && vigencia != undefined) || (rol=='PLANEACION' && plan != undefined && vigencia != undefined) || (rol=='JEFE_UNIDAD_PLANEACION' && vigencia != undefined)">
+        *ngIf="(rol=='JEFE_DEPENDENCIA' && plan != undefined && vigencia != undefined) || (rol=='ASISTENTE_DEPENDENCIA' && plan != undefined && vigencia != undefined) || (rol=='PLANEACION' && plan != undefined && vigencia != undefined) || (rol=='JEFE_UNIDAD_PLANEACION' && plan != undefined && vigencia != undefined)">
         <div class="flex">
           <div class="sameRow">
             <h4>Listado de Planes de Acción</h4>

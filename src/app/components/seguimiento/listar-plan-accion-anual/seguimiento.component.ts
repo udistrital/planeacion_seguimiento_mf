@@ -1,26 +1,27 @@
 import {
-  AfterViewInit,
-  ChangeDetectorRef,
   Component,
   OnInit,
+  AfterViewInit,
   ViewChild,
+  ChangeDetectorRef,
 } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
-import { MatDialog } from '@angular/material/dialog';
 import {
   MatPaginator,
   MatPaginatorIntl,
   PageEvent,
 } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
-import { ActivatedRoute, Router } from '@angular/router';
-import Plan from 'src/app/models/plan';
-import Trimestre from 'src/app/models/trimestre';
-import { ImplicitAutenticationService } from 'src/app/services/implicit_autentication.service';
+import { MatDialog } from '@angular/material/dialog';
 import { environment } from 'src/environments/environment';
 import Swal from 'sweetalert2';
-import { RequestManager } from '../../../services/requestManager.service';
-import { UserService } from '../../../services/userService.service';
+import { ActivatedRoute, Router } from '@angular/router';
+import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
+import { RequestManager } from 'src/app/services/requestManager.service';
+import { ImplicitAutenticationService } from 'src/app/services/implicit_autentication.service';
+import { UserService } from 'src/app/services/userService.service';
+import Plan from 'src/app/models/plan';
+import { DataRequest } from 'src/app/models/dataRequest';
+import Trimestre from 'src/app/models/trimestre';
 
 @Component({
   selector: 'app-seguimiento',
@@ -42,9 +43,10 @@ export class ListComponent implements OnInit, AfterViewInit {
     'periodo',
     'seguimiento',
   ];
-  dataSource: MatTableDataSource<any>;
-  planes: any[] = [];
+  dataSource!: MatTableDataSource<any>;
+  planes!: any[];
   allPlanes: any[] = [];
+  planesMostrar: any[] = [];
   unidades: any[] = [];
   auxUnidades: any[] = [];
   auxPlanes: any[] = [];
@@ -57,23 +59,22 @@ export class ListComponent implements OnInit, AfterViewInit {
     {} as Trimestre,
     {} as Trimestre,
   ];
-
   unidadSelected: boolean;
   unidad: any = { nombre: '' };
-  vigencias: any[] = [];
-  vigenciaSelected: boolean = false;
+  vigencias!: any[];
+  vigenciaSelected!: boolean;
   vigencia: any;
   plan: any;
-  rol: string = '';
-  periodoHabilitado: boolean = false;
+  rol!: string;
+  periodoHabilitado!: boolean;
   formFechas: FormGroup;
   formPlanes: FormGroup;
   formSelect: FormGroup;
+  selectUnidad = new FormControl();
   @ViewChild(MatPaginator) paginator: MatPaginator = new MatPaginator(
     new MatPaginatorIntl(),
     ChangeDetectorRef.prototype
   );
-
   constructor(
     public dialog: MatDialog,
     private request: RequestManager,
@@ -102,7 +103,7 @@ export class ListComponent implements OnInit, AfterViewInit {
       this.rol = 'JEFE_UNIDAD_PLANEACION';
     }
     this.unidadSelected = false;
-    this.dataSource = new MatTableDataSource<any>();
+
     this.formFechas = this.formBuilder.group({
       selectVigencia: null,
       fecha1: null,
@@ -118,24 +119,26 @@ export class ListComponent implements OnInit, AfterViewInit {
       selectPlan: null,
     });
     this.formSelect = this.formBuilder.group({
-      selectUnidad: [''],
+      selectUnidad: null,
     });
   }
 
   ngAfterViewInit(): void {
-    this.dataSource.paginator = this.paginator;
+    this.dataSource = new MatTableDataSource<any>();
+    this.dataSource.data = [];
   }
 
   async ngOnInit() {
-    await this.loadPeriodos();
     if (
       this.rol == 'JEFE_DEPENDENCIA' ||
       this.rol == 'ASISTENTE_DEPENDENCIA' ||
       this.rol == 'JEFE_UNIDAD_PLANEACION'
     ) {
       await this.validarUnidad();
+    } else {
+      await this.loadUnidades();
     }
-    // listar-plan-accion-anual/:vigencia_id/:nombre_plan/:unidad_id
+    await this.loadPeriodos();
     this.activatedRoute.params.subscribe(async (prm) => {
       let vigencia_id = prm['vigencia_id'];
       let nombre = prm['nombre_plan'];
@@ -154,46 +157,17 @@ export class ListComponent implements OnInit, AfterViewInit {
     });
   }
 
-  async loadPeriodos() {
+  async validarUnidad() {
     Swal.fire({
-      title: 'Cargando períodos de la vigencia',
+      title: 'Validando unidad',
       timerProgressBar: true,
       showConfirmButton: false,
+      allowEscapeKey: false,
+      allowOutsideClick: false,
       willOpen: () => {
         Swal.showLoading();
       },
     });
-    await new Promise((resolve, reject) => {
-      this.request
-        .get(
-          environment.PARAMETROS_SERVICE,
-          `periodo?query=CodigoAbreviacion:VG,activo:true`
-        )
-        .subscribe({
-          next: (data: any) => {
-            if (data) {
-              this.vigencias = data.Data;
-              Swal.close();
-              resolve(this.vigencias);
-            }
-          },
-          error: (error) => {
-            Swal.fire({
-              title: 'Error en la operación',
-              text: `No se encontraron datos registrados ${JSON.stringify(
-                error
-              )}`,
-              icon: 'warning',
-              showConfirmButton: false,
-              timer: 2500,
-            });
-            reject(error);
-          },
-        });
-    });
-  }
-
-  async validarUnidad() {
     await new Promise((resolve) => {
       this.userService.user$.subscribe((data: any) => {
         this.request
@@ -224,11 +198,9 @@ export class ListComponent implements OnInit, AfterViewInit {
 
                       this.unidades.push(unidad);
                       this.auxUnidades.push(unidad);
-                      const controlUnidad = this.formSelect.get('selectUnidad');
-                      if (controlUnidad !== null) {
-                        controlUnidad.setValue(unidad);
-                      }
+                      this.formSelect.get('selectUnidad')!.setValue(unidad);
                       this.onChangeU(unidad);
+                      Swal.close();
                       resolve(unidad);
                     }
                   });
@@ -238,183 +210,155 @@ export class ListComponent implements OnInit, AfterViewInit {
     });
   }
 
-  async cargarPlan(planACargar: Plan) {
-    await this.onChangeV(
-      this.obtenerElemento(
-        this.vigencias,
-        'Id',
-        this.formFechas,
-        'selectVigencia',
-        Number(planACargar.vigencia_id)
-      )
-    );
-    await this.onChangeP(
-      this.obtenerElemento(
-        this.auxPlanes,
-        'nombre',
-        this.formPlanes,
-        'selectPlan',
-        planACargar.nombre
-      )
-    );
-    this.dataSource.filter = planACargar.nombre;
-    this.dataSource.filterPredicate = (plan, _) => {
-      return (
-        plan['nombre'] === planACargar.nombre &&
-        planACargar.dependencia_id === plan['dependencia_id']
-      );
-    };
+  gestion() {
+    window.location.href = '#/pages/seguimiento/gestion-seguimiento';
   }
 
-  async onChangeV(vigencia: any) {
-    this.limpiarCampoFechas();
-    this.vigencia = vigencia;
-    this.dataSource.data = this.planes;
-    this.dataSource.filter = ''; // Quita los filtros de la tabla
-    this.auxPlanes = [];
-    this.plan = undefined;
-    if (
-      !(
-        this.vigencia == undefined ||
-        (this.plan == undefined && this.vigencia == undefined)
-      )
-    ) {
-      if (this.rol != undefined && this.rol == 'PLANEACION') {
-        await this.loadPlanes('vigencia');
-      } else {
-        await this.loadPlanes('unidad');
-      }
+  applyFilter(event: Event) {
+    const filterValue = (event.target as HTMLInputElement).value;
+    this.dataSource.filter = filterValue.trim().toLowerCase();
+
+    if (this.dataSource.paginator) {
+      this.dataSource.paginator.firstPage();
     }
   }
-  limpiarCampoFechas() {
-    for (let index = 1; index < 7; index++) {
-      this.formFechas.get(`fecha${index}`)!.setValue(null);
-    }
-  }
-  async loadPlanes(tipo: string) {
+
+  async loadUnidades() {
     Swal.fire({
-      title: 'Cargando información',
+      title: 'Cargando unidades',
       timerProgressBar: true,
       showConfirmButton: false,
+      allowEscapeKey: false,
+      allowOutsideClick: false,
       willOpen: () => {
         Swal.showLoading();
       },
     });
-
-    this.auxEstadosPlanes = [];
-
-    if (tipo == 'unidad') {
-      await new Promise((resolve, reject) => {
-        this.request
-          .get(
-            environment.PLANES_CRUD,
-            `plan?query=activo:true,estado_plan_id:6153355601c7a2365b2fb2a1,vigencia:${this.vigencia.Id},dependencia_id:${this.unidad.Id}`
-          )
-          .subscribe({
-            next: async (data: any) => {
-              if (data?.Data.length != 0) {
-                data.Data.sort(function (a: any, b: any) {
-                  return b.vigencia - a.vigencia;
-                });
-                this.planes = data.Data;
-                await this.getEstados();
-                await this.getVigencias();
-                this.dataSource.data = this.planes;
-                this.allPlanes = this.dataSource.data;
-                await this.loadFechas();
-                this.OnPageChange({ length: 0, pageIndex: 0, pageSize: 5 });
-                Swal.close();
-                resolve(true);
-              } else {
-                this.unidadSelected = false;
-                this.dataSource.data = this.planes;
-                this.vigencia = undefined;
-                this.limpiarCampoFechas();
-                Swal.fire({
-                  title: 'No se encontraron planes',
-                  icon: 'error',
-                  text: `No se encontraron planes para realizar el seguimiento`,
-                  showConfirmButton: false,
-                  timer: 3500,
-                });
-                Swal.close();
-                reject(false);
-              }
-            },
-            error: (error) => {
+    await new Promise((resolve, reject) => {
+      this.request
+        .get(environment.PLANES_MID, `formulacion/get_unidades`)
+        .subscribe({
+          next: (data: DataRequest) => {
+            if (data) {
+              this.unidades = data.Data;
+              this.auxUnidades = data.Data;
               Swal.close();
-              Swal.fire({
-                title: 'Error en la operación',
-                text: 'No se encontraron datos registrados',
-                icon: 'warning',
-                showConfirmButton: false,
-                timer: 2500,
-              });
-              reject(error);
-            },
-          });
-      });
-    } else if (tipo == 'vigencia') {
-      await new Promise((resolve, reject) => {
-        this.request
-          .get(
-            environment.PLANES_CRUD,
-            `plan?query=activo:true,estado_plan_id:6153355601c7a2365b2fb2a1,vigencia:${this.vigencia.Id}`
-          )
-          .subscribe({
-            next: async (data: any) => {
-              if (data) {
-                if (data.Data.length != 0) {
-                  data.Data.sort(function (a: any, b: any) {
-                    return b.vigencia - a.vigencia;
-                  });
-                  this.planes = data.Data;
-                  this.planes.forEach((plan) => {
-                    let bandera = true;
-                    this.auxPlanes.forEach((auxplan) => {
-                      if (auxplan.nombre == plan.nombre) {
-                        bandera = false;
-                      }
-                    });
-                    if (bandera) {
-                      this.auxPlanes.push(plan);
-                    }
-                  });
-                  await this.loadFechas();
-                  this.dataSource.data = this.planes;
-                  this.allPlanes = this.dataSource.data;
-                  this.OnPageChange({ length: 0, pageIndex: 0, pageSize: 5 });
-                  Swal.close();
-                  resolve(true);
-                } else {
-                  this.unidadSelected = false;
-                  Swal.close();
-                  Swal.fire({
-                    title: 'No se encontraron planes',
-                    icon: 'error',
-                    text: `No se encontraron planes para realizar el seguimiento`,
-                    showConfirmButton: false,
-                    timer: 2500,
-                  });
-                  reject();
-                }
-              }
-            },
-            error: (error) => {
-              Swal.close();
-              Swal.fire({
-                title: 'Error en la operación',
-                text: 'No se encontraron datos registrados',
-                icon: 'warning',
-                showConfirmButton: false,
-                timer: 2500,
-              });
-              reject(error);
-            },
-          });
-      });
+              resolve(this.unidades);
+            }
+          },
+          error: (error) => {
+            Swal.fire({
+              title: 'Error en la operación',
+              text: `No se encontraron datos registrados ${JSON.stringify(
+                error
+              )}`,
+              icon: 'warning',
+              showConfirmButton: false,
+              timer: 2500,
+            });
+            reject(error);
+          },
+        });
+    });
+  }
+
+  onKey({ value }: any) {
+    if (value === '') {
+      this.auxUnidades = this.unidades;
+    } else {
+      this.auxUnidades = this.search(value);
     }
   }
+
+  onKeyP(value: string) {
+    if (value === '') {
+      this.auxPlanes = this.planes;
+    } else {
+      this.auxPlanes = this.searchP(value);
+    }
+  }
+
+  search(value: string) {
+    let filter = value.toLowerCase();
+    if (this.unidades != undefined) {
+      return this.unidades.filter((option) =>
+        option.Nombre.toLowerCase().startsWith(filter)
+      );
+    } else {
+      return [];
+    }
+  }
+
+  searchP(value: string) {
+    let filtro = value.toLowerCase();
+    if (this.planes != undefined) {
+      return this.planes.filter((plan) =>
+        plan.nombre.toLowerCase().includes(filtro)
+      );
+    } else {
+      return [];
+    }
+  }
+
+  searchPlanById(value: string) {
+    let filtro = value.toLowerCase();
+    if (this.planes != undefined) {
+      return this.planes.filter((plan) =>
+        plan._id.toLowerCase().includes(filtro)
+      );
+    } else {
+      return [];
+    }
+  }
+
+  filterPlanes(data: any[]) {
+    var dataAux = data.filter(
+      (e) => e.tipo_plan_id != '611af8464a34b3599e3799a2'
+    );
+    return dataAux.filter((e) => e.activo == true);
+  }
+
+  async loadPeriodos() {
+    Swal.fire({
+      title: 'Cargando períodos',
+      timerProgressBar: true,
+      showConfirmButton: false,
+      allowEscapeKey: false,
+      allowOutsideClick: false,
+      willOpen: () => {
+        Swal.showLoading();
+      },
+    });
+    await new Promise((resolve, reject) => {
+      this.request
+        .get(
+          environment.PARAMETROS_SERVICE,
+          `periodo?query=CodigoAbreviacion:VG,activo:true`
+        )
+        .subscribe({
+          next: (data: DataRequest) => {
+            if (data) {
+              this.vigencias = data.Data;
+              resolve(this.vigencias);
+            }
+            Swal.close();
+          },
+          error: (error) => {
+            Swal.fire({
+              title: 'Error en la operación',
+              text: `No se encontraron datos registrados ${JSON.stringify(
+                error
+              )}`,
+              icon: 'warning',
+              showConfirmButton: false,
+              timer: 2500,
+            });
+            reject(error);
+          },
+        });
+    });
+  }
+
   async loadFechas() {
     if (this.vigencia) {
       Swal.fire({
@@ -429,10 +373,10 @@ export class ListComponent implements OnInit, AfterViewInit {
         this.request
           .get(
             environment.PLANES_MID,
-            `seguimiento/get_periodos/` + this.vigencia.Id
+            `seguimiento/get_periodos/${this.vigencia.Id}`
           )
           .subscribe({
-            next: async (data: any) => {
+            next: async (data: DataRequest) => {
               if (data) {
                 if (data.Data != '' && data.Data != null) {
                   let periodos = data.Data;
@@ -500,15 +444,10 @@ export class ListComponent implements OnInit, AfterViewInit {
                                     0 &&
                                   Object.keys(this.trimestres[3]).length !== 0
                                 ) {
-                                  let datos = this.allPlanes.filter(
-                                    (plan) =>
-                                      plan.vigencia == this.vigencia.Nombre
-                                  );
-
-                                  this.dataSource.data = datos;
                                   if (
                                     (this.rol != undefined &&
-                                      this.rol == 'JEFE_DEPENDENCIA') ||
+                                      this.rol == 'PLANEACION') ||
+                                    this.rol == 'JEFE_DEPENDENCIA' ||
                                     this.rol == 'JEFE_UNIDAD_PLANEACION'
                                   ) {
                                     await this.evaluarFechasPlan();
@@ -587,32 +526,125 @@ export class ListComponent implements OnInit, AfterViewInit {
       this.limpiarCampoFechas();
     }
   }
-  searchP(value: string): any[] {
-    let filtro = value.toLowerCase();
-    if (this.planes != undefined) {
-      return this.planes.filter((plan) =>
-        plan.nombre.toLowerCase().includes(filtro)
+
+  async evaluarFechasPlan() {
+    Swal.fire({
+      title: 'Evaluando fechas',
+      text: '',
+      timerProgressBar: true,
+      showConfirmButton: false,
+      willOpen: () => {
+        Swal.showLoading();
+      },
+    });
+
+    this.auxEstadosSeguimientos = [];
+
+    for (let index = 0; index < this.dataSource.data.length; index++) {
+      if (this.rol != undefined && this.rol == 'PLANEACION') {
+        Swal.update({
+          text: `${index + 1} de ${this.dataSource.data.length}`,
+        });
+        Swal.showLoading();
+      }
+      const plan = this.dataSource.data[index];
+      this.trimestres.map(
+        async (trimestre: Trimestre, posicionTrimestre: number) => {
+          await new Promise(async (resolve, reject) => {
+            this.request
+              .get(
+                environment.PLANES_CRUD,
+                `seguimiento?query=activo:true,tipo_seguimiento_id:61f236f525e40c582a0840d0,plan_id:` +
+                  plan._id +
+                  `,periodo_seguimiento_id:` +
+                  trimestre.id
+              )
+              .subscribe(async (data: DataRequest) => {
+                if (data.Data.length != 0) {
+                  let estadoTemp;
+                  if (
+                    this.auxEstadosSeguimientos.some(
+                      (estado) =>
+                        estado.id == data.Data[0].estado_seguimiento_id
+                    ) &&
+                    this.auxEstadosSeguimientos.length > 0
+                  ) {
+                    estadoTemp = this.auxEstadosSeguimientos.find(
+                      (estado) =>
+                        estado.id == data.Data[0].estado_seguimiento_id
+                    ).nombre;
+                  } else {
+                    await new Promise((resolve, reject) => {
+                      this.request
+                        .get(
+                          environment.PLANES_CRUD,
+                          `estado-seguimiento/` +
+                            data.Data[0].estado_seguimiento_id
+                        )
+                        .subscribe((estado: DataRequest) => {
+                          if (estado && estado.Data != null) {
+                            estadoTemp = estado.Data.nombre;
+                            this.auxEstadosSeguimientos.push({
+                              id: estado.Data._id,
+                              nombre: estado.Data.nombre,
+                            });
+                            resolve(true);
+                          } else {
+                            Swal.fire({
+                              title: 'Error en la operación',
+                              text: `No se encontraron datos de estado`,
+                              icon: 'warning',
+                              showConfirmButton: false,
+                              timer: 2500,
+                            });
+                            reject(false);
+                          }
+                        });
+                    });
+                  }
+
+                  let auxFecha = new Date();
+                  let auxFechaCol = auxFecha.toLocaleString('en-US', {
+                    timeZone: 'America/Mexico_City',
+                  });
+                  let strFechaHoy = new Date(auxFechaCol).toISOString();
+                  let fechaHoy = new Date(strFechaHoy);
+
+                  if (estadoTemp == 'Reporte Avalado') {
+                    this.dataSource.data[index][
+                      `t${posicionTrimestre + 1}class`
+                    ] = 'verde';
+                    this.dataSource.data[index]['estado'] = estadoTemp;
+                  } else if (
+                    fechaHoy >=
+                      this.trimestres[posicionTrimestre].fecha_inicio &&
+                    fechaHoy <= this.trimestres[posicionTrimestre].fecha_fin
+                  ) {
+                    this.dataSource.data[index][
+                      `t${posicionTrimestre + 1}class`
+                    ] = 'amarillo';
+                    this.dataSource.data[index]['estado'] = estadoTemp;
+                  } else {
+                    this.dataSource.data[index][
+                      `t${posicionTrimestre + 1}class`
+                    ] = 'gris';
+                  }
+                  this.dataSource.data[index][
+                    `t${posicionTrimestre + 1}estado`
+                  ] = estadoTemp;
+                  this.allPlanes = this.dataSource.data;
+                  resolve(true);
+                } else {
+                  reject();
+                }
+              });
+          });
+        }
       );
     }
-    return [];
+    Swal.close();
   }
-  async onChangeP(plan: any) {
-    this.plan = plan;
-    if (plan == undefined) {
-      this.dataSource.data = [];
-    } else {
-      this.dataSource.data = this.searchP(plan.nombre);
-      if (this.rol != undefined && this.rol == 'PLANEACION') {
-        await this.getUnidades();
-        await this.getEstados();
-        await this.getVigencias();
-        await this.evaluarFechasPlan();
-      }
-    }
-    this.allPlanes = this.dataSource.data;
-    this.dataSource.filter = '';
-    this.OnPageChange({ length: 0, pageIndex: 0, pageSize: 5 });
-  }
+
   onChangeU(unidad: any) {
     this.dataSource.data = [];
     if (unidad == undefined) {
@@ -623,6 +655,183 @@ export class ListComponent implements OnInit, AfterViewInit {
     }
     this.allPlanes = this.dataSource.data;
   }
+
+  async onChangeP(plan: any) {
+    this.plan = plan;
+    if (
+      plan == undefined ||
+      (plan == undefined && this.vigencia == undefined)
+    ) {
+      this.dataSource.data = this.planes;
+    } else {
+      this.planesMostrar = this.searchPlanById(plan._id);
+      this.dataSource = new MatTableDataSource(this.planesMostrar);
+      if (this.rol != undefined && this.rol == 'PLANEACION') {
+        await this.getUnidades();
+        await this.getEstados();
+        await this.getVigencias();
+        // await this.evaluarFechasPlan();
+      }
+      await this.loadFechas();
+    }
+    this.allPlanes = this.dataSource.data;
+    this.dataSource.filter = '';
+    this.OnPageChange({ length: 0, pageIndex: 0, pageSize: 5 });
+  }
+
+  async onChangeV(vigencia: any) {
+    this.limpiarCampoFechas();
+    this.vigencia = vigencia;
+    this.dataSource.data = this.planes;
+    this.dataSource.filter = ''; // Quita los filtros de la tabla
+    this.auxPlanes = [];
+    this.plan = undefined;
+    if (
+      !(
+        this.vigencia == undefined ||
+        (this.plan == undefined && this.vigencia == undefined)
+      )
+    ) {
+      if (this.rol != undefined && this.rol == 'PLANEACION') {
+        await this.loadPlanes('vigencia');
+      } else {
+        await this.loadPlanes('unidad');
+      }
+    }
+  }
+
+  async loadPlanes(tipo: string) {
+    Swal.fire({
+      title: 'Cargando información',
+      timerProgressBar: true,
+      showConfirmButton: false,
+      willOpen: () => {
+        Swal.showLoading();
+      },
+    });
+
+    this.auxEstadosPlanes = [];
+
+    if (tipo == 'unidad') {
+      return await new Promise((resolve, reject) => {
+        this.request
+          .get(
+            environment.PLANES_CRUD,
+            `plan?query=activo:true,estado_plan_id:6153355601c7a2365b2fb2a1,vigencia:${this.vigencia.Id},dependencia_id:${this.unidad.Id}`
+          )
+          .subscribe({
+            next: async (data: DataRequest) => {
+              if (data?.Data.length != 0) {
+                data.Data.sort(function (
+                  a: { vigencia: number },
+                  b: { vigencia: number }
+                ) {
+                  return b.vigencia - a.vigencia;
+                });
+                this.planes = data.Data;
+                this.auxPlanes = this.planes;
+                await this.getEstados();
+                await this.getVigencias();
+                this.dataSource.data = [];
+                this.allPlanes = this.dataSource.data;
+                this.OnPageChange({ length: 0, pageIndex: 0, pageSize: 5 });
+                Swal.close();
+                resolve(true);
+              } else {
+                this.unidadSelected = false;
+                this.dataSource.data = this.planes;
+                this.vigencia = undefined;
+                this.limpiarCampoFechas();
+                Swal.fire({
+                  title: 'No se encontraron planes',
+                  icon: 'error',
+                  text: `No se encontraron planes para realizar seguimiento`,
+                  showConfirmButton: false,
+                  timer: 3500,
+                });
+                Swal.close();
+                reject(false);
+              }
+            },
+            error: (error) => {
+              Swal.close();
+              Swal.fire({
+                title: 'Error en la operación',
+                text: 'No se encontraron datos registrados',
+                icon: 'warning',
+                showConfirmButton: false,
+                timer: 2500,
+              });
+              reject(error);
+            },
+          });
+      });
+    } else if (tipo == 'vigencia') {
+      return await new Promise((resolve, reject) => {
+        this.request
+          .get(
+            environment.PLANES_CRUD,
+            `plan?query=activo:true,estado_plan_id:6153355601c7a2365b2fb2a1,vigencia:${this.vigencia.Id},dependencia_id:${this.unidad.Id}`
+          )
+          .subscribe({
+            next: async (data: DataRequest) => {
+              if (data) {
+                if (data.Data.length != 0) {
+                  data.Data.sort(function (
+                    a: { vigencia: number },
+                    b: { vigencia: number }
+                  ) {
+                    return b.vigencia - a.vigencia;
+                  });
+                  this.planes = data.Data;
+                  this.planes.forEach((plan) => {
+                    let bandera = true;
+                    this.auxPlanes.forEach((auxplan) => {
+                      if (auxplan.nombre == plan.nombre) {
+                        bandera = false;
+                      }
+                    });
+                    if (bandera) {
+                      this.auxPlanes.push(plan);
+                    }
+                  });
+                  // await this.loadFechas();
+                  this.dataSource.data = this.planes;
+                  this.allPlanes = this.dataSource.data;
+                  this.OnPageChange({ length: 0, pageIndex: 0, pageSize: 5 });
+                  Swal.close();
+                  resolve(true);
+                } else {
+                  this.unidadSelected = false;
+                  Swal.close();
+                  Swal.fire({
+                    title: 'No se encontraron planes',
+                    icon: 'error',
+                    text: `No se encontraron planes para realizar el seguimiento`,
+                    showConfirmButton: false,
+                    timer: 2500,
+                  });
+                  reject();
+                }
+              }
+            },
+            error: (error) => {
+              Swal.close();
+              Swal.fire({
+                title: 'Error en la operación',
+                text: 'No se encontraron datos registrados',
+                icon: 'warning',
+                showConfirmButton: false,
+                timer: 2500,
+              });
+              reject(error);
+            },
+          });
+      });
+    }
+    return;
+  }
+
   async getUnidades() {
     return await new Promise((resolve, reject) => {
       for (let i = 0; i < this.planes.length; i++) {
@@ -670,7 +879,7 @@ export class ListComponent implements OnInit, AfterViewInit {
               `estado-plan?query=_id:` + this.planes[i].estado_plan_id
             )
             .subscribe({
-              next: (data: any) => {
+              next: (data: DataRequest) => {
                 if (data) {
                   let estado: any = data.Data[0];
                   this.auxEstadosPlanes[
@@ -711,7 +920,7 @@ export class ListComponent implements OnInit, AfterViewInit {
           `periodo?query=Id:` + this.planes[0].vigencia
         )
         .subscribe({
-          next: (data: any) => {
+          next: (data: DataRequest) => {
             if (data) {
               let vigencia: any = data.Data[0];
               for (let index = 0; index < this.planes.length; index++) {
@@ -733,130 +942,183 @@ export class ListComponent implements OnInit, AfterViewInit {
         });
     });
   }
-  onKeyP(value: string) {
-    if (value === '') {
-      this.auxPlanes = this.planes;
-    } else {
-      this.auxPlanes = this.searchP(value);
-    }
-  }
-  async evaluarFechasPlan() {
+
+  async getPeriodos() {
     Swal.fire({
-      title: 'Evaluando fechas',
-      text: '',
+      title: 'Cargando información',
       timerProgressBar: true,
       showConfirmButton: false,
       willOpen: () => {
         Swal.showLoading();
       },
     });
+    this.auxPeriodos = [];
 
-    this.auxEstadosSeguimientos = [];
+    for (let i = 0; i < this.planes.length; i++) {
+      this.request
+        .get(
+          environment.PLANES_CRUD,
+          `seguimiento?query=plan_id:` + this.planes[i]._id + `,activo:true`
+        )
+        .subscribe({
+          next: async (data: DataRequest) => {
+            if (data) {
+              if (data.Data.length != 0) {
+                let seguimiento: any = data.Data[data.Data.length - 1];
 
-    // for (let index = 0; index < this.dataSource.data.length; index++) {
-    //   const plan = this.dataSource.data[index];
-
-    //   for (
-    //     let posicionTrimestre = 0;
-    //     posicionTrimestre < this.trimestres.length;
-    //     posicionTrimestre++
-    //   ) {
-    //     const trimestre = this.trimestres[posicionTrimestre];
-    this.dataSource.data.map(async (plan: any, index) => {
-      this.trimestres.map(
-        async (trimestre: Trimestre, posicionTrimestre: number) => {
-          await new Promise(async (resolve, reject) => {
-            this.request
-              .get(
-                environment.PLANES_CRUD,
-                `seguimiento?query=activo:true,tipo_seguimiento_id:61f236f525e40c582a0840d0,plan_id:${plan._id},periodo_seguimiento_id:${trimestre.id}`
-              )
-              .subscribe(async (data: any) => {
-                if (data.Data.length != 0) {
-                  let estadoTemp;
-                  if (
-                    this.auxEstadosSeguimientos.length > 0 &&
-                    this.auxEstadosSeguimientos.some(
-                      (estado) =>
-                        estado.id == data.Data[0].estado_seguimiento_id
-                    )
-                  ) {
-                    estadoTemp = this.auxEstadosSeguimientos.find(
-                      (estado) =>
-                        estado.id == data.Data[0].estado_seguimiento_id
-                    ).nombre;
-                  } else {
-                    await new Promise((resolve, reject) => {
-                      this.request
-                        .get(
-                          environment.PLANES_CRUD,
-                          `estado-seguimiento/` +
-                            data.Data[0].estado_seguimiento_id
-                        )
-                        .subscribe((estado: any) => {
-                          if (estado && estado.Data != null) {
-                            estadoTemp = estado.Data.nombre;
-                            this.auxEstadosSeguimientos.push({
-                              id: estado.Data._id,
-                              nombre: estado.Data.nombre,
-                            });
-                            resolve(true);
-                          } else {
-                            Swal.fire({
-                              title: 'Error en la operación',
-                              text: `No se encontraron datos de estado`,
-                              icon: 'warning',
-                              showConfirmButton: false,
-                              timer: 2500,
-                            });
-                            reject(false);
-                          }
-                        });
-                    });
-                  }
-
-                  let auxFecha = new Date();
-                  let auxFechaCol = auxFecha.toLocaleString('en-US', {
-                    timeZone: 'America/Mexico_City',
+                if (
+                  this.auxPeriodos.some(
+                    (periodo) =>
+                      periodo.id != seguimiento.periodo_seguimiento_id
+                  ) ||
+                  this.auxPeriodos.length == 0
+                ) {
+                  this.auxPeriodos.push({
+                    id: seguimiento.periodo_seguimiento_id,
                   });
-                  let strFechaHoy = new Date(auxFechaCol).toISOString();
-                  let fechaHoy = new Date(strFechaHoy);
 
-                  if (estadoTemp == 'Reporte Avalado') {
-                    this.dataSource.data[index][
-                      `t${posicionTrimestre + 1}class`
-                    ] = 'verde';
-                    this.dataSource.data[index]['estado'] = estadoTemp;
-                  } else if (
-                    fechaHoy >= trimestre['fecha_inicio'] &&
-                    fechaHoy <= trimestre['fecha_fin']
-                  ) {
-                    this.dataSource.data[index][
-                      `t${posicionTrimestre + 1}class`
-                    ] = 'amarillo';
-                    this.dataSource.data[index]['estado'] = estadoTemp;
-                  } else {
-                    this.dataSource.data[index][
-                      `t${posicionTrimestre + 1}class`
-                    ] = 'gris';
-                  }
-                  this.dataSource.data[index][
-                    `t${posicionTrimestre + 1}estado`
-                  ] = estadoTemp;
-                  this.allPlanes = this.dataSource.data;
-                  resolve(true);
+                  await new Promise((resolve, reject) => {
+                    this.request
+                      .get(
+                        environment.PLANES_CRUD,
+                        `periodo-seguimiento/` +
+                          seguimiento.periodo_seguimiento_id
+                      )
+                      .subscribe({
+                        next: (data: DataRequest) => {
+                          if (data) {
+                            let auxTrimestre = data.Data;
+
+                            this.request
+                              .get(
+                                environment.PARAMETROS_SERVICE,
+                                `parametro_periodo?query=Id:` +
+                                  auxTrimestre.periodo_id
+                              )
+                              .subscribe({
+                                next: (data: DataRequest) => {
+                                  if (data) {
+                                    let aux = data.Data[0];
+                                    let parametroTemp = {
+                                      trimestre:
+                                        aux.ParametroId.CodigoAbreviacion,
+                                      nombre: aux.ParametroId.Nombre,
+                                      id: seguimiento.periodo_seguimiento_id,
+                                    };
+                                    this.auxPeriodos[
+                                      this.auxPeriodos.findIndex(
+                                        (periodoInt) =>
+                                          periodoInt.id == auxTrimestre._id
+                                      )
+                                    ].periodo = parametroTemp;
+                                    this.planes[i].periodo =
+                                      aux.ParametroId.Nombre;
+                                    this.periodoHabilitado = true;
+                                    resolve(true);
+                                  }
+                                },
+                                error: (error) => {
+                                  Swal.fire({
+                                    title: 'Error en la operación',
+                                    text: 'No se encontraron datos registrados',
+                                    icon: 'warning',
+                                    showConfirmButton: false,
+                                    timer: 2500,
+                                  });
+                                  reject(error);
+                                },
+                              });
+                          }
+                        },
+                        error: (error) => {
+                          Swal.fire({
+                            title: 'Error en la operación',
+                            text: 'No se encontraron datos registrados',
+                            icon: 'warning',
+                            showConfirmButton: false,
+                            timer: 2500,
+                          });
+                          reject(error);
+                        },
+                      });
+                  });
                 } else {
-                  reject();
+                  let parametroTemp = this.auxPeriodos.find(
+                    (periodo) =>
+                      periodo.id == seguimiento.periodo_seguimiento_id
+                  ).periodo;
+                  this.planes[i].periodo = parametroTemp.nombre;
+                  this.periodoHabilitado = true;
                 }
-              });
-          });
-          //   }
-          // }
-        }
-      );
-    });
+              } else {
+                this.periodoHabilitado = false;
+                this.planes[i].periodo = 'No disponible';
+              }
+              // resolve(true);
+            }
+          },
+          error: (error) => {
+            Swal.fire({
+              title: 'Error en la operación',
+              text: 'No se encontraron datos registrados',
+              icon: 'warning',
+              showConfirmButton: false,
+              timer: 2500,
+            });
+          },
+        });
+    }
     Swal.close();
   }
+
+  gestionSeguimiento(plan: any) {
+    if (plan.trimestre != undefined) {
+      this.router.navigate([
+        'pages/seguimiento/gestion-seguimiento/' +
+          plan._id +
+          '/' +
+          plan.trimestre,
+      ]);
+    } else {
+      Swal.fire({
+        title: 'Seleccione el trimestre',
+        text:
+          'Por favor seleccione el trimestre al cual desea hacer seguimiento del plan ' +
+          plan.nombre +
+          ' con vigencia ' +
+          plan.vigencia,
+        icon: 'warning',
+        showConfirmButton: false,
+        timer: 5000,
+      });
+    }
+  }
+
+  OnPageChange(event: PageEvent) {
+    let startIndex = event.pageIndex * event.pageSize;
+    let endIndex = startIndex + event.pageSize;
+    if (endIndex > this.allPlanes.length) {
+      endIndex = this.allPlanes.length;
+    }
+    this.dataSource.data = this.allPlanes.slice(startIndex, endIndex);
+    this.dataSource.data.length = this.allPlanes.length;
+  }
+
+  onTrimestreChange(trimestre: string, id: any) {
+    let index = this.dataSource.data.findIndex((row) => row._id == id);
+    if (this.vigencia) {
+      this.dataSource.data[index]['estado'] =
+        this.dataSource.data[index][`${trimestre.toLowerCase()}estado`];
+    }
+    this.dataSource.data[index]['trimestre'] = trimestre;
+  }
+
+  limpiarCampoFechas() {
+    for (let index = 1; index < 7; index++) {
+      this.formFechas.get(`fecha${index}`)!.setValue(null);
+    }
+  }
+
   /**
    * Obtiene el elemento filtrado por los valores dados y actualiza su campo respectivo
    * @param arreglo Lista de elementos en los cuales se va a buscar un elemento teniendo en cuenta un parametro de busqueda y el valor esperado
@@ -881,36 +1143,32 @@ export class ListComponent implements OnInit, AfterViewInit {
       return elementos[0];
     }
   }
-  OnPageChange(event: PageEvent) {
-    let startIndex = event.pageIndex * event.pageSize;
-    let endIndex = startIndex + event.pageSize;
-    if (endIndex > this.allPlanes.length) {
-      endIndex = this.allPlanes.length;
-    }
-    this.dataSource.data = this.allPlanes.slice(startIndex, endIndex);
-    this.dataSource.data.length = this.allPlanes.length;
-  }
-  onTrimestreChange(trimestre: string, id: any) {
-    let index = this.dataSource.data.findIndex((row) => row._id == id);
-    if (this.vigencia) {
-      this.dataSource.data[index]['estado'] =
-        this.dataSource.data[index][`${trimestre.toLowerCase()}estado`];
-    }
-    this.dataSource.data[index]['trimestre'] = trimestre;
-  }
-  gestionSeguimiento(plan: any) {
-    if (plan.trimestre != undefined) {
-      this.router.navigate([
-        'gestion-seguimiento/' + plan._id + '/' + plan.trimestre,
-      ]);
-    } else {
-      Swal.fire({
-        title: 'Seleccione el trimestre',
-        text: `Por favor seleccione el trimestre al cual desea hacer seguimiento del plan ${plan.nombre} con vigencia ${plan.vigencia}`,
-        icon: 'warning',
-        showConfirmButton: false,
-        timer: 5000,
-      });
-    }
+
+  async cargarPlan(planACargar: Plan) {
+    await this.onChangeV(
+      this.obtenerElemento(
+        this.vigencias,
+        'Id',
+        this.formFechas,
+        'selectVigencia',
+        Number(planACargar.vigencia_id)
+      )
+    );
+    await this.onChangeP(
+      this.obtenerElemento(
+        this.auxPlanes,
+        'nombre',
+        this.formPlanes,
+        'selectPlan',
+        planACargar.nombre
+      )
+    );
+    this.dataSource.filter = planACargar.nombre;
+    this.dataSource.filterPredicate = (plan, _) => {
+      return (
+        plan['nombre'] === planACargar.nombre &&
+        planACargar.dependencia_id === plan['dependencia_id']
+      );
+    };
   }
 }
