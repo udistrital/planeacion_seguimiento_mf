@@ -1,31 +1,32 @@
 import { Injectable } from '@angular/core'
-import { BehaviorSubject } from 'rxjs'
+import { environment } from 'src/environments/environment';
+import * as CryptoJS from 'crypto-js'
 
 @Injectable({
   providedIn: 'root'
 })
 
 export class VerificarFormulario {
-  private formData = new BehaviorSubject<any[]>([]);
-  formData$ = this.formData.asObservable();
+  getCookie(name: string): string | undefined {
+    const value = '; ' + document.cookie;
+    const parts = value.split('; ' + name + '=');
 
-  // Estado para regresar a la lista de planes pendientes en seguimiento
-  private estadoLista = new BehaviorSubject<boolean>(false);
-  estadoLista$ = this.estadoLista.asObservable();
-
-  setFormData(data: any, vigencia: any, unidad: any) {
-    const currentFormData = this.formData.getValue();
-    currentFormData.push(data)
-    currentFormData.push(vigencia)
-    currentFormData.push(unidad)
-    this.formData.next(currentFormData);
+    if (parts.length == 2) {
+      let encrypValue = parts.pop()?.split(';').shift()!;
+      return this.desencriptar(encrypValue, environment.SECRET_KEY)
+    }
+    return undefined
   }
 
-  cleanFormData() {
-    this.formData.next([]);
+  deleteCookie(name: string) {
+    const date = new Date();
+    // Set the expiration date in the past
+    date.setTime(date.getTime() - 1);
+    document.cookie = name + '=; expires=' + date.toUTCString() + '; path=/';
   }
 
-  setEstadoLista(estado: boolean) {
-    this.estadoLista.next(estado);
+  desencriptar(textoEncriptado: string, clave: string): string {
+    const bytes = CryptoJS.AES.decrypt(textoEncriptado, clave);
+    return bytes.toString(CryptoJS.enc.Utf8);
   }
 }
