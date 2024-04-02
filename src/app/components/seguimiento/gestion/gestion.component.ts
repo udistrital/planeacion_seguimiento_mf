@@ -34,6 +34,7 @@ export class GestionComponent implements OnInit {
   trimestres: any[] = [];
   allActividades: any[] = [];
   estado: string = '';
+  estadoLista: boolean = false;
 
   constructor(
     activatedRoute: ActivatedRoute,
@@ -63,6 +64,10 @@ export class GestionComponent implements OnInit {
 
   ngOnInit(): void {
     this.getRol();
+    const listaCookie = this.verificarFormulario.getCookie("estadoLista");
+    if (listaCookie != undefined) {
+      this.estadoLista = true;
+    }
   }
 
   ngAfterViewInit() {
@@ -78,6 +83,7 @@ export class GestionComponent implements OnInit {
 
   ngOnDestroy() {
     const listaCookie = this.verificarFormulario.getCookie("estadoLista");
+    this.estadoLista = false;
     if (listaCookie != undefined) {
       this.verificarFormulario.deleteCookie("estadoLista");
     }
@@ -105,8 +111,7 @@ export class GestionComponent implements OnInit {
   }
 
   backClicked() {
-    const listaCookie = this.verificarFormulario.getCookie("estadoLista");
-    if (listaCookie != undefined) {
+    if (this.estadoLista == true) {
       navigateToUrl('/pendientes/seguimiento');
     } else {
       this.router.navigate(['listar-plan-accion-anual/']);
