@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { PageEvent } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute, Router } from '@angular/router';
+import { navigateToUrl } from 'single-spa';
 import Indicador from 'src/app/models/indicador';
 import { ImplicitAutenticationService } from 'src/app/services/implicitAutentication.service';
 import { RequestManager } from 'src/app/services/requestManager.service';
@@ -105,8 +106,7 @@ export class GestionComponent implements OnInit {
   backClicked() {
     this.verificarFormulario.estadoLista$.subscribe((estadoLista: boolean) => {
       if (estadoLista === true) {
-        alert('Ojito!!!');
-        window.location.assign('pages/pendientes-seguimiento/');
+        navigateToUrl('/pages/pendientes-seguimiento/');
       } else {
         this.router.navigate(['listar-plan-accion-anual/']);
       }

@@ -174,22 +174,19 @@ export class ListComponent implements OnInit, AfterViewInit {
         this.request
           .get(
             environment.TERCEROS_SERVICE,
-            `datos_identificacion/?query=Numero:` +
-              data['userService']['documento']
+            `datos_identificacion/?query=Numero:${data['userService']['documento']}`
           )
           .subscribe((datosInfoTercero: any) => {
             this.request
               .get(
                 environment.PLANES_MID,
-                `formulacion/vinculacion_tercero/` +
-                  datosInfoTercero[0].TerceroId.Id
+                `formulacion/vinculacion_tercero/${datosInfoTercero[0].TerceroId.Id}`
               )
               .subscribe((vinculacion: any) => {
                 this.request
                   .get(
                     environment.OIKOS_SERVICE,
-                    `dependencia_tipo_dependencia?query=DependenciaId:` +
-                      vinculacion['Data']['DependenciaId']
+                    `dependencia_tipo_dependencia?query=DependenciaId:${vinculacion['Data']['DependenciaId']}`
                   )
                   .subscribe((dataUnidad: any) => {
                     if (dataUnidad) {
@@ -209,19 +206,6 @@ export class ListComponent implements OnInit, AfterViewInit {
           });
       });
     });
-  }
-
-  gestion() {
-    window.location.href = '#/pages/seguimiento/gestion-seguimiento';
-  }
-
-  applyFilter(event: Event) {
-    const filterValue = (event.target as HTMLInputElement).value;
-    this.dataSource.filter = filterValue.trim().toLowerCase();
-
-    if (this.dataSource.paginator) {
-      this.dataSource.paginator.firstPage();
-    }
   }
 
   async loadUnidades() {
@@ -310,13 +294,6 @@ export class ListComponent implements OnInit, AfterViewInit {
     } else {
       return [];
     }
-  }
-
-  filterPlanes(data: any[]) {
-    var dataAux = data.filter(
-      (e) => e.tipo_plan_id != this.codigosEstados.getIdTipoPlanProyecto()
-    );
-    return dataAux.filter((e) => e.activo == true);
   }
 
   async loadPeriodos() {
@@ -677,7 +654,7 @@ export class ListComponent implements OnInit, AfterViewInit {
     }
     this.allPlanes = this.dataSource.data;
     this.dataSource.filter = '';
-    this.OnPageChange({ length: 0, pageIndex: 0, pageSize: 5 });
+    this.onPageChange({ length: 0, pageIndex: 0, pageSize: 5 });
   }
 
   async onChangeV(vigencia: any) {
@@ -737,7 +714,7 @@ export class ListComponent implements OnInit, AfterViewInit {
                 await this.getVigencias();
                 this.dataSource.data = [];
                 this.allPlanes = this.dataSource.data;
-                this.OnPageChange({ length: 0, pageIndex: 0, pageSize: 5 });
+                this.onPageChange({ length: 0, pageIndex: 0, pageSize: 5 });
                 Swal.close();
                 resolve(true);
               } else {
@@ -803,7 +780,7 @@ export class ListComponent implements OnInit, AfterViewInit {
                   // await this.loadFechas();
                   this.dataSource.data = this.planes;
                   this.allPlanes = this.dataSource.data;
-                  this.OnPageChange({ length: 0, pageIndex: 0, pageSize: 5 });
+                  this.onPageChange({ length: 0, pageIndex: 0, pageSize: 5 });
                   Swal.close();
                   resolve(true);
                 } else {
@@ -948,134 +925,6 @@ export class ListComponent implements OnInit, AfterViewInit {
     });
   }
 
-  async getPeriodos() {
-    Swal.fire({
-      title: 'Cargando información',
-      timerProgressBar: true,
-      showConfirmButton: false,
-      willOpen: () => {
-        Swal.showLoading();
-      },
-    });
-    this.auxPeriodos = [];
-
-    for (let i = 0; i < this.planes.length; i++) {
-      this.request
-        .get(
-          environment.PLANES_CRUD,
-          `seguimiento?query=plan_id:` + this.planes[i]._id + `,activo:true`
-        )
-        .subscribe({
-          next: async (data: DataRequest) => {
-            if (data) {
-              if (data.Data.length != 0) {
-                let seguimiento: any = data.Data[data.Data.length - 1];
-
-                if (
-                  this.auxPeriodos.some(
-                    (periodo) =>
-                      periodo.id != seguimiento.periodo_seguimiento_id
-                  ) ||
-                  this.auxPeriodos.length == 0
-                ) {
-                  this.auxPeriodos.push({
-                    id: seguimiento.periodo_seguimiento_id,
-                  });
-
-                  await new Promise((resolve, reject) => {
-                    this.request
-                      .get(
-                        environment.PLANES_CRUD,
-                        `periodo-seguimiento/` +
-                          seguimiento.periodo_seguimiento_id
-                      )
-                      .subscribe({
-                        next: (data: DataRequest) => {
-                          if (data) {
-                            let auxTrimestre = data.Data;
-
-                            this.request
-                              .get(
-                                environment.PARAMETROS_SERVICE,
-                                `parametro_periodo?query=Id:` +
-                                  auxTrimestre.periodo_id
-                              )
-                              .subscribe({
-                                next: (data: DataRequest) => {
-                                  if (data) {
-                                    let aux = data.Data[0];
-                                    let parametroTemp = {
-                                      trimestre:
-                                        aux.ParametroId.CodigoAbreviacion,
-                                      nombre: aux.ParametroId.Nombre,
-                                      id: seguimiento.periodo_seguimiento_id,
-                                    };
-                                    this.auxPeriodos[
-                                      this.auxPeriodos.findIndex(
-                                        (periodoInt) =>
-                                          periodoInt.id == auxTrimestre._id
-                                      )
-                                    ].periodo = parametroTemp;
-                                    this.planes[i].periodo =
-                                      aux.ParametroId.Nombre;
-                                    this.periodoHabilitado = true;
-                                    resolve(true);
-                                  }
-                                },
-                                error: (error) => {
-                                  Swal.fire({
-                                    title: 'Error en la operación',
-                                    text: 'No se encontraron datos registrados',
-                                    icon: 'warning',
-                                    showConfirmButton: false,
-                                    timer: 2500,
-                                  });
-                                  reject(error);
-                                },
-                              });
-                          }
-                        },
-                        error: (error) => {
-                          Swal.fire({
-                            title: 'Error en la operación',
-                            text: 'No se encontraron datos registrados',
-                            icon: 'warning',
-                            showConfirmButton: false,
-                            timer: 2500,
-                          });
-                          reject(error);
-                        },
-                      });
-                  });
-                } else {
-                  let parametroTemp = this.auxPeriodos.find(
-                    (periodo) =>
-                      periodo.id == seguimiento.periodo_seguimiento_id
-                  ).periodo;
-                  this.planes[i].periodo = parametroTemp.nombre;
-                  this.periodoHabilitado = true;
-                }
-              } else {
-                this.periodoHabilitado = false;
-                this.planes[i].periodo = 'No disponible';
-              }
-              // resolve(true);
-            }
-          },
-          error: (error) => {
-            Swal.fire({
-              title: 'Error en la operación',
-              text: 'No se encontraron datos registrados',
-              icon: 'warning',
-              showConfirmButton: false,
-              timer: 2500,
-            });
-          },
-        });
-    }
-    Swal.close();
-  }
-
   gestionSeguimiento(plan: any) {
     if (plan.trimestre != undefined) {
       this.router.navigate([
@@ -1096,7 +945,7 @@ export class ListComponent implements OnInit, AfterViewInit {
     }
   }
 
-  OnPageChange(event: PageEvent) {
+  onPageChange(event: PageEvent) {
     let startIndex = event.pageIndex * event.pageSize;
     let endIndex = startIndex + event.pageSize;
     if (endIndex > this.allPlanes.length) {
