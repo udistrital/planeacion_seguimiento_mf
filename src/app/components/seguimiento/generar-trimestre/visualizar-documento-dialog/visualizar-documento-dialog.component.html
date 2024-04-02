@@ -1,0 +1,24 @@
+<div class="container-border">
+  <div class="contenedor">
+
+    <iframe [src]="file" height="750" [style.width]="banderaPUI ? '950px' : '800px'" style="grid-column: 1 / 3;"></iframe>
+
+    <div class="row mb-auto" style="width: 100%;" [style.display]="banderaPUI ? 'none' : 'block'">
+      <div>
+        <mat-label>Observación </mat-label>
+
+        <mat-form-field *ngIf="rol=='PLANEACION'" style="width: 100%;">
+          <textarea [disabled]="!data.editable" class="observacion" matInput [(ngModel)]="observacionText" rows="10"></textarea>
+        </mat-form-field>
+        <button mat-raised-button [disabled]="!data.editable" color="primary" *ngIf="rol=='PLANEACION'" (click)="guardar()">Guardar</button>
+
+        <textarea class="observacion" *ngIf="rol=='JEFE_DEPENDENCIA'" rows="10" disabled
+          style="width: 100%;">{{observacion}}</textarea>
+      </div>
+    </div>
+  </div>
+
+  <button mat-raised-button color="primary" (click)="cerrar()">
+    Cerrar
+  </button>
+</div>

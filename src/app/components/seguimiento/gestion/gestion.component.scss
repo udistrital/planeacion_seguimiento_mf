@@ -1,0 +1,131 @@
+@use "../../styles/global";
+
+.col2 {
+  background-color: var(--primary);
+  color: #f1f5f8;
+  border: 1px solid var(--primary);
+  padding: 1%;
+  border-radius: 5px;
+  width: fit-content;
+}
+
+.idColumna {
+  width: 20px;
+  padding: 10px !important;
+}
+
+.estadoColumna {
+  width: 100px;
+}
+
+.gestionColumna {
+  width: 35px;
+  padding: 10px;
+}
+
+.container-border {
+  border: 1px solid var(--primary);
+  padding: 1%;
+  border-radius: 15px;
+}
+
+.container-border h4 {
+  text-align: initial;
+  width: 20%;
+  border: 1px solid var(--primary);
+  background: #f1f5f8;
+  color: var(--primary);
+  font-size: 15px;
+  margin-top: -28px;
+  margin-bottom: 10px;
+  margin-left: 7px;
+  padding: 0.5%;
+  position: relative;
+  border-radius: 15px;
+  font-weight: normal;
+}
+
+input {
+  background: none;
+}
+.unidad,
+.plan {
+  border: solid 1px;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  outline: none;
+}
+
+.unidad {
+  width: 70%;
+}
+
+.plan {
+  width: 80%;
+}
+
+.contenedor {
+  padding: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.row1 {
+  grid-column: 1 / 3;
+  grid-row: 1;
+}
+
+.row2 {
+  grid-column: 1 / 3;
+  grid-row: 1.5;
+}
+
+.mdc-button__label {
+  color: white;
+}
+.background-button {
+  border-radius: 8px;
+  width: 29%;
+  height: 40px;
+  margin: 1%;
+}
+
+.container-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.state {
+  display: flex;
+  gap: 5px;
+  text-align: center;
+  border: 1px solid var(--primary);
+  padding: 1%;
+  border-radius: 5px;
+}
+
+.textGuide {
+  background-color: #ffff;
+  border: 1px solid var(--primary);
+  border-radius: 15px;
+  box-shadow: var(--primary) 3px 4px 0;
+  color: #0a0a0a;
+  display: inline-block;
+  font-size: 1.1em;
+  padding: 1%;
+  text-decoration: none;
+  margin-bottom: 1%;
+  width: 97%;
+}
+
+.avalada {
+  background-color: var(--success-main);
+}
+
+.conObservacion {
+  background-color: var(--warning-main);
+}

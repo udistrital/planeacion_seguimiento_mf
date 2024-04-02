@@ -1,0 +1,19 @@
+container-border {
+    border: 1px solid var(--primary);
+    padding: 1%;
+    border-radius: 15px 15px 15px 15px;
+}
+
+.contenedor {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-gap: 10px;
+    grid-auto-rows: minmax(100px, auto);
+}
+
+.mat-raised-button {
+    display: block !important;
+    margin-top: 20px;
+    margin-left: auto;
+    margin-right: auto;
+}
