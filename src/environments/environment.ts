@@ -44,7 +44,7 @@ export const environment = {
 
   //coneccion a notificaciones
   NOTIFICACION_MID_SERVICE: "http://pruebasapi.intranetoas.udistrital.edu.co:8527/v1/",
-  ARM_AWS_NOTIFICACIONES:"arn:aws:sns:us-east-1:699001025740:test-Cumplidos",
+  ARM_AWS_NOTIFICACIONES: "arn:aws:sns:us-east-1:699001025740:test-Cumplidos",
 
   TOKEN: {
     AUTORIZATION_URL: 'https://autenticacion.portaloas.udistrital.edu.co/oauth2/authorize',
@@ -56,4 +56,6 @@ export const environment = {
     SIGN_OUT_REDIRECT_URL: 'http://localhost:4200/',
     AUTENTICACION_MID: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/autenticacion_mid/v1/token/userRol',
   },
+
+  SECRET_KEY: 'MySecretKey',
 };

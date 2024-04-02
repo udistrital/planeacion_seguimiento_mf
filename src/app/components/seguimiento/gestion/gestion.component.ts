@@ -34,6 +34,7 @@ export class GestionComponent implements OnInit {
   trimestres: any[] = [];
   allActividades: any[] = [];
   estado: string = '';
+  estadoLista: boolean = false;
 
   constructor(
     activatedRoute: ActivatedRoute,
@@ -63,6 +64,10 @@ export class GestionComponent implements OnInit {
 
   ngOnInit(): void {
     this.getRol();
+    const listaCookie = this.verificarFormulario.getCookie("estadoLista");
+    if (listaCookie != undefined) {
+      this.estadoLista = true;
+    }
   }
 
   ngAfterViewInit() {
@@ -77,8 +82,10 @@ export class GestionComponent implements OnInit {
   }
 
   ngOnDestroy() {
-    if (this.verificarFormulario.estadoLista$) {
-      this.verificarFormulario.setEstadoLista(false);
+    const listaCookie = this.verificarFormulario.getCookie("estadoLista");
+    this.estadoLista = false;
+    if (listaCookie != undefined) {
+      this.verificarFormulario.deleteCookie("estadoLista");
     }
   }
 
@@ -104,13 +111,11 @@ export class GestionComponent implements OnInit {
   }
 
   backClicked() {
-    this.verificarFormulario.estadoLista$.subscribe((estadoLista: boolean) => {
-      if (estadoLista === true) {
-        navigateToUrl('/pages/pendientes-seguimiento/');
-      } else {
-        this.router.navigate(['listar-plan-accion-anual/']);
-      }
-    });
+    if (this.estadoLista == true) {
+      navigateToUrl('/pendientes/seguimiento');
+    } else {
+      this.router.navigate(['listar-plan-accion-anual/']);
+    }
   }
 
   applyFilter(event: Event) {
@@ -422,9 +427,9 @@ export class GestionComponent implements OnInit {
               .get(
                 environment.PLANES_CRUD,
                 `seguimiento?query=activo:true,plan_id:` +
-                  this.planId +
-                  `,periodo_seguimiento_id:` +
-                  this.trimestre.Id
+                this.planId +
+                `,periodo_seguimiento_id:` +
+                this.trimestre.Id
               )
               .subscribe(
                 (data: any) => {
@@ -445,11 +450,11 @@ export class GestionComponent implements OnInit {
                     if (fechaHoy >= fechaInicio && fechaHoy <= fechaFin) {
                       this.router.navigate([
                         'generar-trimestre/' +
-                          this.planId +
-                          '/' +
-                          row.index +
-                          '/' +
-                          this.trimestre.Id,
+                        this.planId +
+                        '/' +
+                        row.index +
+                        '/' +
+                        this.trimestre.Id,
                       ]);
                     } else {
                       Swal.fire({
