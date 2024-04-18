@@ -29,7 +29,7 @@ const routes: Routes = [
   exports: [RouterModule],
   providers: [
     provideRouter(routes),
-    { provide: APP_BASE_HREF, useValue: '/pages/seguimiento/' },
+    { provide: APP_BASE_HREF, useValue: '/seguimiento/' },
     getSingleSpaExtraProviders(),
     provideHttpClient(withFetch()),
   ],
