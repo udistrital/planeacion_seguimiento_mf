@@ -1,0 +1,124 @@
+@use "../../styles/global";
+
+.seguimiento {
+  max-width: 50px;
+  padding-right: 24px !important;
+}
+
+.columnaAngosta {
+  max-width: 180px;
+  padding-right: 0px;
+}
+
+.input-search {
+  width: 99%;
+  height: 30px;
+  border-radius: 5px;
+}
+input.unidad {
+  border: none;
+  font: inherit;
+  background: transparent;
+  color: currentColor;
+  border: none;
+  outline: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  max-width: 100%;
+  vertical-align: bottom;
+  text-align: inherit;
+  box-sizing: content-box;
+}
+
+.textGuide {
+  background-color: #ffff;
+  border: 1px solid var(--primary);
+  border-radius: 15px;
+  box-shadow: var(--primary) 3px 4px 0;
+  color: #0a0a0a;
+  display: inline-block;
+  font-size: 1.1em;
+  padding: 1%;
+  text-decoration: none;
+  margin-bottom: 1%;
+  width: 97%;
+  text-align: justify;
+}
+
+.flex {
+  display: flex;
+  vertical-align: middle;
+  align-content: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.sameRow {
+  border: 1px solid var(--primary);
+  padding: 1%;
+  font-size: 15px;
+  margin-top: 15px;
+  border-radius: 15px;
+  width: 100%;
+  h4 {
+    text-align: initial;
+    width: 20%;
+    border: 1px solid var(--primary);
+    background: #f1f5f8;
+    color: var(--primary);
+    font-size: 15px;
+    margin-top: -28px;
+    margin-left: 7px;
+    padding: 0.5%;
+    position: relative;
+    border-radius: 15px;
+    font-weight: normal;
+  }
+}
+
+.contenedor {
+  padding: 10px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+}
+
+.contenedorTrimestre {
+  display: flex;
+  margin: 0px 10px;
+}
+
+.gris {
+  background-color: #999 !important;
+  color: white !important;
+}
+
+.amarillo {
+  background-color: var(--warning-base) !important;
+  color: black !important;
+}
+
+.verde {
+  background-color: var(--success-base) !important;
+  color: white !important;
+}
+
+.mat-button-toggle-checked.amarillo {
+  background-color: var(--warning-accent) !important;
+  color: white;
+}
+
+.mat-button-toggle-checked.verde {
+  background-color: var(--success-accent) !important;
+  color: white;
+}
+
+.mat-button-toggle-checked.gris {
+  background-color: rgb(122, 122, 122) !important;
+  color: white;
+}
+
+.justificarColumna {
+  text-align: justify;
+}
