@@ -179,7 +179,7 @@ export class ListComponent implements OnInit, AfterViewInit {
           .subscribe((datosInfoTercero: any) => {
             this.request
               .get(
-                environment.PLANES_MID,
+                environment.FORMULACION_MID,
                 `formulacion/tercero/${datosInfoTercero[0].TerceroId.Id}`
               )
               .subscribe((vinculacion: any) => {
