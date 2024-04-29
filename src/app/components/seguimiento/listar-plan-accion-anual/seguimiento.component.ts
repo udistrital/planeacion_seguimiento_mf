@@ -180,11 +180,11 @@ export class ListComponent implements OnInit, AfterViewInit {
             this.request
               .get(
                 environment.PLANES_MID,
-                `formulacion/vinculacion_tercero/${datosInfoTercero[0].TerceroId.Id}`
+                `formulacion/tercero/${datosInfoTercero[0].TerceroId.Id}`
               )
               .subscribe((vinculacion: any) => {
-                for (let aux = 0; aux < vinculacion.Data.length; aux++) {
-                  this.request.get(environment.OIKOS_SERVICE, `dependencia_tipo_dependencia?query=DependenciaId:` + vinculacion.Data[aux]["DependenciaId"]).subscribe((dataUnidad: any) => {
+                for (let aux = 0; aux < vinculacion.data.length; aux++) {
+                  this.request.get(environment.OIKOS_SERVICE, `dependencia_tipo_dependencia?query=DependenciaId:` + vinculacion.data[aux]["DependenciaId"]).subscribe((dataUnidad: any) => {
                     if (dataUnidad) {
                       let unidad = dataUnidad[0]["DependenciaId"]
                       unidad["TipoDependencia"] = dataUnidad[0]["TipoDependenciaId"]["Id"]
@@ -216,12 +216,12 @@ export class ListComponent implements OnInit, AfterViewInit {
     });
     await new Promise((resolve, reject) => {
       this.request
-        .get(environment.PLANES_MID, `formulacion/get_unidades`)
+        .get(environment.FORMULACION_MID, `formulacion/unidades`)
         .subscribe({
-          next: (data: DataRequest) => {
+          next: (data: any) => {
             if (data) {
-              this.unidades = data.Data;
-              this.auxUnidades = data.Data;
+              this.unidades = data.data;
+              this.auxUnidades = data.data;
               Swal.close();
               resolve(this.unidades);
             }
