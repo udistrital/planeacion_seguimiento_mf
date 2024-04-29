@@ -179,29 +179,24 @@ export class ListComponent implements OnInit, AfterViewInit {
           .subscribe((datosInfoTercero: any) => {
             this.request
               .get(
-                environment.PLANES_MID,
-                `formulacion/vinculacion_tercero/${datosInfoTercero[0].TerceroId.Id}`
+                environment.FORMULACION_MID,
+                `formulacion/tercero/${datosInfoTercero[0].TerceroId.Id}`
               )
               .subscribe((vinculacion: any) => {
-                this.request
-                  .get(
-                    environment.OIKOS_SERVICE,
-                    `dependencia_tipo_dependencia?query=DependenciaId:${vinculacion['Data']['DependenciaId']}`
-                  )
-                  .subscribe((dataUnidad: any) => {
+                for (let aux = 0; aux < vinculacion.data.length; aux++) {
+                  this.request.get(environment.OIKOS_SERVICE, `dependencia_tipo_dependencia?query=DependenciaId:` + vinculacion.data[aux]["DependenciaId"]).subscribe((dataUnidad: any) => {
                     if (dataUnidad) {
-                      let unidad = dataUnidad[0]['DependenciaId'];
-                      unidad['TipoDependencia'] =
-                        dataUnidad[0]['TipoDependenciaId']['Id'];
-
+                      let unidad = dataUnidad[0]["DependenciaId"]
+                      unidad["TipoDependencia"] = dataUnidad[0]["TipoDependenciaId"]["Id"]
                       this.unidades.push(unidad);
                       this.auxUnidades.push(unidad);
                       this.formSelect.get('selectUnidad')!.setValue(unidad);
                       this.onChangeU(unidad);
-                      Swal.close();
-                      resolve(unidad);
                     }
-                  });
+                  })
+                }
+                Swal.close();
+                resolve("Operación Exitosa");
               });
           });
       });
@@ -221,12 +216,12 @@ export class ListComponent implements OnInit, AfterViewInit {
     });
     await new Promise((resolve, reject) => {
       this.request
-        .get(environment.PLANES_MID, `formulacion/get_unidades`)
+        .get(environment.FORMULACION_MID, `formulacion/unidades`)
         .subscribe({
-          next: (data: DataRequest) => {
+          next: (data: any) => {
             if (data) {
-              this.unidades = data.Data;
-              this.auxUnidades = data.Data;
+              this.unidades = data.data;
+              this.auxUnidades = data.data;
               Swal.close();
               resolve(this.unidades);
             }
@@ -338,6 +333,7 @@ export class ListComponent implements OnInit, AfterViewInit {
   }
 
   async loadFechas() {
+    this.limpiarCampoFechas();
     if (this.vigencia) {
       Swal.fire({
         title: 'Cargando períodos',
@@ -366,99 +362,201 @@ export class ListComponent implements OnInit, AfterViewInit {
                       {} as Trimestre,
                     ];
                     for (let i = 0; i < periodos.length; i++) {
-                      await new Promise((resolve, reject) => {
-                        this.request
-                          .get(
-                            environment.PLANES_CRUD,
-                            `periodo-seguimiento?query=tipo_seguimiento_id:${this.codigosEstados.getIdSeguimientoPlanAccion()},periodo_id:` +
-                              periodos[i].Id
-                          )
-                          .subscribe({
-                            next: async (data: any) => {
-                              if (data?.Data != '') {
-                                let seguimiento = data.Data[0];
+                      if (this.plan.nueva_estructura) {
+                        let plan = {
+                          _id: this.plan.formato_id,
+                          nombre: this.plan.nombre
+                        }
+                        let body = {
+                          periodo_id: periodos[i].Id,
+                          tipo_seguimiento_id: '61f236f525e40c582a0840d0',
+                          planes_interes: JSON.stringify([plan]),
+                          activo: true
+                        }
+                        await new Promise((resolve, reject) => {
+                          this.request
+                            .post(
+                              environment.PLANES_CRUD, `periodo-seguimiento/buscar-unidad-planes/7`, body
+                            )
+                            .subscribe({
+                              next: async (data: any) => {
+                                if (data) {
+                                  if (data?.Data != '') {
+                                    let seguimiento = data.Data[0];
 
-                                let fechaInicio = new Date(
-                                  seguimiento['fecha_inicio'].replace('Z', '')
-                                );
-                                let fechaFin = new Date(
-                                  seguimiento['fecha_fin'].replace('Z', '')
-                                );
+                                    let fechaInicio = new Date(
+                                      seguimiento['fecha_inicio'].replace('Z', '')
+                                    );
+                                    let fechaFin = new Date(
+                                      seguimiento['fecha_fin'].replace('Z', '')
+                                    );
 
-                                const fechaControlAux1 = this.formFechas.get(
-                                  `fecha${i * 2 + 1}`
-                                );
-                                const fechaControlAux2 = this.formFechas.get(
-                                  `fecha${i * 2 + 2}`
-                                );
-                                if (
-                                  fechaControlAux1 !== null &&
-                                  fechaControlAux1 !== undefined
-                                ) {
-                                  fechaControlAux1.setValue(
-                                    fechaInicio.toLocaleDateString()
-                                  );
-                                }
-                                if (
-                                  fechaControlAux2 !== null &&
-                                  fechaControlAux2 !== undefined
-                                ) {
-                                  fechaControlAux2.setValue(
-                                    fechaFin.toLocaleDateString()
-                                  );
-                                }
-                                this.trimestres[i] = {
-                                  id: seguimiento._id,
-                                  fecha_inicio: fechaInicio,
-                                  fecha_fin: fechaFin,
-                                };
+                                    const fechaControlAux1 = this.formFechas.get(
+                                      `fecha${i * 2 + 1}`
+                                    );
+                                    const fechaControlAux2 = this.formFechas.get(
+                                      `fecha${i * 2 + 2}`
+                                    );
+                                    if (fechaControlAux1 !== null && fechaControlAux1 !== undefined) {
+                                      fechaControlAux1.setValue(
+                                        fechaInicio.toLocaleDateString()
+                                      );
+                                    }
+                                    if (fechaControlAux2 !== null && fechaControlAux2 !== undefined) {
+                                      fechaControlAux2.setValue(
+                                        fechaFin.toLocaleDateString()
+                                      );
+                                    }
+                                    this.trimestres[i] = {
+                                      id: seguimiento._id,
+                                      fecha_inicio: fechaInicio,
+                                      fecha_fin: fechaFin,
+                                    };
 
-                                if (
-                                  Object.keys(this.trimestres[0]).length !==
-                                    0 &&
-                                  Object.keys(this.trimestres[1]).length !==
-                                    0 &&
-                                  Object.keys(this.trimestres[2]).length !==
-                                    0 &&
-                                  Object.keys(this.trimestres[3]).length !== 0
-                                ) {
-                                  if (
-                                    (this.rol != undefined &&
-                                      this.rol == 'PLANEACION') ||
-                                    this.rol == 'JEFE_DEPENDENCIA' ||
-                                    this.rol == 'JEFE_UNIDAD_PLANEACION'
-                                  ) {
-                                    await this.evaluarFechasPlan();
+                                    if (
+                                      Object.keys(this.trimestres[0]).length !== 0
+                                      &&
+                                      Object.keys(this.trimestres[1]).length !== 0
+                                      &&
+                                      Object.keys(this.trimestres[2]).length !== 0
+                                      &&
+                                      Object.keys(this.trimestres[3]).length !== 0
+                                    ) {
+                                      if (
+                                        (this.rol != undefined &&
+                                          this.rol == 'PLANEACION') ||
+                                        this.rol == 'JEFE_DEPENDENCIA' ||
+                                        this.rol == 'JEFE_UNIDAD_PLANEACION'
+                                      ) {
+                                        await this.evaluarFechasPlan();
+                                      }
+                                    }
+                                    resolve(true);
+                                  } else {
+                                    Swal.fire({
+                                      title: 'Error en la operación',
+                                      text: `No se encontraron datos registrados`,
+                                      icon: 'warning',
+                                      showConfirmButton: false,
+                                      timer: 2500,
+                                    });
+                                    this.limpiarCampoFechas();
+                                    reject();
                                   }
                                 }
-                                resolve(true);
-                              } else {
+                              },
+                              error: (error) => {
                                 Swal.fire({
                                   title: 'Error en la operación',
-                                  text: `No se encontraron datos registrados`,
+                                  text: `No se encontraron datos registrados ${JSON.stringify(
+                                    error
+                                  )}`,
                                   icon: 'warning',
                                   showConfirmButton: false,
                                   timer: 2500,
                                 });
                                 this.limpiarCampoFechas();
-                                reject();
-                              }
-                            },
-                            error: (error) => {
-                              Swal.fire({
-                                title: 'Error en la operación',
-                                text: `No se encontraron datos registrados ${JSON.stringify(
-                                  error
-                                )}`,
-                                icon: 'warning',
-                                showConfirmButton: false,
-                                timer: 2500,
-                              });
-                              this.limpiarCampoFechas();
-                              reject(error);
-                            },
-                          });
-                      });
+                                reject(error);
+                              },
+                            });
+                        });
+                      } else {
+                        await new Promise((resolve, reject) => {
+                          this.request
+                            .get(
+                              environment.PLANES_CRUD,
+                              `periodo-seguimiento?query=tipo_seguimiento_id:${this.codigosEstados.getIdSeguimientoPlanAccion()},periodo_id:` +
+                              periodos[i].Id
+                            )
+                            .subscribe({
+                              next: async (data: any) => {
+                                if (data) {
+                                  if (data?.Data != '') {
+                                    let seguimiento = data.Data[0];
+
+                                    let fechaInicio = new Date(
+                                      seguimiento['fecha_inicio'].replace('Z', '')
+                                    );
+                                    let fechaFin = new Date(
+                                      seguimiento['fecha_fin'].replace('Z', '')
+                                    );
+
+                                    const fechaControlAux1 = this.formFechas.get(
+                                      `fecha${i * 2 + 1}`
+                                    );
+                                    const fechaControlAux2 = this.formFechas.get(
+                                      `fecha${i * 2 + 2}`
+                                    );
+                                    if (
+                                      fechaControlAux1 !== null &&
+                                      fechaControlAux1 !== undefined
+                                    ) {
+                                      fechaControlAux1.setValue(
+                                        fechaInicio.toLocaleDateString()
+                                      );
+                                    }
+                                    if (
+                                      fechaControlAux2 !== null &&
+                                      fechaControlAux2 !== undefined
+                                    ) {
+                                      fechaControlAux2.setValue(
+                                        fechaFin.toLocaleDateString()
+                                      );
+                                    }
+                                    this.trimestres[i] = {
+                                      id: seguimiento._id,
+                                      fecha_inicio: fechaInicio,
+                                      fecha_fin: fechaFin,
+                                    };
+
+                                    if (
+                                      Object.keys(this.trimestres[0]).length !== 0
+                                      &&
+                                      Object.keys(this.trimestres[1]).length !== 0
+                                      &&
+                                      Object.keys(this.trimestres[2]).length !== 0
+                                      &&
+                                      Object.keys(this.trimestres[3]).length !== 0
+                                    ) {
+                                      if (
+                                        (this.rol != undefined &&
+                                          this.rol == 'PLANEACION') ||
+                                        this.rol == 'JEFE_DEPENDENCIA' ||
+                                        this.rol == 'JEFE_UNIDAD_PLANEACION'
+                                      ) {
+                                        await this.evaluarFechasPlan();
+                                      }
+                                    }
+                                    resolve(true);
+                                  } else {
+                                    Swal.fire({
+                                      title: 'Error en la operación',
+                                      text: `No se encontraron datos registrados`,
+                                      icon: 'warning',
+                                      showConfirmButton: false,
+                                      timer: 2500,
+                                    });
+                                    this.limpiarCampoFechas();
+                                    reject();
+                                  }
+                                }
+                              },
+                              error: (error) => {
+                                Swal.fire({
+                                  title: 'Error en la operación',
+                                  text: `No se encontraron datos registrados ${JSON.stringify(
+                                    error
+                                  )}`,
+                                  icon: 'warning',
+                                  showConfirmButton: false,
+                                  timer: 2500,
+                                });
+                                this.limpiarCampoFechas();
+                                reject(error);
+                              },
+                            });
+                        });
+                      }
                     }
                     Swal.close();
                     resolve(true);
@@ -533,9 +631,9 @@ export class ListComponent implements OnInit, AfterViewInit {
               .get(
                 environment.PLANES_CRUD,
                 `seguimiento?query=activo:true,tipo_seguimiento_id:${this.codigosEstados.getIdSeguimientoPlanAccion()},plan_id:` +
-                  plan._id +
-                  `,periodo_seguimiento_id:` +
-                  trimestre.id
+                plan._id +
+                `,periodo_seguimiento_id:` +
+                trimestre.id
               )
               .subscribe(async (data: DataRequest) => {
                 if (data.Data.length != 0) {
@@ -557,7 +655,7 @@ export class ListComponent implements OnInit, AfterViewInit {
                         .get(
                           environment.PLANES_CRUD,
                           `estado-seguimiento/` +
-                            data.Data[0].estado_seguimiento_id
+                          data.Data[0].estado_seguimiento_id
                         )
                         .subscribe((estado: DataRequest) => {
                           if (estado && estado.Data != null) {
@@ -595,7 +693,7 @@ export class ListComponent implements OnInit, AfterViewInit {
                     this.dataSource.data[index]['estado'] = estadoTemp;
                   } else if (
                     fechaHoy >=
-                      this.trimestres[posicionTrimestre].fecha_inicio &&
+                    this.trimestres[posicionTrimestre].fecha_inicio &&
                     fechaHoy <= this.trimestres[posicionTrimestre].fecha_fin
                   ) {
                     this.dataSource.data[index][
@@ -631,6 +729,13 @@ export class ListComponent implements OnInit, AfterViewInit {
     } else {
       this.unidadSelected = true;
       this.unidad = unidad;
+    }
+    if (!(this.vigencia == undefined || (this.plan == undefined && this.vigencia == undefined))) {
+      if (this.rol != undefined && this.rol == 'PLANEACION') {
+        this.loadPlanes("vigencia");
+      } else {
+        this.loadPlanes("unidad");
+      }
     }
   }
 
@@ -695,14 +800,13 @@ export class ListComponent implements OnInit, AfterViewInit {
         this.request
           .get(
             environment.PLANES_CRUD,
-            `plan?query=activo:true,estado_plan_id:${this.codigosEstados.getIdPlanEstadoAvalado()},vigencia:${
-              this.vigencia.Id
+            `plan?query=activo:true,estado_plan_id:${this.codigosEstados.getIdPlanEstadoAvalado()},vigencia:${this.vigencia.Id
             },dependencia_id:${this.unidad.Id}`
           )
           .subscribe({
             next: async (data: DataRequest) => {
               if (data?.Data.length != 0) {
-                data.Data.sort(function (
+                data.Data.sort(function(
                   a: { vigencia: number },
                   b: { vigencia: number }
                 ) {
@@ -751,15 +855,14 @@ export class ListComponent implements OnInit, AfterViewInit {
         this.request
           .get(
             environment.PLANES_CRUD,
-            `plan?query=activo:true,estado_plan_id:${this.codigosEstados.getIdPlanEstadoAvalado()},vigencia:${
-              this.vigencia.Id
+            `plan?query=activo:true,estado_plan_id:${this.codigosEstados.getIdPlanEstadoAvalado()},vigencia:${this.vigencia.Id
             },dependencia_id:${this.unidad.Id}`
           )
           .subscribe({
             next: async (data: DataRequest) => {
               if (data) {
                 if (data.Data.length != 0) {
-                  data.Data.sort(function (
+                  data.Data.sort(function(
                     a: { vigencia: number },
                     b: { vigencia: number }
                   ) {
@@ -899,7 +1002,7 @@ export class ListComponent implements OnInit, AfterViewInit {
       this.request
         .get(
           environment.PARAMETROS_SERVICE,
-          `periodo?query=Id:` + this.planes[0].vigencia
+          `periodo?query=Id:` + this.vigencia.Id.toString()
         )
         .subscribe({
           next: (data: DataRequest) => {
