@@ -163,7 +163,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
     this.mostrarObservaciones = false;
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void { }
 
   ngAfterViewInit() {
     Swal.fire({
@@ -273,7 +273,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
       } else if (
         this.estadoActividad === 'Actividad reportada' ||
         this.estadoActividad ===
-          'Con observaciones' /*|| this.estadoActividad === 'Actividad Verificada'*/
+        'Con observaciones' /*|| this.estadoActividad === 'Actividad Verificada'*/
       ) {
         this.readonlyFormulario = true;
         this.readonlyObservacion = !(
@@ -316,9 +316,9 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
   backClicked() {
     this.router.navigate([
       'gestion-seguimiento/' +
-        this.planId +
-        '/' +
-        this.codigoTrimestre,
+      this.planId +
+      '/' +
+      this.codigoTrimestre,
     ]);
   }
 
@@ -358,17 +358,17 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
           });
           this.request
             .put(
-              environment.PLANES_MID,
-              `seguimiento/guardar_documentos`,
+              environment.SEGUIMIENTO_MID,
+              `detalles/documento`,
               documentoPorSubir,
               this.planId + `/` + this.indexActividad + `/` + this.trimestreId
             )
             .subscribe(
               (data: any) => {
                 if (data) {
-                  this.documentos = data.Data.seguimiento;
+                  this.documentos = data.data.seguimiento;
                   this.seguimiento.evidencia = this.documentos;
-                  this.estadoActividad = data.Data.estadoActividad.nombre;
+                  this.estadoActividad = data.data.estadoActividad.nombre;
                   this.verificarFormulario();
                   Swal.fire({
                     title: 'Documento(s) actualizado(s)',
@@ -447,16 +447,16 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
 
           this.request
             .put(
-              environment.PLANES_MID,
-              `seguimiento/guardar_documentos`,
+              environment.SEGUIMIENTO_MID,
+              `detalles/documento`,
               documentoPorSubir,
               this.planId + `/` + this.indexActividad + `/` + this.trimestreId
             )
             .subscribe(
               (data: any) => {
                 if (data) {
-                  this.estadoActividad = data.Data.estadoActividad.nombre;
-                  this.documentos = data.Data.seguimiento;
+                  this.estadoActividad = data.data.estadoActividad.nombre;
+                  this.documentos = data.data.seguimiento;
                   this.seguimiento.evidencia = this.documentos;
                   this.verificarFormulario();
 
@@ -512,29 +512,29 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
     });
     await this.request
       .get(
-        environment.PLANES_MID,
-        `seguimiento/get_seguimiento/` +
-          this.planId +
-          `/` +
-          this.indexActividad +
-          `/` +
-          this.trimestreId
+        environment.SEGUIMIENTO_MID,
+        `seguimiento/` +
+        this.planId +
+        `/` +
+        this.indexActividad +
+        `/` +
+        this.trimestreId
       )
       .subscribe(
         async (data: any) => {
-          if (data.Data != '') {
-            this.seguimiento = data.Data;
+          if (data.data != '') {
+            this.seguimiento = data.data;
             this.unidad = this.seguimiento.informacion.unidad;
-            this.documentos = JSON.parse(JSON.stringify(data.Data.evidencia));
-            this.datosIndicadores = data.Data.cuantitativo.indicadores;
+            this.documentos = JSON.parse(JSON.stringify(data.data.evidencia));
+            this.datosIndicadores = data.data.cuantitativo.indicadores;
             this.datosResultados.data = JSON.parse(
-              JSON.stringify(data.Data.cuantitativo.resultados)
+              JSON.stringify(data.data.cuantitativo.resultados)
             );
 
             this.numeradorOriginal = [];
             this.denominadorOriginal = [];
             let resultados = JSON.parse(
-              JSON.stringify(data.Data.cuantitativo.indicadores)
+              JSON.stringify(data.data.cuantitativo.indicadores)
             );
             resultados.forEach((indicador: any) => {
               this.numeradorOriginal.push(
@@ -545,7 +545,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
               );
             });
 
-            this.datosCualitativo = data.Data.cualitativo;
+            this.datosCualitativo = data.data.cualitativo;
 
             this.estadoActividad = this.seguimiento.estado.nombre;
             this.estadoSeguimiento = this.seguimiento.estadoSeguimiento;
@@ -563,8 +563,8 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
               }
             }
 
-            this.trimestreAbr = data.Data.informacion.trimestre;
-            if (data.Data.informacion.trimestre != 'T1') {
+            this.trimestreAbr = data.data.informacion.trimestre;
+            if (data.data.informacion.trimestre != 'T1') {
               this.calcular = true;
 
               if (this.datosResultados.data[0].indicador != 0) {
@@ -641,8 +641,8 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
         if (result.isConfirmed) {
           this.request
             .put(
-              environment.PLANES_MID,
-              `seguimiento/guardar_cualitativo`,
+              environment.SEGUIMIENTO_MID,
+              `detalles/cualitativo`,
               {
                 _id: this.seguimiento.id,
                 informacion: this.seguimiento.informacion,
@@ -720,8 +720,8 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
         if (result.isConfirmed) {
           this.request
             .put(
-              environment.PLANES_MID,
-              `seguimiento/guardar_cuantitativo`,
+              environment.SEGUIMIENTO_MID,
+              `detalles/cuantitativo`,
               {
                 _id: this.seguimiento.id,
                 informacion: this.seguimiento.informacion,
@@ -788,8 +788,8 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
         if (result.isConfirmed) {
           this.request
             .put(
-              environment.PLANES_MID,
-              `seguimiento/guardar_seguimiento`,
+              environment.SEGUIMIENTO_MID,
+              `seguimiento`,
               this.seguimiento,
               this.planId + `/` + this.indexActividad + `/` + this.trimestreId
             )
@@ -853,14 +853,14 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
 
           this.request
             .put(
-              environment.PLANES_MID,
-              `seguimiento/reportar_actividad`,
+              environment.SEGUIMIENTO_MID,
+              `reportes/actividad`,
               mod,
               this.indexActividad
             )
             .subscribe((data: any) => {
               if (data) {
-                if (data.Success) {
+                if (data.success) {
                   Swal.fire({
                     title: 'Seguimiento Generado',
                     icon: 'success',
@@ -874,7 +874,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
                     title: 'No es posible generar el reporte',
                     icon: 'error',
                     showConfirmButton: false,
-                    text: data.Data.motivo,
+                    text: data.data.motivo,
                     timer: 4000,
                   });
                 }
@@ -1197,14 +1197,14 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
             Math.round(
               (this.datosResultados.data[index].acumuladoNumerador /
                 this.datosResultados.data[index].acumuladoDenominador) *
-                100
+              100
             ) / 100;
         } else {
           this.datosResultados.data[index].indicadorAcumulado =
             Math.round(
               (this.datosResultados.data[index].acumuladoNumerador /
                 this.datosResultados.data[index].acumuladoDenominador) *
-                10000
+              10000
             ) / 10000;
         }
       } else {
@@ -1216,7 +1216,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
         this.datosResultados.data[index].indicadorAcumulado;
       var metaEvaluada =
         this.datosIndicadores[index].unidad == 'Unidad' ||
-        this.datosIndicadores[index].unidad == 'Tasa'
+          this.datosIndicadores[index].unidad == 'Tasa'
           ? meta
           : meta / 100;
       if (indicador.tendencia == 'Creciente') {
@@ -1294,15 +1294,15 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
         if (result.isConfirmed) {
           this.request
             .put(
-              environment.PLANES_MID,
-              `seguimiento/revision_actividad`,
+              environment.SEGUIMIENTO_MID,
+              `actividades/revision`,
               this.seguimiento,
               this.planId + `/` + this.indexActividad + `/` + this.trimestreId
             )
             .subscribe({
               next: (data: any) => {
                 if (data) {
-                  if (data.Data.Observación) {
+                  if (data.data.Observación) {
                     Swal.fire({
                       title: 'Información de seguimiento actualizada',
                       text: 'Las observaciones hechas al seguimiento se ha guardado satisfactoriamente',
@@ -1400,8 +1400,8 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
         if (result.isConfirmed) {
           this.request
             .put(
-              environment.PLANES_MID,
-              `seguimiento/retornar_actividad`,
+              environment.SEGUIMIENTO_MID,
+              `actividades/retornar`,
               this.seguimiento,
               this.planId + `/` + this.indexActividad + `/` + this.trimestreId
             )

@@ -346,14 +346,14 @@ export class ListComponent implements OnInit, AfterViewInit {
       await new Promise((resolve, reject) => {
         this.request
           .get(
-            environment.PLANES_MID,
-            `seguimiento/get_periodos/${this.vigencia.Id}`
+            environment.SEGUIMIENTO_MID,
+            `periodos/${this.vigencia.Id}`
           )
           .subscribe({
-            next: async (data: DataRequest) => {
+            next: async (data: any) => {
               if (data) {
-                if (data.Data != '' && data.Data != null) {
-                  let periodos = data.Data;
+                if (data.data != '' && data.data != null) {
+                  let periodos = data.data;
                   if (periodos.length > 0) {
                     this.trimestres = [
                       {} as Trimestre,
