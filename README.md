@@ -12,10 +12,40 @@ Microfrontend de Seguimiento. Contiene las características, funcionalidades y v
 ### Variables de Entorno
 
 ```shell
-# En Pipeline
-SLACK_AND_WEBHOOK: WEBHOOK ..
-AWS_ACCESS_KEY_ID: llave de acceso ID Usuario AWS
-AWS_SECRET_ACCESS_KEY: Secreto de Usuario AWS
+SINTOMAS_SERVICE: [API Sintomas Crud],
+PLANES_CRUD: [API Planes CRUD],
+FORMULACION_MID: [API MicroMid Formulacion],
+SEGUIMIENTO_MID: [API MicroMid Seguimiento],
+PLANES_MID_PROXY: [Proxy Planes Mid],
+OIKOS_SERVICE: [API OIKOS SERVICE],
+PARAMETROS_SERVICE: [API PARAMETROS SERVICE],
+RESOLUCIONES_DOCENTES_SERVICE: [API DOCENTES SERVICE],
+GESTOR_DOCUMENTAL_MID: [API GESTOR DOCUMENTAL MID],
+DOCUMENTO_SERVICE: [API DOCUMENTO SERVICE],
+KRONOS_SERVICE: [API KRONOS SERVICE],
+PRUEBAS: [API PRUEBAS],
+TERCEROS_SERVICE: [API TERCEROS],
+ACADEMICA_JBPM_SERVICE: [Servicio ACADEMICA JBPM],
+CONFIGURACION_SERVICE: [Servicio de Configuracion Crud],
+CONF_MENU_SERVICE: [Servicio Configuracion Menú],
+NOTIFICACION_SERVICE: [Servicio de Notificaciones],
+
+#Conexión a notificaciones
+NOTIFICACION_MID_SERVICE: [API Mid Notificaciones],
+ARM_AWS_NOTIFICACIONES: [Test Cumplidos Notificaciones],
+
+TOKEN: {
+  AUTORIZATION_URL: [URL de Autorización],
+  CLIENTE_ID: [Tipo de Cliente],
+  RESPONSE_TYPE: [Tipo de Respuesta],
+  SCOPE: [Scope],
+  REDIRECT_URL: [URL de redirección],
+  SIGN_OUT_URL: [URL de Cerrar Sesión],
+  SIGN_OUT_REDIRECT_URL: [URL de redirección],
+  AUTENTICACION_MID: [API MID Autenticación],
+},
+
+SECRET_KEY: [SECRET_KEY],
 ```
 
 ### Ejecución del Proyecto
