@@ -50,7 +50,7 @@
               <mat-form-field appearance="fill" [style.width.%]="100">
                 <mat-label id="tipo-input-label">Seleccione la unidad de interés</mat-label>
                 <mat-select (selectionChange)="onChangeU($event.value)"
-                  placeholder="Escriba el nombre del plan que desea seleccionar" formControlName="selectUnidad">
+                  placeholder="Escriba el nombre del plan que desea seleccionar" formControlName="selectUnidad" hideSingleSelectionIndicator=true>
                   <input (keyup)="onKey($event.target)" class="input-search">
                   <mat-option>--</mat-option>
                   <mat-option *ngFor="let unidad of auxUnidades" [value]="unidad">
@@ -70,7 +70,7 @@
               <h4>Fechas guía para cada trimestre para la vigencia.</h4>
               <mat-form-field appearance="fill" [style.width.%]="100">
                 <mat-label id="tipo-input-label">Seleccione la vigencia</mat-label>
-                <mat-select (selectionChange)="onChangeV($event.value)" formControlName="selectVigencia">
+                <mat-select (selectionChange)="onChangeV($event.value)" formControlName="selectVigencia" hideSingleSelectionIndicator=true>
                   <mat-option>--</mat-option>
                   <mat-option *ngFor="let vigencia of vigencias" [value]="vigencia">
                     {{vigencia.Nombre}}
@@ -157,7 +157,7 @@
             <mat-form-field appearance="fill" [style.width.%]="100">
               <mat-label id="tipo-input-label">Seleccione el plan de interés</mat-label>
               <mat-select (selectionChange)="onChangeP($event.value)"
-                placeholder="Escriba el nombre del plan que desea seleccionar" formControlName="selectPlan">
+                placeholder="Escriba el nombre del plan que desea seleccionar" formControlName="selectPlan" hideSingleSelectionIndicator=true>
                 <input (keyup)="onKeyP($any($event.target).value)" class="input-search">
                 <mat-option>--</mat-option>
                 <mat-option *ngFor="let plan of auxPlanes" [value]="plan">
