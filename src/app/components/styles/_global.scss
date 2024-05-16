@@ -1,3 +1,7 @@
+*:not(mat-icon) {
+  font-family: Roboto, "Helvetica Neue", sans-serif !important;
+}
+
 b {
   color: var(--primary);
 }
@@ -20,6 +24,7 @@ b {
 }
 
 table {
+  margin-top: 10px;
   width: 100%;
 }
 
@@ -55,6 +60,6 @@ mat-hint {
   font-size: 11px;
 }
 
-div > mat-label {
+div>mat-label {
   color: var(--primary);
 }
