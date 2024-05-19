@@ -183,8 +183,8 @@ export class ListComponent implements OnInit, AfterViewInit {
                 `formulacion/tercero/${datosInfoTercero[0].TerceroId.Id}`
               )
               .subscribe((vinculacion: any) => {
-                for (let aux = 0; aux < vinculacion.data.length; aux++) {
-                  this.request.get(environment.OIKOS_SERVICE, `dependencia_tipo_dependencia?query=DependenciaId:` + vinculacion.data[aux]["DependenciaId"]).subscribe((dataUnidad: any) => {
+                for (let aux = 0; aux < vinculacion.Data.length; aux++) {
+                  this.request.get(environment.OIKOS_SERVICE, `dependencia_tipo_dependencia?query=DependenciaId:` + vinculacion.Data[aux]["DependenciaId"]).subscribe((dataUnidad: any) => {
                     if (dataUnidad) {
                       let unidad = dataUnidad[0]["DependenciaId"]
                       unidad["TipoDependencia"] = dataUnidad[0]["TipoDependenciaId"]["Id"]
@@ -220,8 +220,8 @@ export class ListComponent implements OnInit, AfterViewInit {
         .subscribe({
           next: (data: any) => {
             if (data) {
-              this.unidades = data.data;
-              this.auxUnidades = data.data;
+              this.unidades = data.Data;
+              this.auxUnidades = data.Data;
               Swal.close();
               resolve(this.unidades);
             }
@@ -352,8 +352,8 @@ export class ListComponent implements OnInit, AfterViewInit {
           .subscribe({
             next: async (data: any) => {
               if (data) {
-                if (data.data != '' && data.data != null) {
-                  let periodos = data.data;
+                if (data.Data != '' && data.Data != null) {
+                  let periodos = data.Data;
                   if (periodos.length > 0) {
                     this.trimestres = [
                       {} as Trimestre,
@@ -367,10 +367,15 @@ export class ListComponent implements OnInit, AfterViewInit {
                           _id: this.plan.formato_id,
                           nombre: this.plan.nombre
                         }
+                        let unidad = {
+                          Id: this.unidad.Id,
+                          Nombre: this.unidad.Nombre
+                        }
                         let body = {
                           periodo_id: periodos[i].Id,
                           tipo_seguimiento_id: '61f236f525e40c582a0840d0',
                           planes_interes: JSON.stringify([plan]),
+                          unidades_interes: JSON.stringify([unidad]),
                           activo: true
                         }
                         await new Promise((resolve, reject) => {
