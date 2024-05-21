@@ -144,7 +144,7 @@ export class GestionComponent implements OnInit {
       .subscribe({
         next: async (data: any) => {
           if (data) {
-            this.seguimiento = data.data;
+            this.seguimiento = data.Data;
             this.estado = this.seguimiento.estado_seguimiento_id.nombre;
             await this.loadUnidad(this.seguimiento.plan_id.dependencia_id);
           }
@@ -205,16 +205,16 @@ export class GestionComponent implements OnInit {
       .subscribe({
         next: (data: any) => {
           if (data) {
-            for (let index = 0; index < data.data.length; index++) {
-              const actividad = data.data[index];
+            for (let index = 0; index < data.Data.length; index++) {
+              const actividad = data.Data[index];
               if (actividad.estado.nombre == 'Con observaciones') {
-                data.data[index].estado.color = 'conObservacion';
+                data.Data[index].estado.color = 'conObservacion';
               }
               if (actividad.estado.nombre == 'Actividad avalada') {
-                data.data[index].estado.color = 'avalada';
+                data.Data[index].estado.color = 'avalada';
               }
             }
-            this.dataSource.data = data.data;
+            this.dataSource.data = data.Data;
             this.allActividades = this.dataSource.data;
             Swal.close();
           }
@@ -253,7 +253,7 @@ export class GestionComponent implements OnInit {
             )
             .subscribe((data: any) => {
               if (data) {
-                if (data.success) {
+                if (data.Success) {
                   Swal.fire({
                     title: 'El reporte se ha enviado satisfactoriamente',
                     icon: 'success',
@@ -264,7 +264,7 @@ export class GestionComponent implements OnInit {
                   });
                 } else {
                   let message: string = '<b>ID - Actividad</b><br/>';
-                  let actividades: any = data.data.actividades;
+                  let actividades: any = data.Data.actividades;
                   let llaves: string[] = Object.keys(actividades);
                   for (let llave of llaves) {
                     message += llave + ' - ' + actividades[llave] + '<br/>';
@@ -330,7 +330,7 @@ export class GestionComponent implements OnInit {
             )
             .subscribe((data: any) => {
               if (data) {
-                if (data.success) {
+                if (data.Success) {
                   Swal.fire({
                     title: 'El reporte se ha enviado satisfactoriamente',
                     icon: 'success',
@@ -341,7 +341,7 @@ export class GestionComponent implements OnInit {
                   });
                 } else {
                   let message: string = '<b>ID - Actividad</b><br/>';
-                  let actividades: any = data.data.actividades;
+                  let actividades: any = data.Data.actividades;
                   let llaves: string[] = Object.keys(actividades);
                   for (let llave of llaves) {
                     message += llave + ' - ' + actividades[llave] + '<br/>';
@@ -577,7 +577,7 @@ export class GestionComponent implements OnInit {
             )
             .subscribe((data: any) => {
               if (data) {
-                if (data.success) {
+                if (data.Success) {
                   Swal.fire({
                     title: 'El reporte se ha enviado satisfactoriamente',
                     icon: 'success',
@@ -588,7 +588,7 @@ export class GestionComponent implements OnInit {
                   });
                 } else {
                   let message: string = '<b>ID - Actividad</b><br/>';
-                  let actividades: any = data.data.actividades;
+                  let actividades: any = data.Data.actividades;
                   let llaves: string[] = Object.keys(actividades);
                   for (let llave of llaves) {
                     message += llave + ' - ' + actividades[llave] + '<br/>';
