@@ -6,7 +6,7 @@ import {
 } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { GestorDocumentalService } from 'src/app/services/gestorDocumental.service';
-import { ImplicitAutenticationService } from 'src/app/services/implicitAutentication.service';
+import { ImplicitAutenticationService } from '@udistrital/planeacion-utilidades-module';
 import Swal from 'sweetalert2';
 import { VisualizarDocumentoDialogComponent } from '../generar-trimestre/visualizar-documento-dialog/visualizar-documento-dialog.component';
 
@@ -24,8 +24,9 @@ export class EvidenciasDialogComponent implements OnInit {
   dataFiltered: any[];
   readonlyFormulario: string;
 
+  private autenticationService = new ImplicitAutenticationService();
+
   constructor(
-    private autenticationService: ImplicitAutenticationService,
     private dialogRef: MatDialogRef<EvidenciasDialogComponent>,
     public dialog: MatDialog,
     private gestorDocumental: GestorDocumentalService,
@@ -40,10 +41,10 @@ export class EvidenciasDialogComponent implements OnInit {
     this.filterActive();
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void { }
 
   getRol() {
-    let roles: any = this.autenticationService.getRole();
+    let roles: any = this.autenticationService.getRoles();
     if (
       roles.__zone_symbol__value.find(
         (x: string) => x == 'JEFE_DEPENDENCIA' || x == 'ASISTENTE_DEPENDENCIA'
@@ -147,7 +148,7 @@ export class EvidenciasDialogComponent implements OnInit {
   }
 
   filterActive() {
-    this.dataSource.filterPredicate = function (
+    this.dataSource.filterPredicate = function(
       data: any,
       filterValue: string
     ) {

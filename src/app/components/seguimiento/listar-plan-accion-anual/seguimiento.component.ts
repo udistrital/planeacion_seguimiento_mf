@@ -17,7 +17,7 @@ import Swal from 'sweetalert2';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { RequestManager } from 'src/app/services/requestManager.service';
-import { ImplicitAutenticationService } from 'src/app/services/implicitAutentication.service';
+import { ImplicitAutenticationService } from '@udistrital/planeacion-utilidades-module';
 import Plan from 'src/app/models/plan';
 import { DataRequest } from 'src/app/models/dataRequest';
 import Trimestre from 'src/app/models/trimestre';
@@ -75,16 +75,18 @@ export class ListComponent implements OnInit, AfterViewInit {
     new MatPaginatorIntl(),
     ChangeDetectorRef.prototype
   );
+
+  private autenticationService = new ImplicitAutenticationService();
+
   constructor(
     public dialog: MatDialog,
     private request: RequestManager,
     private router: Router,
-    private autenticationService: ImplicitAutenticationService,
     private formBuilder: FormBuilder,
     private activatedRoute: ActivatedRoute,
     private codigosEstados: CodigosEstados
   ) {
-    let roles: any = this.autenticationService.getRole();
+    let roles: any = this.autenticationService.getRoles();
     if (
       roles.__zone_symbol__value.find(
         (x: string) => x == 'JEFE_DEPENDENCIA' || x == 'ASISTENTE_DEPENDENCIA'
