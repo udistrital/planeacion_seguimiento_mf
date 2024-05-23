@@ -373,7 +373,7 @@ export class ListComponent implements OnInit, AfterViewInit {
                         }
                         let body = {
                           periodo_id: periodos[i].Id,
-                          tipo_seguimiento_id: '61f236f525e40c582a0840d0',
+                          tipo_seguimiento_id: this.codigosEstados.getIdSeguimientoPlanAccion(),
                           planes_interes: JSON.stringify([plan]),
                           unidades_interes: JSON.stringify([unidad]),
                           activo: true
@@ -466,12 +466,15 @@ export class ListComponent implements OnInit, AfterViewInit {
                             });
                         });
                       } else {
+                        let body = {
+                          periodo_id: periodos[i].Id,
+                          tipo_seguimiento_id: this.codigosEstados.getIdSeguimientoPlanAccion(),
+                          activo: true,
+                        }
                         await new Promise((resolve, reject) => {
                           this.request
-                            .get(
-                              environment.PLANES_CRUD,
-                              `periodo-seguimiento?query=tipo_seguimiento_id:${this.codigosEstados.getIdSeguimientoPlanAccion()},periodo_id:` +
-                              periodos[i].Id
+                            .post(
+                              environment.PLANES_CRUD,`periodo-seguimiento/buscar-unidad-planes/8`, body
                             )
                             .subscribe({
                               next: async (data: any) => {
