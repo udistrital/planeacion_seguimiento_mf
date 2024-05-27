@@ -95,12 +95,6 @@ export class ListComponent implements OnInit, AfterViewInit {
       roles.__zone_symbol__value.find((x: string) => x == 'PLANEACION')
     ) {
       this.rol = 'PLANEACION';
-    } else if (
-      roles.__zone_symbol__value.find(
-        (x: string) => x == 'JEFE_UNIDAD_PLANEACION'
-      )
-    ) {
-      this.rol = 'JEFE_UNIDAD_PLANEACION';
     }
     this.unidadSelected = false;
 
@@ -132,8 +126,7 @@ export class ListComponent implements OnInit, AfterViewInit {
     this.codigosEstados.cargarIdentificadores();
     if (
       this.rol == 'JEFE_DEPENDENCIA' ||
-      this.rol == 'ASISTENTE_DEPENDENCIA' ||
-      this.rol == 'JEFE_UNIDAD_PLANEACION'
+      this.rol == 'ASISTENTE_DEPENDENCIA'
     ) {
       await this.validarUnidad();
     } else {
@@ -430,8 +423,7 @@ export class ListComponent implements OnInit, AfterViewInit {
                                       if (
                                         (this.rol != undefined &&
                                           this.rol == 'PLANEACION') ||
-                                        this.rol == 'JEFE_DEPENDENCIA' ||
-                                        this.rol == 'JEFE_UNIDAD_PLANEACION'
+                                        this.rol == 'JEFE_DEPENDENCIA'
                                       ) {
                                         await this.evaluarFechasPlan();
                                       }
@@ -529,8 +521,7 @@ export class ListComponent implements OnInit, AfterViewInit {
                                       if (
                                         (this.rol != undefined &&
                                           this.rol == 'PLANEACION') ||
-                                        this.rol == 'JEFE_DEPENDENCIA' ||
-                                        this.rol == 'JEFE_UNIDAD_PLANEACION'
+                                        this.rol == 'JEFE_DEPENDENCIA'
                                       ) {
                                         await this.evaluarFechasPlan();
                                       }
