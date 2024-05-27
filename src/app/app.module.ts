@@ -19,6 +19,7 @@ import { GestionComponent } from './components/seguimiento/gestion/gestion.compo
 import { GenerarTrimestreComponent } from './components/seguimiento/generar-trimestre/generar-trimestre.component';
 import { VisualizarDocumentoDialogComponent } from './components/seguimiento/generar-trimestre/visualizar-documento-dialog/visualizar-documento-dialog.component';
 import { EvidenciasDialogComponent } from './components/seguimiento/evidencias/evidencias-dialog.component';
+import { ReformulacionComponent } from './components/seguimiento/reformulacion/reformulacion.component';
 
 @NgModule({
   declarations: [
@@ -28,6 +29,7 @@ import { EvidenciasDialogComponent } from './components/seguimiento/evidencias/e
     GenerarTrimestreComponent,
     VisualizarDocumentoDialogComponent,
     EvidenciasDialogComponent,
+    ReformulacionComponent,
   ],
   imports: [
     BrowserModule,

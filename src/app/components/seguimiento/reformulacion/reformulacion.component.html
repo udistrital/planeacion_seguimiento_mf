@@ -1,0 +1,65 @@
+<!-- Reformulacion Component -->
+<mat-card class="card-oas">
+
+  <mat-card-header>
+    <mat-card-title>Solicitud De Reformulación A Planes de Acción</mat-card-title>
+    <div>
+      Listado de unidades académicas y/o administrativas
+    </div>
+  </mat-card-header>
+  <u class="textGuide">
+    A continuación encontrará un listado de Planes de Acción anuales relacionados con cada una de las unidades
+    académicas y/o administrativas, para iniciar seleccione el de su interés y posteriormente de click en el trimestre
+    habilitado.
+  </u>
+
+  <mat-card-content>
+    <div class="sameRow">
+      <h4>Unidad Académica/Administrativa</h4>
+      <mat-form-field appearance="fill" [style.width.%]="100">
+        <mat-label id="tipo-input-label">Seleccione la unidad de interes</mat-label>
+        <mat-select (selectionChange)="onChangeUnidad($event.value)" formControlName="selectUnidad"
+          hideSingleSelectionIndicator=true>
+          <mat-option>--</mat-option>
+          <!-- <mat-option *ngFor="let vigencia of vigencias" [value]="vigencia">
+              {{vigencia.Nombre}}
+            </mat-option> -->
+        </mat-select>
+      </mat-form-field>
+    </div>
+    <form [formGroup]="formSelect">
+
+      <div class="sameRow">
+        <h4>Fechas guía para cada trimestre para la vigencia</h4>
+        <mat-form-field appearance="fill" [style.width.%]="100">
+          <mat-label id="tipo-input-label">Seleccione la vigencia</mat-label>
+          <mat-select (selectionChange)="onChangeVigencia($event.value)" formControlName="selectVigencia"
+            hideSingleSelectionIndicator=true>
+            <mat-option>--</mat-option>
+            <!-- <mat-option *ngFor="let vigencia of vigencias" [value]="vigencia">
+              {{vigencia.Nombre}}
+            </mat-option> -->
+          </mat-select>
+        </mat-form-field>
+        <div class="sameRow">
+          <h4>Plan de Acción</h4>
+          <mat-form-field appearance="fill" [style.width.%]="100">
+            <mat-label id="tipo-input-label">Seleccione el Plan</mat-label>
+            <mat-select (selectionChange)="onChangePlan($event.value)" formControlName="selectPlan"
+              hideSingleSelectionIndicator=true>
+              <mat-option>--</mat-option>
+              <!-- <mat-option *ngFor="let plan of planes" [value]="plan">
+                {{plan.nombre}}
+              </mat-option> -->
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </div>
+    </form>
+    <div style="text-align: center">
+      <button mat-raised-button color="primary" style="color: white" (click)="buscarPlan()">Buscar Plan De
+        Acción</button>
+    </div>
+  </mat-card-content>
+
+</mat-card>
