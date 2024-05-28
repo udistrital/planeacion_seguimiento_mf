@@ -5,9 +5,8 @@ import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute, Router } from '@angular/router';
 import { navigateToUrl } from 'single-spa';
 import Indicador from 'src/app/models/indicador';
-import { ImplicitAutenticationService } from 'src/app/services/implicitAutentication.service';
+import { ImplicitAutenticationService, ServiceCookies } from '@udistrital/planeacion-utilidades-module';
 import { RequestManager } from 'src/app/services/requestManager.service';
-import { VerificarFormulario } from 'src/app/services/verificarFormulario.service';
 import { environment } from 'src/environments/environment';
 import Swal from 'sweetalert2';
 
@@ -36,13 +35,14 @@ export class GestionComponent implements OnInit {
   estado: string = '';
   estadoLista: boolean = false;
 
+  private autenticationService = new ImplicitAutenticationService();
+  private serviceCookies = new ServiceCookies();
+
   constructor(
     activatedRoute: ActivatedRoute,
     private formBuilder: FormBuilder,
     private request: RequestManager,
-    private autenticationService: ImplicitAutenticationService,
     private router: Router,
-    private verificarFormulario: VerificarFormulario
   ) {
     activatedRoute.params.subscribe((prm) => {
       this.planId = prm['plan_id'];
@@ -64,7 +64,7 @@ export class GestionComponent implements OnInit {
 
   ngOnInit(): void {
     this.getRol();
-    const listaCookie = this.verificarFormulario.getCookie("estadoLista");
+    const listaCookie = this.serviceCookies.getCookie("estadoLista");
     if (listaCookie != undefined) {
       this.estadoLista = true;
     }
@@ -82,15 +82,15 @@ export class GestionComponent implements OnInit {
   }
 
   ngOnDestroy() {
-    const listaCookie = this.verificarFormulario.getCookie("estadoLista");
+    const listaCookie = this.serviceCookies.getCookie("estadoLista");
     this.estadoLista = false;
     if (listaCookie != undefined) {
-      this.verificarFormulario.deleteCookie("estadoLista");
+      this.serviceCookies.deleteCookie("estadoLista");
     }
   }
 
   getRol() {
-    let roles: any = this.autenticationService.getRole();
+    let roles: any = this.autenticationService.getRoles();
     if (
       roles.__zone_symbol__value.find(
         (x: string) => x == 'JEFE_DEPENDENCIA' || x == 'ASISTENTE_DEPENDENCIA'

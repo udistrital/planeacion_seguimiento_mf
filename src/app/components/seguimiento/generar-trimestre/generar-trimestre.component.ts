@@ -13,7 +13,8 @@ import { MatPaginator, MatPaginatorIntl } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute, Router } from '@angular/router';
 import { GestorDocumentalService } from 'src/app/services/gestorDocumental.service';
-import { ImplicitAutenticationService } from 'src/app/services/implicitAutentication.service';
+import { GestorDocumentalMethods } from '@udistrital/planeacion-utilidades-module';
+import { ImplicitAutenticationService } from '@udistrital/planeacion-utilidades-module';
 import { RequestManager } from 'src/app/services/requestManager.service';
 import { environment } from 'src/environments/environment';
 import Swal from 'sweetalert2';
@@ -121,9 +122,10 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
   denominadorOriginal: number[] = [];
   calcular: boolean = true;
   abrirDocs: boolean = true;
+  private gestorMethods = new GestorDocumentalMethods();
+  private autenticationService = new ImplicitAutenticationService();
 
   constructor(
-    private autenticationService: ImplicitAutenticationService,
     private activatedRoute: ActivatedRoute,
     private formBuilder: FormBuilder,
     private router: Router,
@@ -177,7 +179,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
   }
 
   getRol() {
-    let roles: any = this.autenticationService.getRole();
+    let roles: any = this.autenticationService.getRoles();
     if (
       roles.__zone_symbol__value.find(
         (x: string) => x == 'JEFE_DEPENDENCIA' || x == 'ASISTENTE_DEPENDENCIA'
@@ -432,7 +434,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
               },
               descripcion:
                 'Documento de soporte para seguimiento de plan de acción',
-              file: await this.gestorDocumental.fileToBase64(aux),
+              file: await this.gestorMethods.fileToBase64(aux),
               Activo: true,
             },
           ];
