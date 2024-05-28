@@ -92,21 +92,17 @@ export class GestionComponent implements OnInit {
   getRol() {
     let roles: any = this.autenticationService.getRoles();
     if (
-      roles.__zone_symbol__value.find(
-        (x: string) => x == 'JEFE_DEPENDENCIA' || x == 'ASISTENTE_DEPENDENCIA'
-      )
+      roles.__zone_symbol__value.find((x: string) => x == 'JEFE_DEPENDENCIA')
     ) {
       this.rol = 'JEFE_DEPENDENCIA';
+    } else if (
+      roles.__zone_symbol__value.find((x: string) => x == 'ASISTENTE_DEPENDENCIA')
+    ) {
+      this.rol = 'ASISTENTE_DEPENDENCIA';
     } else if (
       roles.__zone_symbol__value.find((x: string) => x == 'PLANEACION')
     ) {
       this.rol = 'PLANEACION';
-    } else if (
-      roles.__zone_symbol__value.find(
-        (x: string) => x == 'JEFE_UNIDAD_PLANEACION'
-      )
-    ) {
-      this.rol = 'JEFE_UNIDAD_PLANEACION';
     }
   }
 

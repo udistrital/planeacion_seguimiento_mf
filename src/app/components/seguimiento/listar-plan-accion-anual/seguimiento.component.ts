@@ -97,12 +97,6 @@ export class ListComponent implements OnInit, AfterViewInit {
       roles.__zone_symbol__value.find((x: string) => x == 'PLANEACION')
     ) {
       this.rol = 'PLANEACION';
-    } else if (
-      roles.__zone_symbol__value.find(
-        (x: string) => x == 'JEFE_UNIDAD_PLANEACION'
-      )
-    ) {
-      this.rol = 'JEFE_UNIDAD_PLANEACION';
     }
     this.unidadSelected = false;
 
@@ -134,8 +128,7 @@ export class ListComponent implements OnInit, AfterViewInit {
     this.codigosEstados.cargarIdentificadores();
     if (
       this.rol == 'JEFE_DEPENDENCIA' ||
-      this.rol == 'ASISTENTE_DEPENDENCIA' ||
-      this.rol == 'JEFE_UNIDAD_PLANEACION'
+      this.rol == 'ASISTENTE_DEPENDENCIA'
     ) {
       await this.validarUnidad();
     } else {
@@ -375,7 +368,7 @@ export class ListComponent implements OnInit, AfterViewInit {
                         }
                         let body = {
                           periodo_id: periodos[i].Id,
-                          tipo_seguimiento_id: '61f236f525e40c582a0840d0',
+                          tipo_seguimiento_id: this.codigosEstados.getIdSeguimientoPlanAccion(),
                           planes_interes: JSON.stringify([plan]),
                           unidades_interes: JSON.stringify([unidad]),
                           activo: true
@@ -432,8 +425,7 @@ export class ListComponent implements OnInit, AfterViewInit {
                                       if (
                                         (this.rol != undefined &&
                                           this.rol == 'PLANEACION') ||
-                                        this.rol == 'JEFE_DEPENDENCIA' ||
-                                        this.rol == 'JEFE_UNIDAD_PLANEACION'
+                                        this.rol == 'JEFE_DEPENDENCIA'
                                       ) {
                                         await this.evaluarFechasPlan();
                                       }
@@ -468,12 +460,15 @@ export class ListComponent implements OnInit, AfterViewInit {
                             });
                         });
                       } else {
+                        let body = {
+                          periodo_id: periodos[i].Id,
+                          tipo_seguimiento_id: this.codigosEstados.getIdSeguimientoPlanAccion(),
+                          activo: true,
+                        }
                         await new Promise((resolve, reject) => {
                           this.request
-                            .get(
-                              environment.PLANES_CRUD,
-                              `periodo-seguimiento?query=tipo_seguimiento_id:${this.codigosEstados.getIdSeguimientoPlanAccion()},periodo_id:` +
-                              periodos[i].Id
+                            .post(
+                              environment.PLANES_CRUD,`periodo-seguimiento/buscar-unidad-planes/8`, body
                             )
                             .subscribe({
                               next: async (data: any) => {
@@ -528,8 +523,7 @@ export class ListComponent implements OnInit, AfterViewInit {
                                       if (
                                         (this.rol != undefined &&
                                           this.rol == 'PLANEACION') ||
-                                        this.rol == 'JEFE_DEPENDENCIA' ||
-                                        this.rol == 'JEFE_UNIDAD_PLANEACION'
+                                        this.rol == 'JEFE_DEPENDENCIA'
                                       ) {
                                         await this.evaluarFechasPlan();
                                       }
