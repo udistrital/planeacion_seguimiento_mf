@@ -7,6 +7,7 @@ import { navigateToUrl } from 'single-spa';
 import Indicador from 'src/app/models/indicador';
 import { ImplicitAutenticationService } from 'src/app/services/implicitAutentication.service';
 import { RequestManager } from 'src/app/services/requestManager.service';
+import { Notificaciones } from 'src/app/services/notificaciones';
 import { VerificarFormulario } from 'src/app/services/verificarFormulario.service';
 import { environment } from 'src/environments/environment';
 import Swal from 'sweetalert2';
@@ -22,6 +23,7 @@ export class GestionComponent implements OnInit {
   planId: string = '';
   trimestreId: string = '';
   unidad: any;
+  vigencia: any;
   seguimiento: any;
   formGestionSeguimiento: FormGroup;
   dataActividad: any;
@@ -35,11 +37,13 @@ export class GestionComponent implements OnInit {
   allActividades: any[] = [];
   estado: string = '';
   estadoLista: boolean = false;
+  codigoNotificacion: string = '';
 
   constructor(
     activatedRoute: ActivatedRoute,
     private formBuilder: FormBuilder,
     private request: RequestManager,
+    private notificacionesService: Notificaciones,
     private autenticationService: ImplicitAutenticationService,
     private router: Router,
     private verificarFormulario: VerificarFormulario
@@ -127,6 +131,33 @@ export class GestionComponent implements OnInit {
     }
   }
 
+  enviarNotificacion(){
+    if (this.codigoNotificacion != "") {
+      // Bifurcación en estado En revisión JU
+      if (this.codigoNotificacion === 'SERJU') {
+        const estadoPlanMap:any = {'Revisión Verificada con Observaciones': "SERJU1", 'Revisión Verificada': "SERJU2"};
+        this.codigoNotificacion = estadoPlanMap[this.estado];
+      }
+
+      // Bifurcación en estado 'En revisión OAPC'
+      if (this.codigoNotificacion === "SEROAPC") {
+        const estadoPlanMap:any = {'Con observaciones': "SEROAPC1", 'Reporte Avalado': "SEROAPC2"};
+        this.codigoNotificacion = estadoPlanMap[this.estado];
+      }
+
+      let datos = {
+        codigo: this.codigoNotificacion,
+        id_unidad: this.unidad.Id,
+        nombre_unidad: this.unidad.Nombre,
+        nombre_plan: this.seguimiento.plan_id.nombre,
+        nombre_vigencia: this.vigencia.Nombre,
+        trimestre: this.trimestreId
+      }
+      this.codigoNotificacion = "";
+      this.notificacionesService.enviarNotificacion(datos)
+    }
+  }
+
   loadDataSeguimiento() {
     Swal.fire({
       title: 'Cargando información',
@@ -147,6 +178,8 @@ export class GestionComponent implements OnInit {
             this.seguimiento = data.Data;
             this.estado = this.seguimiento.estado_seguimiento_id.nombre;
             await this.loadUnidad(this.seguimiento.plan_id.dependencia_id);
+            this.loadVigencia(this.seguimiento.plan_id.vigencia)
+            this.enviarNotificacion();
           }
         },
         error: (error) => {
@@ -161,6 +194,17 @@ export class GestionComponent implements OnInit {
           });
         },
       });
+  }
+
+  loadVigencia(vigencia_id:any) {
+    this.request.get(environment.PARAMETROS_SERVICE, `periodo?query=CodigoAbreviacion:VG,Id:${vigencia_id},activo:true`)
+      .subscribe(
+        (data: any) => {
+          if (data) {
+            this.vigencia = data.Data[0];
+          }
+        }, (error) => {}
+      )
   }
 
   loadUnidad(dependencia_id: string) {
@@ -254,6 +298,13 @@ export class GestionComponent implements OnInit {
             .subscribe((data: any) => {
               if (data) {
                 if (data.Success) {
+                  if (this.estado == 'En reporte') {
+                    this.codigoNotificacion = "SER"; // NOTIFICACION(SER)
+                  } else if (this.estado == 'Revisión Verificada con Observaciones') {
+                    this.codigoNotificacion = "SRVCO"; // NOTIFICACION(SRVCO)
+                  } else if (this.estado == 'Con observaciones') {
+                    this.codigoNotificacion = "SCO"; // NOTIFICACION(SCO)
+                  }
                   Swal.fire({
                     title: 'El reporte se ha enviado satisfactoriamente',
                     icon: 'success',
@@ -331,6 +382,7 @@ export class GestionComponent implements OnInit {
             .subscribe((data: any) => {
               if (data) {
                 if (data.Success) {
+                  this.codigoNotificacion = "SEROAPC"; // NOTIFICACION(SEROAPC)
                   Swal.fire({
                     title: 'El reporte se ha enviado satisfactoriamente',
                     icon: 'success',
@@ -526,6 +578,7 @@ export class GestionComponent implements OnInit {
             )
             .subscribe((data: any) => {
               if (data) {
+                this.codigoNotificacion = "SRV"; // NOTIFICACION(SRV)
                 Swal.fire({
                   title: 'Seguimiento en revisión',
                   icon: 'success',
