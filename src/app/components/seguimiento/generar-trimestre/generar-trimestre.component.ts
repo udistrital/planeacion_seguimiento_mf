@@ -404,7 +404,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
       if (!this.FORMATOS.includes(aux.type)) {
         Swal.fire({
           title: 'Archivo no válido',
-          text: `No se admite el tipo de archivo que selecciono`,
+          text: `No se admite el tipo de archivo que seleccionó`,
           icon: 'error',
           showConfirmButton: false,
           timer: 2500,
