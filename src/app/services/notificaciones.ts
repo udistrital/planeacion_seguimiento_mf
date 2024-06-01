@@ -361,4 +361,25 @@ export class Notificaciones {
       setTimeout(() => this.router.navigate([`pages/${modulo}/${url}`]), 50);
     }
   }
+
+  // Cargar plan en el modulo
+  async loadNotificacion(notificacion: any) {
+    const atributos = notificacion.Body.MessageAttributes
+    const modulo = notificacion.Body.MessageAttributes.Url.Value
+    const dataSistema:any = this.getJsonDeTexto(atributos.Data.Value)
+    
+    const nombre_plan = dataSistema.nombre_plan
+    const id_unidad = await this.getIdUnidad(dataSistema.nombre_unidad)
+    const id_vigencia = await this.getIdVigencia(dataSistema.nombre_vigencia)
+    
+    if (id_vigencia && id_unidad) {
+      if (modulo === "formulacion") {
+        return {nombre_plan, id_unidad, id_vigencia}
+      } else if (modulo == "seguimiento") {
+        const plan_id = await this.getIdPlan(nombre_plan, id_unidad, id_vigencia)
+        return {plan_id, trimestre: dataSistema.trimestre}
+      }
+    }
+    return null
+  }
 }

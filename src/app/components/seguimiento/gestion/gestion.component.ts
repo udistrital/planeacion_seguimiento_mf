@@ -51,9 +51,9 @@ export class GestionComponent implements OnInit {
     activatedRoute.params.subscribe((prm) => {
       this.planId = prm['plan_id'];
       this.trimestreId = prm['trimestre'];
+      this.loadDataSeguimiento();
     });
     this.dataSource = new MatTableDataSource<any>();
-    this.loadDataSeguimiento();
     this.formGestionSeguimiento = this.formBuilder.group({
       unidad: ['', Validators.required],
       estado: ['', Validators.required],
