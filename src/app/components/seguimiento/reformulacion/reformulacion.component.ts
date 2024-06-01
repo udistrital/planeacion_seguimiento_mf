@@ -1,10 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import {
   FormBuilder,
   FormControl,
   FormGroup,
   Validators,
 } from '@angular/forms';
+import { MatPaginator, MatPaginatorIntl } from '@angular/material/paginator';
+import { MatTableDataSource } from '@angular/material/table';
 import { DataRequest } from 'src/app/models/dataRequest';
 import { Dependencia } from 'src/app/models/dependencia';
 import { EstadoPlan } from 'src/app/models/estadoPlan';
@@ -32,36 +34,69 @@ export class ReformulacionComponent implements OnInit {
   vigenciaSeleccionada: Vigencia | undefined = undefined;
   planSeleccionado: Plan | undefined = undefined;
 
+  columnasMostradas: string[] = [
+    'dependencia',
+    'vigencia',
+    'nombre',
+    'acciones',
+  ];
+  informacionTabla: MatTableDataSource<any>;
+  inputsFiltros!: NodeListOf<HTMLInputElement>;
+  planesCargadosDinamicamente = [
+    {
+      dependencia_nombre: 'VICERRECTORIA ACADEMICA',
+      vigencia: 2202,
+      nombre: 'Plan 1',
+    },
+    {
+      dependencia_nombre: 'VICERRECTORIA ACADEMICA',
+      vigencia: 2202,
+      nombre: 'Plan 2',
+    },
+    {
+      dependencia_nombre: 'FACULTAD DE INGENIERIA',
+      vigencia: 2202,
+      nombre: 'Plan 3',
+    },
+    {
+      dependencia_nombre: 'VICERRECTORIA ACADEMICA',
+      vigencia: 2202,
+      nombre: 'Plan 4',
+    },
+  ];
+
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+
   constructor(
     private formBuilder: FormBuilder,
     private request: RequestManager,
-    private autenticationService: ImplicitAutenticationService
+    private autenticationService: ImplicitAutenticationService,
+    private _changeDetectorRef: ChangeDetectorRef
   ) {
-    let roles: any = this.autenticationService.getRole();
-    if (
-      roles.__zone_symbol__value.find(
-        (x: string) => x == 'JEFE_DEPENDENCIA' || x == 'ASISTENTE_DEPENDENCIA'
-      )
-    ) {
-      this.rol = 'JEFE_DEPENDENCIA';
-    } else if (
-      roles.__zone_symbol__value.find((x: string) => x == 'PLANEACION')
-    ) {
-      this.rol = 'PLANEACION';
-    } else if (
-      roles.__zone_symbol__value.find(
-        (x: string) => x == 'JEFE_UNIDAD_PLANEACION'
-      )
-    ) {
-      this.rol = 'JEFE_UNIDAD_PLANEACION';
-    }
     this.formSelect = this.formBuilder.group({
       selectUnidad: new FormControl({ value: '', disabled: false }),
       selectVigencia: new FormControl({ value: '', disabled: true }),
       selectPlan: new FormControl({ value: '', disabled: true }),
     });
+    this.informacionTabla = new MatTableDataSource<any>(
+      this.planesCargadosDinamicamente
+    );
+    this.informacionTabla.filterPredicate = (data, _) => this.filtroTabla(data);
+    this.informacionTabla.paginator = this.paginator;
   }
   async ngOnInit() {
+    let roles: string[] = await this.autenticationService.getRole();
+    if (
+      roles.find(
+        (x: string) => x == 'JEFE_DEPENDENCIA' || x == 'ASISTENTE_DEPENDENCIA'
+      )
+    ) {
+      this.rol = 'JEFE_DEPENDENCIA';
+    } else if (roles.find((x) => x == 'PLANEACION')) {
+      this.rol = 'PLANEACION';
+    } else if (roles.find((x) => x == 'JEFE_UNIDAD_PLANEACION')) {
+      this.rol = 'JEFE_UNIDAD_PLANEACION';
+    }
     if (
       this.rol == 'JEFE_DEPENDENCIA' ||
       this.rol == 'ASISTENTE_DEPENDENCIA' ||
@@ -72,6 +107,11 @@ export class ReformulacionComponent implements OnInit {
       await this.cargarUnidades();
     }
     this.cargarVigencias();
+  }
+
+  ngAfterViewInit(): void {
+    this.inputsFiltros = document.querySelectorAll('input');
+    this._changeDetectorRef.markForCheck();
   }
 
   async validarUnidad() {
@@ -304,7 +344,59 @@ export class ReformulacionComponent implements OnInit {
         timer: 2500,
       });
     } else {
-      console.log(this.formSelect.value);
+      this.consultar({
+        dependencia_nombre: this.formSelect.get('selectUnidad')?.value,
+        vigencia: this.formSelect.get('selectVigencia')?.value,
+        nombre: this.formSelect.get('selectPlan')?.value,
+      });
     }
+  }
+  consultar(value: any) {
+    console.log(value);
+  }
+
+  filtroTabla(seg: any) {
+    let filtrosPasados: number = 0;
+    const valoresAComparar = [
+      seg.dependencia_nombre.toLowerCase(),
+      seg.vigencia.toString(),
+      seg.nombre.toLowerCase(),
+    ];
+    console.log(this.inputsFiltros);
+    this.inputsFiltros.forEach((input, posicion) => {
+      if (
+        valoresAComparar[posicion].includes(input.value.trim().toLowerCase())
+      ) {
+        filtrosPasados++;
+      }
+    });
+    return filtrosPasados === valoresAComparar.length;
+  }
+
+  async ajustarData(event: any) {
+    // TODO: Actualizar para traer los datos pertinentes dependiendo de la dependencia
+    let nombreUnidad = event.value;
+    // await this.cargarPlanes(event.value);
+    this.planesCargadosDinamicamente = this.planesCargadosDinamicamente.filter(
+      (data) => data.dependencia_nombre === nombreUnidad
+    );
+    this.informacionTabla = new MatTableDataSource<any>(
+      this.planesCargadosDinamicamente
+    );
+    this.informacionTabla.filterPredicate = (plan, _) => this.filtroTabla(plan);
+    this.informacionTabla.paginator = this.paginator;
+  }
+  aplicarFiltro(event: Event) {
+    let filtro: string = (event.target as HTMLInputElement).value;
+    if (filtro === '') {
+      this.inputsFiltros.forEach((input) => {
+        if (input.value !== '') {
+          filtro = input.value;
+          return;
+        }
+      });
+    }
+    // Se debe poner algún valor que no sea vacio  para que se accione el filtro la tabla
+    this.informacionTabla.filter = filtro.trim().toLowerCase();
   }
 }
