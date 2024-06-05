@@ -1,7 +1,7 @@
 import { Component, OnInit, Inject } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { DomSanitizer } from '@angular/platform-browser';
-import { ImplicitAutenticationService } from 'src/app/services/implicitAutentication.service';
+import { ImplicitAutenticationService } from '@udistrital/planeacion-utilidades-module';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -17,9 +17,9 @@ export class VisualizarDocumentoDialogComponent implements OnInit {
   banderaPUI: boolean;
   observacion: string;
   observacionText: string;
+  private autenticationService = new ImplicitAutenticationService();
 
   constructor(
-    private autenticationService: ImplicitAutenticationService,
     public dialogRef: MatDialogRef<VisualizarDocumentoDialogComponent>,
     private sanitizer: DomSanitizer,
     @Inject(MAT_DIALOG_DATA) public data: any) {
@@ -43,7 +43,7 @@ export class VisualizarDocumentoDialogComponent implements OnInit {
   }
 
   getRol() {
-    let roles: any = this.autenticationService.getRole();
+    let roles: any = this.autenticationService.getRoles();
     if (roles.__zone_symbol__value.find((x: string) => x == 'JEFE_DEPENDENCIA' || x == 'ASISTENTE_DEPENDENCIA')) {
       this.rol = 'JEFE_DEPENDENCIA';
     } else if (roles.__zone_symbol__value.find((x: string) => x == 'PLANEACION')) {

@@ -13,7 +13,8 @@ import { MatPaginator, MatPaginatorIntl } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute, Router } from '@angular/router';
 import { GestorDocumentalService } from 'src/app/services/gestorDocumental.service';
-import { ImplicitAutenticationService } from 'src/app/services/implicitAutentication.service';
+import { GestorDocumentalMethods } from '@udistrital/planeacion-utilidades-module';
+import { ImplicitAutenticationService } from '@udistrital/planeacion-utilidades-module';
 import { RequestManager } from 'src/app/services/requestManager.service';
 import { Notificaciones } from "src/app/services/notificaciones";
 import { environment } from 'src/environments/environment';
@@ -125,9 +126,10 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
   calcular: boolean = true;
   abrirDocs: boolean = true;
   codigoNotificacion: string = "";
+  private gestorMethods = new GestorDocumentalMethods();
+  private autenticationService = new ImplicitAutenticationService();
 
   constructor(
-    private autenticationService: ImplicitAutenticationService,
     private activatedRoute: ActivatedRoute,
     private formBuilder: FormBuilder,
     private router: Router,
@@ -182,23 +184,19 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
   }
 
   getRol() {
-    let roles: any = this.autenticationService.getRole();
+    let roles: any = this.autenticationService.getRoles();
     if (
-      roles.__zone_symbol__value.find(
-        (x: string) => x == 'JEFE_DEPENDENCIA' || x == 'ASISTENTE_DEPENDENCIA'
-      )
+      roles.__zone_symbol__value.find((x: string) => x == 'JEFE_DEPENDENCIA')
     ) {
       this.rol = 'JEFE_DEPENDENCIA';
+    } else if (
+      roles.__zone_symbol__value.find((x: string) => x == 'ASISTENTE_DEPENDENCIA')
+    ) {
+      this.rol = 'ASISTENTE_DEPENDENCIA';
     } else if (
       roles.__zone_symbol__value.find((x: string) => x == 'PLANEACION')
     ) {
       this.rol = 'PLANEACION';
-    } else if (
-      roles.__zone_symbol__value.find(
-        (x: string) => x == 'JEFE_UNIDAD_PLANEACION'
-      )
-    ) {
-      this.rol = 'JEFE_UNIDAD_PLANEACION';
     }
   }
 
@@ -267,7 +265,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
   }
 
   verificarFormulario() {
-    if (this.rol === 'PLANEACION' || this.rol === 'JEFE_UNIDAD_PLANEACION') {
+    if (this.rol === 'PLANEACION') {
       if (
         this.estadoActividad === 'Actividad en reporte' ||
         this.estadoActividad === 'Sin reporte'
@@ -349,7 +347,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
             documento: null,
             evidencia: documentos,
             unidad:
-              this.rol != 'PLANEACION' && this.rol != 'JEFE_UNIDAD_PLANEACION',
+              this.rol != 'PLANEACION',
             _id: this.seguimiento.id,
           };
 
@@ -437,7 +435,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
               },
               descripcion:
                 'Documento de soporte para seguimiento de plan de acción',
-              file: await this.gestorDocumental.fileToBase64(aux),
+              file: await this.gestorMethods.fileToBase64(aux),
               Activo: true,
             },
           ];
@@ -446,7 +444,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
             documento: documento,
             evidencia: this.documentos,
             unidad:
-              this.rol != 'PLANEACION' && this.rol != 'JEFE_UNIDAD_PLANEACION',
+              this.rol != 'PLANEACION',
             _id: this.seguimiento.id,
           };
 

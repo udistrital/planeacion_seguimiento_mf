@@ -1,5 +1,5 @@
 <mat-card class="card-oas" style="width: 95vmax; margin: 0 auto;">
-  <ng-container *ngIf="rol=='JEFE_DEPENDENCIA' || rol=='JEFE_UNIDAD_PLANEACION'">
+  <ng-container *ngIf="rol=='JEFE_DEPENDENCIA'">
     <mat-card-header style="place-content: center;">
       <mat-card-title>Seguimiento al Plan de Acción</mat-card-title>
     </mat-card-header>
@@ -18,7 +18,7 @@
   <br>
   <mat-card-content>
     <form [formGroup]="formSelect">
-      <ng-container *ngIf="rol=='JEFE_DEPENDENCIA' || rol=='JEFE_UNIDAD_PLANEACION'">
+      <ng-container *ngIf="rol=='JEFE_DEPENDENCIA'">
         <div>
           <div>
             <u class="textGuide">
@@ -42,7 +42,7 @@
       <br>
 
       <form [formGroup]="formSelect"
-        *ngIf="rol=='PLANEACION' || rol=='JEFE_DEPENDENCIA' || rol=='ASISTENTE_DEPENDENCIA' || rol=='JEFE_DEPENDENCIA_PLANEACION' || rol=='JEFE_UNIDAD_PLANEACION'">
+        *ngIf="rol=='PLANEACION' || rol=='JEFE_DEPENDENCIA' || rol=='ASISTENTE_DEPENDENCIA'">
         <ng-container>
           <div class="flex">
             <div class="sameRow" style="vertical-align: middle;" [style.width.%]="100">
@@ -150,7 +150,7 @@
       </form>
       <br>
       <form [formGroup]="formPlanes"
-        *ngIf="rol=='PLANEACION' || rol=='JEFE_DEPENDENCIA' || rol=='ASISTENTE_DEPENDENCIA' || rol=='JEFE_DEPENDENCIA_PLANEACION' || rol=='JEFE_UNIDAD_PLANEACION' && vigencia != undefined && unidad != undefined">
+        *ngIf="rol=='PLANEACION' || rol=='JEFE_DEPENDENCIA' || rol=='ASISTENTE_DEPENDENCIA' && vigencia != undefined && unidad != undefined">
         <ng-container>
           <div class="sameRow" style="vertical-align: middle;">
             <h4>Plan de Acción</h4>
@@ -171,7 +171,7 @@
       <br>
 
       <ng-container
-        *ngIf="(rol=='JEFE_DEPENDENCIA' && plan != undefined && vigencia != undefined) || (rol=='ASISTENTE_DEPENDENCIA' && plan != undefined && vigencia != undefined) || (rol=='PLANEACION' && plan != undefined && vigencia != undefined) || (rol=='JEFE_UNIDAD_PLANEACION' && plan != undefined && vigencia != undefined)">
+        *ngIf="(rol=='JEFE_DEPENDENCIA' && plan != undefined && vigencia != undefined) || (rol=='ASISTENTE_DEPENDENCIA' && plan != undefined && vigencia != undefined) || (rol=='PLANEACION' && plan != undefined && vigencia != undefined)">
         <div class="flex">
           <div class="sameRow">
             <h4>Listado de Planes de Acción</h4>
@@ -183,7 +183,7 @@
                   <td mat-cell *matCellDef="let row"> {{row.unidad}} </td>
                 </ng-container>
 
-                <ng-container *ngIf="rol=='JEFE_DEPENDENCIA' || rol=='JEFE_UNIDAD_PLANEACION'" matColumnDef="unidad">
+                <ng-container *ngIf="rol=='JEFE_DEPENDENCIA'" matColumnDef="unidad">
                   <th mat-header-cell *matHeaderCellDef style="background: var(--primary);"> Nombre del plan </th>
                   <td mat-cell class="justificarColumna" *matCellDef="let row"> {{row.nombre}} </td>
                 </ng-container>
@@ -222,7 +222,7 @@
                   </td>
                 </ng-container>
 
-                <div *ngIf="rol=='JEFE_DEPENDENCIA' || rol=='JEFE_UNIDAD_PLANEACION'">
+                <div *ngIf="rol=='JEFE_DEPENDENCIA'">
                   <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
                   <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
                 </div>

@@ -5,7 +5,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute, Router } from '@angular/router';
 import { navigateToUrl } from 'single-spa';
 import Indicador from 'src/app/models/indicador';
-import { ImplicitAutenticationService } from 'src/app/services/implicitAutentication.service';
+import { ImplicitAutenticationService, ServiceCookies } from '@udistrital/planeacion-utilidades-module';
 import { RequestManager } from 'src/app/services/requestManager.service';
 import { Notificaciones } from 'src/app/services/notificaciones';
 import { VerificarFormulario } from 'src/app/services/verificarFormulario.service';
@@ -39,6 +39,9 @@ export class GestionComponent implements OnInit {
   estadoLista: boolean = false;
   codigoNotificacion: string = '';
 
+  private autenticationService = new ImplicitAutenticationService();
+  private serviceCookies = new ServiceCookies();
+
   constructor(
     activatedRoute: ActivatedRoute,
     private formBuilder: FormBuilder,
@@ -46,7 +49,6 @@ export class GestionComponent implements OnInit {
     private notificacionesService: Notificaciones,
     private autenticationService: ImplicitAutenticationService,
     private router: Router,
-    private verificarFormulario: VerificarFormulario
   ) {
     activatedRoute.params.subscribe((prm) => {
       this.planId = prm['plan_id'];
@@ -68,7 +70,7 @@ export class GestionComponent implements OnInit {
 
   ngOnInit(): void {
     this.getRol();
-    const listaCookie = this.verificarFormulario.getCookie("estadoLista");
+    const listaCookie = this.serviceCookies.getCookie("estadoLista");
     if (listaCookie != undefined) {
       this.estadoLista = true;
     }
@@ -86,31 +88,27 @@ export class GestionComponent implements OnInit {
   }
 
   ngOnDestroy() {
-    const listaCookie = this.verificarFormulario.getCookie("estadoLista");
+    const listaCookie = this.serviceCookies.getCookie("estadoLista");
     this.estadoLista = false;
     if (listaCookie != undefined) {
-      this.verificarFormulario.deleteCookie("estadoLista");
+      this.serviceCookies.deleteCookie("estadoLista");
     }
   }
 
   getRol() {
-    let roles: any = this.autenticationService.getRole();
+    let roles: any = this.autenticationService.getRoles();
     if (
-      roles.__zone_symbol__value.find(
-        (x: string) => x == 'JEFE_DEPENDENCIA' || x == 'ASISTENTE_DEPENDENCIA'
-      )
+      roles.__zone_symbol__value.find((x: string) => x == 'JEFE_DEPENDENCIA')
     ) {
       this.rol = 'JEFE_DEPENDENCIA';
+    } else if (
+      roles.__zone_symbol__value.find((x: string) => x == 'ASISTENTE_DEPENDENCIA')
+    ) {
+      this.rol = 'ASISTENTE_DEPENDENCIA';
     } else if (
       roles.__zone_symbol__value.find((x: string) => x == 'PLANEACION')
     ) {
       this.rol = 'PLANEACION';
-    } else if (
-      roles.__zone_symbol__value.find(
-        (x: string) => x == 'JEFE_UNIDAD_PLANEACION'
-      )
-    ) {
-      this.rol = 'JEFE_UNIDAD_PLANEACION';
     }
   }
 
