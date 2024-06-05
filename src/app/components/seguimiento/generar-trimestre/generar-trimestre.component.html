@@ -146,8 +146,7 @@
         </div>
 
         <div class="container-border" *ngIf="mostrarObservaciones">
-          <h4>&nbsp;&nbsp;&nbsp;&nbsp;Observaciones Oficina Asesora de Planeación y
-            Control&nbsp;&nbsp;&nbsp;&nbsp;</h4>
+          <h4>&nbsp;&nbsp;&nbsp;&nbsp;{{txtObservaciones}}&nbsp;&nbsp;&nbsp;&nbsp;</h4>
           <textarea class="textareaContenido" autoresize id="observaciones"
             [placeholder]="txtPlaceHolderObservaciones"
             formControlName="observaciones" required [value]="datosCualitativo.observaciones" ngModel

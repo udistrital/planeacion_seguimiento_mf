@@ -86,19 +86,19 @@
 
         <button *ngIf="rol=='JEFE_DEPENDENCIA' && estado=='Enviado a revisión'" class="background-button"
           mat-raised-button color="primary"
-          (click)="iniciarRevisionJefeUnidad()">Iniciar revisión Jefe Dependencia</button>
+          (click)="iniciarRevisionJefeUnidad()" style="color: white">Iniciar revisión Jefe Dependencia</button>
 
         <button *ngIf="rol=='JEFE_DEPENDENCIA' && estado=='En revisión JU'" class="background-button"
           mat-raised-button color="primary"
-          (click)="finalizarRevisionJefeDependencia()">Finalizar revisión Jefe Dependencia</button>
+          (click)="finalizarRevisionJefeDependencia()" style="color: white">Finalizar revisión Jefe Dependencia</button>
 
         <button *ngIf="(rol=='PLANEACION' || rol=='ASISTENTE_PLANEACION') && estado=='Revisión Verificada'"
           class="background-button" mat-raised-button color="primary"
-          (click)="iniciarRevision()">Iniciar revisión OAPC</button>
+          (click)="iniciarRevision()" style="color: white">Iniciar revisión OAPC</button>
 
-        <button *ngIf="(rol=='PLANEACION' || rol=='ASISTENTE_PLANEACION') && estado=='En revisión OAPC'"
+        <button *ngIf="rol=='PLANEACION' && estado=='En revisión OAPC'"
           class="background-button" mat-raised-button color="primary"
-          (click)="finalizarRevision()">Finalizar revisión OAPC</button>
+          (click)="finalizarRevision()" style="color: white">Finalizar revisión OAPC</button>
       </div>
     </form>
   </mat-card-content>

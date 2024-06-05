@@ -363,6 +363,24 @@ export class GestionComponent implements OnInit {
               });
             }
           }
+        }, (error: any) => {
+          let DataError = error.error;
+          let message: string = '<b>ID - Actividad</b><br/>';
+          let mensajeActividades: any = JSON.parse(DataError.Message);
+          let actividades: any = mensajeActividades.actividades;
+          let llaves: string[] = Object.keys(actividades);
+          for (let llave of llaves) {
+            message += llave + ' - ' + actividades[llave] + '<br/>';
+          }
+
+          Swal.fire({
+            title: 'Actividades sin revisar',
+            icon: 'error',
+            showConfirmButton: true,
+            html:
+              'Debe verificar o realizar las observaciones a las siguientes actividades:<br/>' +
+              message,
+          });
         });
       } else if (result.dismiss === Swal.DismissReason.cancel) {
         Swal.fire({
@@ -431,6 +449,24 @@ export class GestionComponent implements OnInit {
                   });
                 }
               }
+            }, (error: any) => {
+              let DataError = error.error;
+              let message: string = '<b>ID - Actividad</b><br/>';
+              let mensajeActividades: any = JSON.parse(DataError.Message);
+              let actividades: any = mensajeActividades.actividades;
+              let llaves: string[] = Object.keys(actividades);
+              for (let llave of llaves) {
+                message += llave + ' - ' + actividades[llave] + '<br/>';
+              }
+    
+              Swal.fire({
+                title: 'Actividades sin revisar',
+                icon: 'error',
+                showConfirmButton: true,
+                html:
+                  'Debe verificar o realizar las observaciones a las siguientes actividades:<br/>' +
+                  message,
+              });
             });
         } else if (result.dismiss === Swal.DismissReason.cancel) {
           Swal.fire({

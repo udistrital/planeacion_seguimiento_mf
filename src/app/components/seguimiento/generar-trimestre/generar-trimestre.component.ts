@@ -1475,7 +1475,8 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
   verificarObservaciones() {
     if (
       this.seguimiento.cualitativo.observaciones != '' &&
-      this.seguimiento.cualitativo.observaciones != 'Sin observación'
+      this.seguimiento.cualitativo.observaciones != 'Sin observación' &&
+      this.seguimiento.cualitativo.observaciones != undefined
     ) {
       return true;
     }
@@ -1488,7 +1489,8 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
       const indicador = this.seguimiento.cuantitativo.indicadores[index];
       if (
         indicador.observaciones != '' &&
-        indicador.observaciones != 'Sin observación'
+        indicador.observaciones != 'Sin observación' &&
+        indicador.observaciones != undefined
       ) {
         return true;
       }
@@ -1498,7 +1500,8 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
       const evidencia = this.seguimiento.evidencia[index];
       if (
         evidencia.Observacion != '' &&
-        evidencia.Observacion != 'Sin observación'
+        evidencia.Observacion != 'Sin observación' &&
+        evidencia.Observacion != undefined
       ) {
         return true;
       }
