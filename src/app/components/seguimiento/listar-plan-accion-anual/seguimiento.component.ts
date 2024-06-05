@@ -17,6 +17,7 @@ import Swal from 'sweetalert2';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { RequestManager } from 'src/app/services/requestManager.service';
+import { Notificaciones } from 'src/app/services/notificaciones';
 import { ImplicitAutenticationService } from '@udistrital/planeacion-utilidades-module';
 import Plan from 'src/app/models/plan';
 import { DataRequest } from 'src/app/models/dataRequest';
@@ -82,6 +83,8 @@ export class ListComponent implements OnInit, AfterViewInit {
     public dialog: MatDialog,
     private request: RequestManager,
     private router: Router,
+    private notificacionesService: Notificaciones,
+    private autenticationService: ImplicitAutenticationService,
     private formBuilder: FormBuilder,
     private activatedRoute: ActivatedRoute,
     private codigosEstados: CodigosEstados
@@ -151,6 +154,26 @@ export class ListComponent implements OnInit, AfterViewInit {
         } as Plan);
       }
     });
+
+    // Obtener notificación
+    this.getNotificacion()
+    window.addEventListener("notificacion", () => {
+      this.getNotificacion()
+    })
+  }
+
+  getNotificacion(){
+    let storage = localStorage.getItem('notificacion')
+    if(storage){
+      let notificacion = JSON.parse(storage)
+      localStorage.removeItem('notificacion')
+      this.loadNotificacion(notificacion)
+    }
+  }
+
+  async loadNotificacion(notificacion: any){
+    let data:any = await this.notificacionesService.loadNotificacion(notificacion)
+    this.router.navigate([`gestion-seguimiento/${data.plan_id}/${data.trimestre}`]);
   }
 
   async validarUnidad() {
