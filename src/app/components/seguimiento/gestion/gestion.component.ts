@@ -9,6 +9,7 @@ import { ImplicitAutenticationService, ServiceCookies } from '@udistrital/planea
 import { RequestManager } from 'src/app/services/requestManager.service';
 import { environment } from 'src/environments/environment';
 import Swal from 'sweetalert2';
+import { DataRequest } from 'src/app/models/dataRequest';
 
 @Component({
   selector: 'app-gestion',
@@ -266,30 +267,40 @@ export class GestionComponent implements OnInit {
                     }
                   });
                 } else {
-                  let message: string = '<b>ID - Actividad</b><br/>';
-                  let actividades: any = data.Data.actividades;
-                  let llaves: string[] = Object.keys(actividades);
-                  for (let llave of llaves) {
-                    message += llave + ' - ' + actividades[llave] + '<br/>';
-                  }
-
-                  if (this.estado != 'Con observaciones') {
-                    Swal.fire({
-                      title: 'Debe reportar las siguientes actividades:',
-                      icon: 'error',
-                      showConfirmButton: true,
-                      html: message,
-                    });
-                  } else {
-                    Swal.fire({
-                      title:
-                        'Debe revisar las observaciones de las siguientes actividades:',
-                      icon: 'error',
-                      showConfirmButton: true,
-                      html: message,
-                    });
-                  }
+                  Swal.fire({
+                    title: 'Error en la operación',
+                    icon: 'error',
+                    text: `${JSON.stringify(data.Message)}`,
+                    showConfirmButton: false,
+                    timer: 2500
+                  })
                 }
+              }
+            }, (error: any) => {
+              let DataError = error.error;
+              let message: string = '<b>ID - Actividad</b><br/>';
+              let mensajeActividades: any = JSON.parse(DataError.Message);
+              let actividades: any = mensajeActividades.actividades;
+              let llaves: string[] = Object.keys(actividades);
+              for (let llave of llaves) {
+                message += llave + ' - ' + actividades[llave] + '<br/>';
+              }
+
+              if (this.estado != 'Con observaciones') {
+                Swal.fire({
+                  title: 'Debe reportar las siguientes actividades:',
+                  icon: 'error',
+                  showConfirmButton: true,
+                  html: message,
+                });
+              } else {
+                Swal.fire({
+                  title:
+                    'Debe revisar las observaciones de las siguientes actividades:',
+                  icon: 'error',
+                  showConfirmButton: true,
+                  html: message,
+                });
               }
             });
         } else if (result.dismiss === Swal.DismissReason.cancel) {
@@ -580,7 +591,6 @@ export class GestionComponent implements OnInit {
       if (result.isConfirmed) {
         this.request.get(environment.PLANES_CRUD, `estado-seguimiento?query=activo:true,codigo_abreviacion:RJU`).subscribe((data: any) => {
           if (data) {
-            console.log(data);
             this.seguimiento.estado_seguimiento_id = data.Data[0]._id;;
             this.request.put(environment.PLANES_CRUD, `seguimiento`, this.seguimiento, this.seguimiento._id).subscribe((data: any) => {
               if (data) {

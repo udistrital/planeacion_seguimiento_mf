@@ -155,7 +155,7 @@
         </div>
 
         <div class="container-button3">
-          <button class="background-button" mat-raised-button color="primary" *ngIf="!readonlyFormulario"
+          <button class="background-button" mat-raised-button color="primary" style="color: white" *ngIf="!readonlyFormulario"
             (click)="guardarCualitativo()">Guardar componente cualitativo</button>
 
           <button class="background-button" mat-raised-button color="primary"
@@ -408,7 +408,7 @@
         <br>
 
         <div class="align-button-enviar">
-          <button class="background-button" mat-raised-button color="primary" *ngIf="!readonlyFormulario"
+          <button class="background-button" mat-raised-button color="primary" style="color: white" *ngIf="!readonlyFormulario"
             (click)="guardarCuantitativo()">Guardar componente cuantitativo</button>
 
           <button class="background-button" mat-raised-button color="primary"
@@ -458,7 +458,7 @@
         <button class="background-button" mat-raised-button color="primary" style="color:white"
           (click)="backClicked()">Regresar</button>
         <button class="background-button" mat-raised-button color="primary" style="color:white"
-          *ngIf="estadoActividad==='Actividad avalada'" (click)="retornarRevision()">Retornar a
+          *ngIf="estadoActividad==='Actividad avalada' && estadoSeguimiento==='En revisión OAPC'" (click)="retornarRevision()">Retornar a
           revisión</button>
       </div>
 

@@ -76,13 +76,13 @@
           style="color:white;">Regresar</button>
 
         <button *ngIf="(rol=='JEFE_DEPENDENCIA' || rol=='ASISTENTE_DEPENDENCIA') && this.estado == 'En reporte'"
-          class="background-button" mat-raised-button color="primary" (click)="reportar()">Enviar
+          class="background-button" mat-raised-button color="primary" (click)="reportar()" style="color: white">Enviar
           reporte</button>
 
         <button *ngIf="(rol=='JEFE_DEPENDENCIA' || rol=='ASISTENTE_DEPENDENCIA') &&
           (estado == 'Con observaciones' || estado == 'Revisión Verificada con Observaciones')"
           class="background-button" mat-raised-button color="primary"
-          (click)="reportar()">Enviar corrección</button>
+          (click)="reportar()" style="color: white">Enviar corrección</button>
 
         <button *ngIf="rol=='JEFE_DEPENDENCIA' && estado=='Enviado a revisión'" class="background-button"
           mat-raised-button color="primary"

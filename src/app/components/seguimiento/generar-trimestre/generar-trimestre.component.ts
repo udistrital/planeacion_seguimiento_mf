@@ -464,7 +464,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
 
   async onChangeDocumento(event: any) {
     if (event != undefined) {
-      let aux = event.files[0];
+      let aux = event.target.files[0];
       if (!this.FORMATOS.includes(aux.type)) {
         Swal.fire({
           title: 'Archivo no válido',
@@ -537,7 +537,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
                 this.documentos.pop();
                 Swal.fire({
                   title: 'Error en la operación',
-                  text: `No se pudo subir el documento`,
+                  text: `No se pudo subir el documento2`,
                   icon: 'warning',
                   showConfirmButton: false,
                   timer: 2500,
@@ -557,7 +557,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
     } else {
       Swal.fire({
         title: 'Error en la operación',
-        text: `No se pudo subir el documento`,
+        text: `No se pudo subir el documento1`,
         icon: 'warning',
         showConfirmButton: false,
         timer: 2500,
@@ -699,18 +699,17 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
     }).then(
       (result) => {
         if (result.isConfirmed) {
+          let cualitativoBody = {
+            _id: this.seguimiento.id,
+            informacion: this.seguimiento.informacion,
+            evidencias: this.seguimiento.evidencia,
+            cualitativo: this.seguimiento.cualitativo,
+            cuantitativo: this.seguimiento.cuantitativo,
+            dependencia: this.rol == 'JEFE_DEPENDENCIA',
+          };
           this.request
             .put(
-              environment.SEGUIMIENTO_MID,
-              `detalles/cualitativo`,
-              {
-                _id: this.seguimiento.id,
-                informacion: this.seguimiento.informacion,
-                evidencias: this.seguimiento.evidencia,
-                cualitativo: this.seguimiento.cualitativo,
-                cuantitativo: this.seguimiento.cuantitativo,
-                dependencia: this.rol == 'JEFE_DEPENDENCIA',
-              },
+              environment.SEGUIMIENTO_MID,`detalles/cualitativo`,cualitativoBody,
               this.planId + `/` + this.indexActividad + `/` + this.trimestreId
             )
             .subscribe(
