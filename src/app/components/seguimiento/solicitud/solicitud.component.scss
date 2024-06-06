@@ -1,0 +1,138 @@
+@use "../../styles/global";
+
+.col2 {
+  background-color: var(--primary);
+  color: var(--md-primary-contrast-700);
+  border: 1px solid var(--primary);
+  padding: 1%;
+  border-radius: 5px;
+  width: fit-content;
+}
+
+.container-border {
+  border: 1px solid var(--primary);
+  padding: 1%;
+  border-radius: 15px;
+
+  h4 {
+    text-align: initial;
+    width: 20%;
+    border: 1px solid var(--primary);
+    background: var(--md-primary-contrast-700);
+    color: var(--primary);
+    font-size: 15px;
+    margin-top: -28px;
+    margin-bottom: 10px;
+    margin-left: 7px;
+    padding: 0.5%;
+    position: relative;
+    border-radius: 15px;
+    font-weight: normal;
+  }
+}
+
+input {
+  background: none;
+}
+
+.contenedor {
+  padding: 12px;
+  display: grid;
+  grid-template-columns: 66% auto;
+  gap: 10px;
+  align-items: center;
+  .unidad,
+  .plan {
+    border: solid 1px;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    outline: none;
+  }
+
+  .unidad {
+    width: 60%;
+  }
+
+  .plan {
+    width: 76%;
+  }
+}
+
+.background-button {
+  border-radius: 8px;
+  width: 29%;
+  height: 40px;
+  margin: 1%;
+}
+
+.container-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  button {
+    color: var(--md-primary-contrast-700);
+  }
+}
+
+.state {
+  display: flex;
+  gap: 5px;
+  text-align: center;
+  border: 1px solid var(--primary);
+  padding: 1%;
+  border-radius: 5px;
+}
+
+.solicitud {
+  background-color: var(--md-primary-contrast-700);
+  border-radius: 15px;
+  padding: 1%;
+  padding-top: 2%;
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+
+  .container-border {
+    width: 50%;
+    h4 {
+      width: 35%;
+      padding-left: 8px;
+      background: var(--primary);
+      color: var(--md-primary-contrast-700);
+      font-size: 14px;
+    }
+    .contenido {
+      display: flex;
+      p {
+        width: 50%;
+        align-self: center;
+      }
+      .botones {
+        display: flex;
+        width: 50%;
+        div {
+          display: flex;
+          flex-direction: column;
+          button {
+            width: 95%;
+            color: var(--md-primary-contrast-700);
+          }
+          .mdc-icon-button {
+            height: auto;
+          }
+          .mat-icon {
+            font-size: 5rem;
+            width: 100%;
+            height: auto;
+            color: #0a0a0a;
+          }
+        }
+      }
+    }
+  }
+}
+
+input[type="file"] {
+  display: none;
+}

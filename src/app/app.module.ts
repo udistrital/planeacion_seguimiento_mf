@@ -20,6 +20,7 @@ import { GenerarTrimestreComponent } from './components/seguimiento/generar-trim
 import { VisualizarDocumentoDialogComponent } from './components/seguimiento/generar-trimestre/visualizar-documento-dialog/visualizar-documento-dialog.component';
 import { EvidenciasDialogComponent } from './components/seguimiento/evidencias/evidencias-dialog.component';
 import { ReformulacionComponent } from './components/seguimiento/reformulacion/reformulacion.component';
+import { SolicitudComponent } from './components/seguimiento/solicitud/solicitud.component';
 
 @NgModule({
   declarations: [
@@ -30,6 +31,7 @@ import { ReformulacionComponent } from './components/seguimiento/reformulacion/r
     VisualizarDocumentoDialogComponent,
     EvidenciasDialogComponent,
     ReformulacionComponent,
+    SolicitudComponent,
   ],
   imports: [
     BrowserModule,
