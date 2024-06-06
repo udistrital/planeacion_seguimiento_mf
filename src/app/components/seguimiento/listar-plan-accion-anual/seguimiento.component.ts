@@ -17,7 +17,8 @@ import Swal from 'sweetalert2';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { RequestManager } from 'src/app/services/requestManager.service';
-import { ImplicitAutenticationService } from 'src/app/services/implicitAutentication.service';
+import { Notificaciones } from 'src/app/services/notificaciones';
+import { ImplicitAutenticationService } from '@udistrital/planeacion-utilidades-module';
 import Plan from 'src/app/models/plan';
 import { DataRequest } from 'src/app/models/dataRequest';
 import Trimestre from 'src/app/models/trimestre';
@@ -75,16 +76,20 @@ export class ListComponent implements OnInit, AfterViewInit {
     new MatPaginatorIntl(),
     ChangeDetectorRef.prototype
   );
+
+  private autenticationService = new ImplicitAutenticationService();
+
   constructor(
     public dialog: MatDialog,
     private request: RequestManager,
     private router: Router,
+    private notificacionesService: Notificaciones,
     private autenticationService: ImplicitAutenticationService,
     private formBuilder: FormBuilder,
     private activatedRoute: ActivatedRoute,
     private codigosEstados: CodigosEstados
   ) {
-    let roles: any = this.autenticationService.getRole();
+    let roles: any = this.autenticationService.getRoles();
     if (
       roles.__zone_symbol__value.find(
         (x: string) => x == 'JEFE_DEPENDENCIA' || x == 'ASISTENTE_DEPENDENCIA'
@@ -95,12 +100,6 @@ export class ListComponent implements OnInit, AfterViewInit {
       roles.__zone_symbol__value.find((x: string) => x == 'PLANEACION')
     ) {
       this.rol = 'PLANEACION';
-    } else if (
-      roles.__zone_symbol__value.find(
-        (x: string) => x == 'JEFE_UNIDAD_PLANEACION'
-      )
-    ) {
-      this.rol = 'JEFE_UNIDAD_PLANEACION';
     }
     this.unidadSelected = false;
 
@@ -132,8 +131,7 @@ export class ListComponent implements OnInit, AfterViewInit {
     this.codigosEstados.cargarIdentificadores();
     if (
       this.rol == 'JEFE_DEPENDENCIA' ||
-      this.rol == 'ASISTENTE_DEPENDENCIA' ||
-      this.rol == 'JEFE_UNIDAD_PLANEACION'
+      this.rol == 'ASISTENTE_DEPENDENCIA'
     ) {
       await this.validarUnidad();
     } else {
@@ -156,6 +154,26 @@ export class ListComponent implements OnInit, AfterViewInit {
         } as Plan);
       }
     });
+
+    // Obtener notificación
+    this.getNotificacion()
+    window.addEventListener("notificacion", () => {
+      this.getNotificacion()
+    })
+  }
+
+  getNotificacion(){
+    let storage = localStorage.getItem('notificacion')
+    if(storage){
+      let notificacion = JSON.parse(storage)
+      localStorage.removeItem('notificacion')
+      this.loadNotificacion(notificacion)
+    }
+  }
+
+  async loadNotificacion(notificacion: any){
+    let data:any = await this.notificacionesService.loadNotificacion(notificacion)
+    this.router.navigate([`gestion-seguimiento/${data.plan_id}/${data.trimestre}`]);
   }
 
   async validarUnidad() {
@@ -373,7 +391,7 @@ export class ListComponent implements OnInit, AfterViewInit {
                         }
                         let body = {
                           periodo_id: periodos[i].Id,
-                          tipo_seguimiento_id: '61f236f525e40c582a0840d0',
+                          tipo_seguimiento_id: this.codigosEstados.getIdSeguimientoPlanAccion(),
                           planes_interes: JSON.stringify([plan]),
                           unidades_interes: JSON.stringify([unidad]),
                           activo: true
@@ -430,8 +448,7 @@ export class ListComponent implements OnInit, AfterViewInit {
                                       if (
                                         (this.rol != undefined &&
                                           this.rol == 'PLANEACION') ||
-                                        this.rol == 'JEFE_DEPENDENCIA' ||
-                                        this.rol == 'JEFE_UNIDAD_PLANEACION'
+                                        this.rol == 'JEFE_DEPENDENCIA'
                                       ) {
                                         await this.evaluarFechasPlan();
                                       }
@@ -466,12 +483,15 @@ export class ListComponent implements OnInit, AfterViewInit {
                             });
                         });
                       } else {
+                        let body = {
+                          periodo_id: periodos[i].Id,
+                          tipo_seguimiento_id: this.codigosEstados.getIdSeguimientoPlanAccion(),
+                          activo: true,
+                        }
                         await new Promise((resolve, reject) => {
                           this.request
-                            .get(
-                              environment.PLANES_CRUD,
-                              `periodo-seguimiento?query=tipo_seguimiento_id:${this.codigosEstados.getIdSeguimientoPlanAccion()},periodo_id:` +
-                              periodos[i].Id
+                            .post(
+                              environment.PLANES_CRUD,`periodo-seguimiento/buscar-unidad-planes/8`, body
                             )
                             .subscribe({
                               next: async (data: any) => {
@@ -526,8 +546,7 @@ export class ListComponent implements OnInit, AfterViewInit {
                                       if (
                                         (this.rol != undefined &&
                                           this.rol == 'PLANEACION') ||
-                                        this.rol == 'JEFE_DEPENDENCIA' ||
-                                        this.rol == 'JEFE_UNIDAD_PLANEACION'
+                                        this.rol == 'JEFE_DEPENDENCIA'
                                       ) {
                                         await this.evaluarFechasPlan();
                                       }

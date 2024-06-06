@@ -13,8 +13,10 @@ import { MatPaginator, MatPaginatorIntl } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute, Router } from '@angular/router';
 import { GestorDocumentalService } from 'src/app/services/gestorDocumental.service';
-import { ImplicitAutenticationService } from 'src/app/services/implicitAutentication.service';
+import { GestorDocumentalMethods } from '@udistrital/planeacion-utilidades-module';
+import { ImplicitAutenticationService } from '@udistrital/planeacion-utilidades-module';
 import { RequestManager } from 'src/app/services/requestManager.service';
+import { Notificaciones } from "src/app/services/notificaciones";
 import { environment } from 'src/environments/environment';
 import Swal from 'sweetalert2';
 import { EvidenciasDialogComponent } from '../evidencias/evidencias-dialog.component';
@@ -85,6 +87,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
 
   rol: string = '';
   planId: string = '';
+  plan: string = '';
   indexActividad: string = '';
   trimestreId: string = '';
   codigoTrimestre: string = '';
@@ -117,17 +120,21 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
   readonlyObservacion: boolean = true;
   denominadorFijo: boolean = true;
   unidad: string = '';
+  vigencia: any;
   numeradorOriginal: number[] = [];
   denominadorOriginal: number[] = [];
   calcular: boolean = true;
   abrirDocs: boolean = true;
+  codigoNotificacion: string = "";
+  private gestorMethods = new GestorDocumentalMethods();
+  private autenticationService = new ImplicitAutenticationService();
 
   constructor(
-    private autenticationService: ImplicitAutenticationService,
     private activatedRoute: ActivatedRoute,
     private formBuilder: FormBuilder,
     private router: Router,
     private request: RequestManager,
+    private notificacionesService: Notificaciones,
     private gestorDocumental: GestorDocumentalService,
     private _location: Location,
     public dialog: MatDialog
@@ -177,23 +184,19 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
   }
 
   getRol() {
-    let roles: any = this.autenticationService.getRole();
+    let roles: any = this.autenticationService.getRoles();
     if (
-      roles.__zone_symbol__value.find(
-        (x: string) => x == 'JEFE_DEPENDENCIA' || x == 'ASISTENTE_DEPENDENCIA'
-      )
+      roles.__zone_symbol__value.find((x: string) => x == 'JEFE_DEPENDENCIA')
     ) {
       this.rol = 'JEFE_DEPENDENCIA';
+    } else if (
+      roles.__zone_symbol__value.find((x: string) => x == 'ASISTENTE_DEPENDENCIA')
+    ) {
+      this.rol = 'ASISTENTE_DEPENDENCIA';
     } else if (
       roles.__zone_symbol__value.find((x: string) => x == 'PLANEACION')
     ) {
       this.rol = 'PLANEACION';
-    } else if (
-      roles.__zone_symbol__value.find(
-        (x: string) => x == 'JEFE_UNIDAD_PLANEACION'
-      )
-    ) {
-      this.rol = 'JEFE_UNIDAD_PLANEACION';
     }
   }
 
@@ -214,8 +217,8 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
                 (data: any) => {
                   if (data) {
                     this.trimestre = data.Data[0].ParametroId.Nombre;
-                    this.codigoTrimestre =
-                      data.Data[0].ParametroId.CodigoAbreviacion;
+                    this.codigoTrimestre = data.Data[0].ParametroId.CodigoAbreviacion;
+                    this.vigencia = data.Data[0].PeriodoId
                   }
                 },
                 (error) => {
@@ -262,7 +265,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
   }
 
   verificarFormulario() {
-    if (this.rol === 'PLANEACION' || this.rol === 'JEFE_UNIDAD_PLANEACION') {
+    if (this.rol === 'PLANEACION') {
       if (
         this.estadoActividad === 'Actividad en reporte' ||
         this.estadoActividad === 'Sin reporte'
@@ -344,7 +347,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
             documento: null,
             evidencia: documentos,
             unidad:
-              this.rol != 'PLANEACION' && this.rol != 'JEFE_UNIDAD_PLANEACION',
+              this.rol != 'PLANEACION',
             _id: this.seguimiento.id,
           };
 
@@ -432,7 +435,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
               },
               descripcion:
                 'Documento de soporte para seguimiento de plan de acción',
-              file: await this.gestorDocumental.fileToBase64(aux),
+              file: await this.gestorMethods.fileToBase64(aux),
               Activo: true,
             },
           ];
@@ -441,7 +444,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
             documento: documento,
             evidencia: this.documentos,
             unidad:
-              this.rol != 'PLANEACION' && this.rol != 'JEFE_UNIDAD_PLANEACION',
+              this.rol != 'PLANEACION',
             _id: this.seguimiento.id,
           };
 
@@ -501,6 +504,30 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
     }
   }
 
+  setCodigoNotificacion() {
+    if (this.estadoSeguimiento == 'Habilitado') {
+      this.codigoNotificacion = "SH"; // NOTIFICACION(SH)
+    } else if (this.estadoSeguimiento == 'Revisión Verificada con Observaciones') {
+      this.codigoNotificacion = "SRVCO"; // NOTIFICACION(SRVCO)
+    } else if (this.estadoSeguimiento == "Con observaciones") {
+      this.codigoNotificacion = "SCO"; // NOTIFICACION(SCO)
+    }
+  }
+
+  enviarNotificacion(){
+    if (this.codigoNotificacion != "") {
+      let datos = {
+        codigo: this.codigoNotificacion,
+        nombre_unidad: this.unidad,
+        nombre_plan: this.plan,
+        nombre_vigencia: this.vigencia.Nombre,
+        trimestre: this.codigoTrimestre
+      }
+      this.codigoNotificacion = "";
+      this.notificacionesService.enviarNotificacion(datos);
+    }
+  }
+
   async loadData() {
     Swal.fire({
       title: 'Cargando información',
@@ -525,6 +552,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
           if (data.Data != '') {
             this.seguimiento = data.Data;
             this.unidad = this.seguimiento.informacion.unidad;
+            this.plan = this.seguimiento.informacion.nombre;
             this.documentos = JSON.parse(JSON.stringify(data.Data.evidencia));
             this.datosIndicadores = data.Data.cuantitativo.indicadores;
             this.datosResultados.data = JSON.parse(
@@ -550,6 +578,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
             this.estadoActividad = this.seguimiento.estado.nombre;
             this.estadoSeguimiento = this.seguimiento.estadoSeguimiento;
             this.verificarFormulario();
+            this.enviarNotificacion();
 
             if (this.estadoActividad != 'Sin reporte') {
               if (
@@ -656,6 +685,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
             .subscribe(
               (data: any) => {
                 if (data) {
+                  this.setCodigoNotificacion();
                   Swal.fire({
                     title: 'Información de seguimiento actualizada',
                     text: 'El seguimiento del componente cualitativo se ha guardado satisfactoriamente',
@@ -735,6 +765,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
             .subscribe(
               (data: any) => {
                 if (data) {
+                  this.setCodigoNotificacion();
                   Swal.fire({
                     title: 'Información de seguimiento actualizada',
                     text: 'El seguimiento del componente cuantitativo se ha guardado satisfactoriamente',
@@ -796,6 +827,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
             .subscribe(
               (data: any) => {
                 if (data) {
+                  this.setCodigoNotificacion();
                   Swal.fire({
                     title: 'Información de seguimiento actualizada',
                     text: 'El seguimiento se ha guardado satisfactoriamente',
@@ -861,6 +893,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
             .subscribe((data: any) => {
               if (data) {
                 if (data.Success) {
+                  this.setCodigoNotificacion();
                   Swal.fire({
                     title: 'Seguimiento Generado',
                     icon: 'success',
@@ -1302,6 +1335,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
             .subscribe({
               next: (data: any) => {
                 if (data) {
+                  this.setCodigoNotificacion();
                   if (data.Data.Observación) {
                     Swal.fire({
                       title: 'Información de seguimiento actualizada',
@@ -1408,6 +1442,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
             .subscribe(
               (data: any) => {
                 if (data) {
+                  this.setCodigoNotificacion();
                   Swal.fire({
                     title: 'Información de seguimiento actualizada',
                     text: 'Se ha actualizado el estado de la actividad satisfactoriamente',
