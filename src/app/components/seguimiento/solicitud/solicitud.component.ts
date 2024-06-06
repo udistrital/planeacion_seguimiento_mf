@@ -2,10 +2,10 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute } from '@angular/router';
-import { GestorDocumentalService } from 'src/app/services/gestorDocumental.service';
 import { RequestManager } from 'src/app/services/requestManager.service';
 import Swal from 'sweetalert2';
 import { VisualizarDocumentoDialogComponent } from '../generar-trimestre/visualizar-documento-dialog/visualizar-documento-dialog.component';
+import { GestorDocumentalMethods } from '@udistrital/planeacion-utilidades-module';
 
 const FORMATOS = [
   'application/pdf',
@@ -24,13 +24,13 @@ export class SolicitudComponent {
   estado: string = '';
   fileName!: string;
   archivoCodificado!: string;
+  private gestorMethods = new GestorDocumentalMethods();
 
   constructor(
     activatedRoute: ActivatedRoute,
     private formBuilder: FormBuilder,
     private request: RequestManager,
-    public dialog: MatDialog,
-    private gestorDocumental: GestorDocumentalService
+    public dialog: MatDialog
   ) {
     // activatedRoute.params.subscribe((prm) => {
     //   this.planId = prm['plan_id'];
@@ -143,7 +143,7 @@ export class SolicitudComponent {
           },
         });
 
-        this.archivoCodificado = (await this.gestorDocumental.fileToBase64(
+        this.archivoCodificado = (await this.gestorMethods.fileToBase64(
           file
         )) as string;
 

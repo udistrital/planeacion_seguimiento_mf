@@ -12,7 +12,7 @@ import { Dependencia } from 'src/app/models/dependencia';
 import { EstadoPlan } from 'src/app/models/estadoPlan';
 import Plan from 'src/app/models/plan';
 import { Vigencia } from 'src/app/models/vigencia';
-import { ImplicitAutenticationService } from 'src/app/services/implicitAutentication.service';
+import { ImplicitAutenticationService } from '@udistrital/planeacion-utilidades-module';
 import { RequestManager } from 'src/app/services/requestManager.service';
 import { environment } from 'src/environments/environment';
 import Swal from 'sweetalert2';
@@ -65,12 +65,13 @@ export class ReformulacionComponent implements OnInit {
     },
   ];
 
+  private autenticationService = new ImplicitAutenticationService();
+
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   constructor(
     private formBuilder: FormBuilder,
     private request: RequestManager,
-    private autenticationService: ImplicitAutenticationService,
     private _changeDetectorRef: ChangeDetectorRef
   ) {
     this.formSelect = this.formBuilder.group({
@@ -85,7 +86,7 @@ export class ReformulacionComponent implements OnInit {
     this.informacionTabla.paginator = this.paginator;
   }
   async ngOnInit() {
-    let roles: string[] = await this.autenticationService.getRole();
+    let roles: string[] = await this.autenticationService.getRoles();
     if (
       roles.find(
         (x: string) => x == 'JEFE_DEPENDENCIA' || x == 'ASISTENTE_DEPENDENCIA'
