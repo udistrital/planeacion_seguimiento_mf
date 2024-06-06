@@ -6,6 +6,8 @@ import { getSingleSpaExtraProviders } from 'single-spa-angular';
 import { ListComponent } from './components/seguimiento/listar-plan-accion-anual/seguimiento.component';
 import { GestionComponent } from './components/seguimiento/gestion/gestion.component';
 import { GenerarTrimestreComponent } from './components/seguimiento/generar-trimestre/generar-trimestre.component';
+import { ReformulacionComponent } from './components/seguimiento/reformulacion/reformulacion.component';
+import { SolicitudComponent } from './components/seguimiento/solicitud/solicitud.component';
 
 const routes: Routes = [
   { path: 'listar-plan-accion-anual', component: ListComponent },
@@ -20,6 +22,14 @@ const routes: Routes = [
   {
     path: 'generar-trimestre/:plan_id/:index/:trimestre_id',
     component: GenerarTrimestreComponent,
+  },
+  {
+    path: 'reformulacion',
+    component: ReformulacionComponent,
+  },
+  {
+    path: 'solicitud',
+    component: SolicitudComponent,
   },
   { path: '**', redirectTo: 'listar-plan-accion-anual' },
 ];

@@ -8,7 +8,6 @@ import Indicador from 'src/app/models/indicador';
 import { ImplicitAutenticationService, ServiceCookies } from '@udistrital/planeacion-utilidades-module';
 import { RequestManager } from 'src/app/services/requestManager.service';
 import { Notificaciones } from 'src/app/services/notificaciones';
-import { VerificarFormulario } from 'src/app/services/verificarFormulario.service';
 import { environment } from 'src/environments/environment';
 import Swal from 'sweetalert2';
 
@@ -47,7 +46,6 @@ export class GestionComponent implements OnInit {
     private formBuilder: FormBuilder,
     private request: RequestManager,
     private notificacionesService: Notificaciones,
-    private autenticationService: ImplicitAutenticationService,
     private router: Router,
   ) {
     activatedRoute.params.subscribe((prm) => {

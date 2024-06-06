@@ -2,18 +2,17 @@ import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { environment } from 'src/environments/environment';
 import { RequestManager } from './requestManager.service';
-import { ImplicitAutenticationService } from './implicitAutentication.service';
+import { ImplicitAutenticationService } from '@udistrital/planeacion-utilidades-module';
 
 @Injectable({
   providedIn: 'root',
 })
 export class Notificaciones {
   private arm = environment.ARN_TOPIC_NOTIFICACIONES;
-
+  autenticationService = new ImplicitAutenticationService();
   constructor(
     private router: Router,
     private request: RequestManager,
-    private autenticationService: ImplicitAutenticationService
   ) {}
 
   // Lista de mensajes
@@ -121,25 +120,25 @@ export class Notificaciones {
     }
   ]
 
-  async enviarNotificacion(datosMensaje: any) {    
+  async enviarNotificacion(datosMensaje: any) {
     // Obtener notificación de lista (notificaciones) por código de abreviación
     const notificacion:any = this.notificaciones.find(
       objeto => objeto.codigo === datosMensaje.codigo
     );
-    
+
     let codigosAbreviacion: string[] = [];
     if (notificacion.destinatarios.some((str:any) => str.includes("jefe"))) {
       codigosAbreviacion.push("JO");
-    } 
+    }
     if (notificacion.destinatarios.some((str:any) => str.includes("asistente"))) {
       codigosAbreviacion.push("AS_D", "NR");
     }
-    
+
     try {
       const cargos:any = await this.getCargos(codigosAbreviacion.join("|"))
       let idsCargos = cargos.Data.map((cargo:any) => cargo.Id).join("|");
 
-      // Obtener el id de la vigencia si no está en los datos del mensaje 
+      // Obtener el id de la vigencia si no está en los datos del mensaje
       let dependencias: string
       if (datosMensaje.id_unidad) {
         dependencias = datosMensaje.id_unidad.toString()
@@ -154,7 +153,7 @@ export class Notificaciones {
       }
 
       const usuarios:any = await this.getUsuarios(dependencias, idsCargos)
-      
+
       let documentos: string[] = [];
       for (let i = 0; i < usuarios.length; i++) {
         const usuario = usuarios[i];
@@ -184,7 +183,7 @@ export class Notificaciones {
         );
     });
   }
-  
+
   // Obtener los usuarios filtrados por dependencia y cargo
   async getUsuarios(dependencias: string, idsCargos: string) {
     return await new Promise((resolve, reject) => {
@@ -344,12 +343,12 @@ export class Notificaciones {
   async redirigir(notificacion: any) {
     const atributos = notificacion.Body.MessageAttributes
     const dataSistema:any = this.getJsonDeTexto(atributos.Data.Value)
-    
+
     const modulo = dataSistema.modulo;
     const nombre_plan = dataSistema.nombre_plan
     const id_unidad = await this.getIdUnidad(dataSistema.nombre_unidad)
     const id_vigencia = await this.getIdVigencia(dataSistema.nombre_vigencia)
-    
+
     if (id_vigencia && id_unidad) {
       let url: string;
       if (modulo === "formulacion") {
@@ -367,11 +366,11 @@ export class Notificaciones {
     const atributos = notificacion.Body.MessageAttributes
     const modulo = notificacion.Body.MessageAttributes.Url.Value
     const dataSistema:any = this.getJsonDeTexto(atributos.Data.Value)
-    
+
     const nombre_plan = dataSistema.nombre_plan
     const id_unidad = await this.getIdUnidad(dataSistema.nombre_unidad)
     const id_vigencia = await this.getIdVigencia(dataSistema.nombre_vigencia)
-    
+
     if (id_vigencia && id_unidad) {
       if (modulo === "formulacion") {
         return {nombre_plan, id_unidad, id_vigencia}

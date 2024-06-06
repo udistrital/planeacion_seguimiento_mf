@@ -84,7 +84,6 @@ export class ListComponent implements OnInit, AfterViewInit {
     private request: RequestManager,
     private router: Router,
     private notificacionesService: Notificaciones,
-    private autenticationService: ImplicitAutenticationService,
     private formBuilder: FormBuilder,
     private activatedRoute: ActivatedRoute,
     private codigosEstados: CodigosEstados
