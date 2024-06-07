@@ -11,22 +11,21 @@
         <div class="contenedor">
           <div>
             <mat-label>Unidad académico y/o administrativa: </mat-label>
-            <input class="unidad" type="text" matInput formControlName="unidad" required readonly>
-          </div>
-          <div class="state">
-            <div class="col2" style="width:35%">
-              Estado reporte
-            </div>
-            <input style="width:65%" class="state" type="text" matInput formControlName="estado" placeholder="Estado"
-              readonly>
+            <input id="unidad" type="text" matInput formControlName="unidad" required readonly>
           </div>
           <div>
             <mat-label>Plan de Acción: </mat-label>
-            <input class="plan" type="text" matInput formControlName="plan" required readonly>
+            <input id="plan" type="text" matInput formControlName="plan" required readonly>
           </div>
           <div>
             <mat-label>Vigencia: </mat-label>
-            <input class="vigencia" type="text" matInput formControlName="vigencia" required readonly>
+            <input id="vigencia" type="text" matInput formControlName="vigencia" required readonly>
+          </div>
+          <div class="state">
+            <span>
+              Estado reporte
+            </span>
+            <input type="text" matInput formControlName="estado" placeholder="Estado" readonly>
           </div>
         </div>
       </form>
@@ -44,9 +43,7 @@
               sugeridos</p>
             <div class="botones">
               <div>
-                <input id="archivo" type="file" matInput
-                  accept="application/pdf, audio/*, image/*, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.openxmlformats-officedocument.presentationml.presentation, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.ms-excel, application/vnd.ms-powerpoint, application/msword"
-                  (change)="onChangeArchivo($event)">
+                <input id="archivo" type="file" matInput accept="application/pdf" (change)="onChangeArchivo($event)">
                 <button mat-icon-button (click)="activarCargarArchivo()">
                   <img src="https://cdn-icons-png.flaticon.com/512/888/888034.png" alt="archivo">
                   <!-- <mat-icon>cloud_upload</mat-icon> -->

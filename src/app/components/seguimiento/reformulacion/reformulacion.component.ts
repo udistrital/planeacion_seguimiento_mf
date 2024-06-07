@@ -40,7 +40,6 @@ export class ReformulacionComponent implements OnInit {
   informacionTabla: MatTableDataSource<Plan>;
   inputsFiltros!: NodeListOf<HTMLInputElement>;
 
-  auxUnidades: Dependencia[] = [];
   auxPlanesTabla: Plan[] = [];
   planesTabla: Plan[] = [];
 
@@ -116,9 +115,15 @@ export class ReformulacionComponent implements OnInit {
               .subscribe({
                 next: async (data: DataRequest) => {
                   if (data) {
-                    let planes: Plan[] = [];
                     (data.Data as Plan[]).forEach((plan) => {
-                      if (!planes.some((p) => p.nombre === plan.nombre)) {
+                      if (
+                        !this.planesTabla.some(
+                          (p) =>
+                            p.nombre === plan.nombre &&
+                            p.dependencia_id === plan.dependencia_id &&
+                            p.vigencia === plan.vigencia
+                        )
+                      ) {
                         plan.dependencia_nombre = this.unidades.filter(
                           (u) => u.Id.toString() === plan.dependencia_id
                         )[0].Nombre;
@@ -127,14 +132,18 @@ export class ReformulacionComponent implements OnInit {
                         )[0];
                         if (vigencia) {
                           plan.vigencia_nombre = vigencia.Nombre;
-                          planes.push(plan);
+                          this.planesTabla.push(plan);
                         }
                       }
                     });
                     Swal.close();
-                    if (planes.length !== 0) {
-                      this.auxPlanesTabla.push(...planes);
-                      this.auxUnidades.push(unidad);
+                    if (this.planesTabla.length !== 0) {
+                      this.informacionTabla = new MatTableDataSource<Plan>(
+                        this.planesTabla
+                      );
+                      this.informacionTabla.filterPredicate = (plan, _) =>
+                        this.filtroTabla(plan);
+                      this.informacionTabla.paginator = this.paginator;
                     }
                   }
                 },
@@ -156,7 +165,7 @@ export class ReformulacionComponent implements OnInit {
   }
 
   ngAfterViewInit(): void {
-    this.inputsFiltros = document.querySelectorAll('input');
+    this.inputsFiltros = document.querySelectorAll('th > input');
     this._changeDetectorRef.markForCheck();
   }
 
@@ -382,15 +391,12 @@ export class ReformulacionComponent implements OnInit {
 
   consultar(planTraido?: Plan) {
     if (planTraido) {
-      const dependencia = this.auxUnidades.filter(
+      const dependencia = this.unidades.filter(
         (u) => u.Id.toString() === planTraido.dependencia_id
       )[0];
       const vigencia = this.vigencias.filter(
         (v) => v.Id.toString() === planTraido.vigencia
       )[0];
-      console.log(planTraido);
-      console.log(dependencia);
-      console.log(vigencia);
       localStorage.setItem(
         'plan_reformulacion',
         JSON.stringify({
@@ -432,7 +438,7 @@ export class ReformulacionComponent implements OnInit {
             plan: this.formSelect.get('selectPlan')?.value,
           })
         );
-      this.router.navigate(['reformulacion', 'solicitud']);
+        this.router.navigate(['reformulacion', 'solicitud']);
       }
     }
   }
@@ -444,7 +450,6 @@ export class ReformulacionComponent implements OnInit {
       p.vigencia_nombre!.toLowerCase(),
       p.nombre.toLowerCase(),
     ];
-    console.log(this.inputsFiltros);
     this.inputsFiltros.forEach((input, posicion) => {
       if (
         valoresAComparar[posicion].includes(input.value.trim().toLowerCase())
@@ -453,17 +458,6 @@ export class ReformulacionComponent implements OnInit {
       }
     });
     return filtrosPasados === valoresAComparar.length;
-  }
-
-  async ajustarData(event: any) {
-    let unidadSeleccionada = event.value as Dependencia;
-    this.inputsFiltros[0].setAttribute('value', unidadSeleccionada.Nombre);
-    this.planesTabla = this.auxPlanesTabla.filter(
-      (data) => data.dependencia_id === unidadSeleccionada.Id.toString()
-    );
-    this.informacionTabla = new MatTableDataSource<Plan>(this.planesTabla);
-    this.informacionTabla.filterPredicate = (plan, _) => this.filtroTabla(plan);
-    this.informacionTabla.paginator = this.paginator;
   }
 
   aplicarFiltro(event: Event) {
