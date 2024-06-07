@@ -8,8 +8,9 @@ type Plan = {
   ultima_modificacion?: Date;
   version?: number;
   fase?: string;
-  vigencia?: number;
-  vigencia_id: string;
+  vigencia: string;
+  vigencia_id?: string;
+  vigencia_nombre?: string;
 };
 
 export default Plan;

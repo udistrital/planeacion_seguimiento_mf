@@ -1,0 +1,83 @@
+<mat-card class="card-oas">
+  <mat-card-header style="place-content: center;">
+    <mat-card-title>Solicitud de Reformulación A Planes De Acción</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <br>
+    <div class="container-border">
+      <form [formGroup]="formVisualizacionPlan">
+
+        <h4>Información básica del Plan de Acción</h4>
+        <div class="contenedor">
+          <div>
+            <mat-label>Unidad académico y/o administrativa: </mat-label>
+            <input class="unidad" type="text" matInput formControlName="unidad" required readonly>
+          </div>
+          <div class="state">
+            <div class="col2" style="width:35%">
+              Estado reporte
+            </div>
+            <input style="width:65%" class="state" type="text" matInput formControlName="estado" placeholder="Estado"
+              readonly>
+          </div>
+          <div>
+            <mat-label>Plan de Acción: </mat-label>
+            <input class="plan" type="text" matInput formControlName="plan" required readonly>
+          </div>
+          <div>
+            <mat-label>Vigencia: </mat-label>
+            <input class="vigencia" type="text" matInput formControlName="vigencia" required readonly>
+          </div>
+        </div>
+      </form>
+    </div>
+    <br>
+
+    <br>
+    <div class="container-border">
+      <h4>Realizar solicitud de reformulación</h4>
+      <div class="solicitud mat-elevation-z8">
+        <div class="container-border">
+          <h4>Solicitud de Reformulación</h4>
+          <div class="contenido">
+            <p>Realice el cargue del documento con la petición detallada y evidencias que sustenten los cambios
+              sugeridos</p>
+            <div class="botones">
+              <div>
+                <input id="archivo" type="file" matInput
+                  accept="application/pdf, audio/*, image/*, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.openxmlformats-officedocument.presentationml.presentation, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.ms-excel, application/vnd.ms-powerpoint, application/msword"
+                  (change)="onChangeArchivo($event)">
+                <button mat-icon-button (click)="activarCargarArchivo()">
+                  <img src="https://cdn-icons-png.flaticon.com/512/888/888034.png" alt="archivo">
+                  <!-- <mat-icon>cloud_upload</mat-icon> -->
+                </button>
+                <button class="background-button" mat-raised-button color="primary"
+                  (click)="activarCargarArchivo()">Cargar
+                  Archivo</button>
+              </div>
+              <div>
+                <button mat-icon-button (click)="visualizarArchivo()">
+                  <!-- <mat-icon>remove_red_eye</mat-icon> -->
+                  <img src="https://cdn-icons-png.flaticon.com/512/2356/2356572.png" alt="visualizacion">
+                </button>
+                <button class="background-button" mat-raised-button color="primary"
+                  (click)="visualizarArchivo()">Visualizar Archivo</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="container-border">
+          <h4>Observaciones</h4>
+          <textarea matInput placeholder="Ingrese observaciones" [(ngModel)]="observaciones"
+            maxlength="1000"></textarea>
+          <mat-hint>{{observaciones.length}} / 1000</mat-hint>
+        </div>
+      </div>
+    </div>
+    <div class="container-button">
+      <button *ngIf="rol!=='PLANEACION'" class="background-button" mat-raised-button color="primary"
+        (click)="solicitarReformulacion()">Enviar Solicitud De Reformulación</button>
+
+    </div>
+  </mat-card-content>
+</mat-card>

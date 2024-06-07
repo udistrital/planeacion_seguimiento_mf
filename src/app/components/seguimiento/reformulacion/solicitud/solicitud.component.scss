@@ -1,4 +1,4 @@
-@use "../../styles/global";
+@use "../../../styles/global";
 
 .col2 {
   background-color: var(--primary);
@@ -42,7 +42,8 @@ input {
   gap: 10px;
   align-items: center;
   .unidad,
-  .plan {
+  .plan,
+  .vigencia {
     border: solid 1px;
     border-top: none;
     border-left: none;
@@ -121,6 +122,7 @@ input {
           .mdc-icon-button {
             height: auto;
           }
+          img,
           .mat-icon {
             font-size: 5rem;
             width: 100%;
@@ -135,4 +137,10 @@ input {
 
 input[type="file"] {
   display: none;
+}
+textarea {
+  width: 100%;
+  height: 90%;
+  resize: vertical;
+  min-height: 90%;
 }
