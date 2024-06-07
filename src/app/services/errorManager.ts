@@ -1,12 +1,12 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Injectable } from '@angular/core';
 import { throwError } from 'rxjs';
+import { Injectable } from '@angular/core';
 
 @Injectable({
   providedIn: 'root',
 })
 export class HttpErrorManager {
-  constructor() {}
+  constructor() { }
 
   public handleError(error: HttpErrorResponse) {
     if (error.error instanceof ErrorEvent) {
@@ -15,21 +15,16 @@ export class HttpErrorManager {
     } else {
       // The backend returned an unsuccessful response code.
       // The response body may contain clues as to what went wrong,
-      console.log(error)
 
-      console.error(
-        `Backend returned code ${error.status ? error.status : 'no code'}, ` +
-          `body was: ${error.message}`
-      );
+
+      console.error(`Backend returned code ${ error.status ? error.status : 'no code' }, ` +`body was: ${error}`);
+
     }
     // return an observable with a user-facing error message
-    return throwError(
-      () =>
-        new Error(
-          `Algo salió mal; por favor intenta más tarde.\nCódigo de error: ${
-            error.status ? error.status.toString() : 'Error'
-          }.`
-        )
-    );
-  }
+    return throwError({
+      status: error.status ? error.status : 'Error',
+      message: 'Something bad happened; please try again later.',
+      error: error.error,
+    });
+  };
 }

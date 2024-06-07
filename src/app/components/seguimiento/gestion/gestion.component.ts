@@ -10,6 +10,7 @@ import { RequestManager } from 'src/app/services/requestManager.service';
 import { Notificaciones } from 'src/app/services/notificaciones';
 import { environment } from 'src/environments/environment';
 import Swal from 'sweetalert2';
+import { DataRequest } from 'src/app/models/dataRequest';
 
 @Component({
   selector: 'app-gestion',
@@ -107,6 +108,10 @@ export class GestionComponent implements OnInit {
       roles.__zone_symbol__value.find((x: string) => x == 'PLANEACION')
     ) {
       this.rol = 'PLANEACION';
+    } else if (
+      roles.__zone_symbol__value.find((x: string) => x == 'ASISTENTE_PLANEACION')
+    ) {
+      this.rol = 'ASISTENTE_PLANEACION';
     }
   }
 
@@ -250,7 +255,10 @@ export class GestionComponent implements OnInit {
               if (actividad.estado.nombre == 'Con observaciones') {
                 data.Data[index].estado.color = 'conObservacion';
               }
-              if (actividad.estado.nombre == 'Actividad avalada') {
+              if (
+                actividad.estado.nombre == 'Actividad avalada' ||
+                actividad.estado.nombre == "Actividad Verificada"
+              ) {
                 data.Data[index].estado.color = 'avalada';
               }
             }
@@ -276,7 +284,7 @@ export class GestionComponent implements OnInit {
   reportar() {
     Swal.fire({
       title: 'Enviar Reporte',
-      text: `¿Confirma que desea enviar el reporte de seguimiento al Plan de Acción para su etapa de revisión por parte de la Oficina Asesora de Planeación y Control?`,
+      text: `¿Confirma que desea enviar el reporte de seguimiento para su etapa de verificación por parte del Jefe de Dependencia?`,
       icon: 'warning',
       confirmButtonText: `Continuar`,
       cancelButtonText: `Cancelar`,
@@ -310,30 +318,40 @@ export class GestionComponent implements OnInit {
                     }
                   });
                 } else {
-                  let message: string = '<b>ID - Actividad</b><br/>';
-                  let actividades: any = data.Data.actividades;
-                  let llaves: string[] = Object.keys(actividades);
-                  for (let llave of llaves) {
-                    message += llave + ' - ' + actividades[llave] + '<br/>';
-                  }
-
-                  if (this.estado != 'Con observaciones') {
-                    Swal.fire({
-                      title: 'Debe reportar las siguientes actividades:',
-                      icon: 'error',
-                      showConfirmButton: true,
-                      html: message,
-                    });
-                  } else {
-                    Swal.fire({
-                      title:
-                        'Debe revisar las observaciones de las siguientes actividades:',
-                      icon: 'error',
-                      showConfirmButton: true,
-                      html: message,
-                    });
-                  }
+                  Swal.fire({
+                    title: 'Error en la operación',
+                    icon: 'error',
+                    text: `${JSON.stringify(data.Message)}`,
+                    showConfirmButton: false,
+                    timer: 2500
+                  })
                 }
+              }
+            }, (error: any) => {
+              let DataError = error.error;
+              let message: string = '<b>ID - Actividad</b><br/>';
+              let mensajeActividades: any = JSON.parse(DataError.Message);
+              let actividades: any = mensajeActividades.actividades;
+              let llaves: string[] = Object.keys(actividades);
+              for (let llave of llaves) {
+                message += llave + ' - ' + actividades[llave] + '<br/>';
+              }
+
+              if (this.estado != 'Con observaciones') {
+                Swal.fire({
+                  title: 'Debe reportar las siguientes actividades:',
+                  icon: 'error',
+                  showConfirmButton: true,
+                  html: message,
+                });
+              } else {
+                Swal.fire({
+                  title:
+                    'Debe revisar las observaciones de las siguientes actividades:',
+                  icon: 'error',
+                  showConfirmButton: true,
+                  html: message,
+                });
               }
             });
         } else if (result.dismiss === Swal.DismissReason.cancel) {
@@ -355,6 +373,84 @@ export class GestionComponent implements OnInit {
         });
       }
     );
+  }
+
+  finalizarRevisionJefeDependencia() {
+    Swal.fire({
+      title: 'Finalizar revisión',
+      text: `¿Confirma que desea finalizar la revisión del seguimiento al Plan de Acción?`,
+      icon: 'warning',
+      confirmButtonText: `Continuar`,
+      cancelButtonText: `Cancelar`,
+      showCancelButton: true
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.request.put(environment.SEGUIMIENTO_MID, `seguimiento/revision_jefe_dependencia`, "{}", this.seguimiento._id).subscribe((data: any) => {
+          if (data) {
+            if (data.Success) {
+              Swal.fire({
+                title: 'El reporte se ha enviado satisfactoriamente',
+                icon: 'success',
+              }).then((result) => {
+                if (result.value) {
+                  this.loadDataSeguimiento();
+                }
+              });
+            } else {
+              let message: string = '<b>ID - Actividad</b><br/>';
+              let actividades: any = data.Data.actividades;
+              let llaves: string[] = Object.keys(actividades);
+              for (let llave of llaves) {
+                message += llave + ' - ' + actividades[llave] + '<br/>';
+              }
+
+              Swal.fire({
+                title: 'Actividades sin revisar',
+                icon: 'error',
+                showConfirmButton: true,
+                html:
+                  'Debe verificar o realizar las observaciones a las siguientes actividades:<br/>' +
+                  message,
+              });
+            }
+          }
+        }, (error: any) => {
+          let DataError = error.error;
+          let message: string = '<b>ID - Actividad</b><br/>';
+          let mensajeActividades: any = JSON.parse(DataError.Message);
+          let actividades: any = mensajeActividades.actividades;
+          let llaves: string[] = Object.keys(actividades);
+          for (let llave of llaves) {
+            message += llave + ' - ' + actividades[llave] + '<br/>';
+          }
+
+          Swal.fire({
+            title: 'Actividades sin revisar',
+            icon: 'error',
+            showConfirmButton: true,
+            html:
+              'Debe verificar o realizar las observaciones a las siguientes actividades:<br/>' +
+              message,
+          });
+        });
+      } else if (result.dismiss === Swal.DismissReason.cancel) {
+        Swal.fire({
+          title: 'Finalizalización de revisión cancelada',
+          icon: 'error',
+          showConfirmButton: false,
+          timer: 2500
+        })
+      }
+    }),
+      (error: any) => {
+        Swal.fire({
+          title: 'Error en la operación',
+          icon: 'error',
+          text: `${JSON.stringify(error)}`,
+          showConfirmButton: false,
+          timer: 2500
+        })
+      }
   }
 
   finalizarRevision() {
@@ -405,6 +501,24 @@ export class GestionComponent implements OnInit {
                   });
                 }
               }
+            }, (error: any) => {
+              let DataError = error.error;
+              let message: string = '<b>ID - Actividad</b><br/>';
+              let mensajeActividades: any = JSON.parse(DataError.Message);
+              let actividades: any = mensajeActividades.actividades;
+              let llaves: string[] = Object.keys(actividades);
+              for (let llave of llaves) {
+                message += llave + ' - ' + actividades[llave] + '<br/>';
+              }
+    
+              Swal.fire({
+                title: 'Actividades sin revisar',
+                icon: 'error',
+                showConfirmButton: true,
+                html:
+                  'Debe verificar o realizar las observaciones a las siguientes actividades:<br/>' +
+                  message,
+              });
             });
         } else if (result.dismiss === Swal.DismissReason.cancel) {
           Swal.fire({
@@ -444,7 +558,7 @@ export class GestionComponent implements OnInit {
     if (
       (fechaHoy >= fechaInicio && fechaHoy <= fechaFin) ||
       row.estado.nombre == 'Actividad avalada' ||
-      this.rol == 'PLANEACION'
+      (this.rol == 'PLANEACION' || this.rol == 'ASISTENTE_PLANEACION')
     ) {
       this.router.navigate([
         `generar-trimestre/${this.planId}/${row.index}/${this.seguimiento.periodo_seguimiento_id['_id']}`,
@@ -551,6 +665,53 @@ export class GestionComponent implements OnInit {
     }
     this.dataSource.data = this.allActividades.slice(startIndex, endIndex);
     this.dataSource.data.length = this.allActividades.length;
+  }
+
+  iniciarRevisionJefeUnidad() {
+    Swal.fire({
+      title: 'Iniciar Revisión',
+      text: `Esta a punto de iniciar la revisión para este Plan`,
+      icon: 'warning',
+      confirmButtonText: `Continuar`,
+      cancelButtonText: `Cancelar`,
+      showCancelButton: true
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.request.get(environment.PLANES_CRUD, `estado-seguimiento?query=activo:true,codigo_abreviacion:RJU`).subscribe((data: any) => {
+          if (data) {
+            this.seguimiento.estado_seguimiento_id = data.Data[0]._id;;
+            this.request.put(environment.PLANES_CRUD, `seguimiento`, this.seguimiento, this.seguimiento._id).subscribe((data: any) => {
+              if (data) {
+                Swal.fire({
+                  title: 'Seguimiento en revisión',
+                  icon: 'success',
+                }).then((result) => {
+                  if (result.value) {
+                    this.loadDataSeguimiento();
+                  }
+                })
+              }
+            })
+          }
+        })
+      } else if (result.dismiss === Swal.DismissReason.cancel) {
+        Swal.fire({
+          title: 'Inicio de revisión cancelado',
+          icon: 'error',
+          showConfirmButton: false,
+          timer: 2500
+        })
+      }
+    }),
+      (error: any) => {
+        Swal.fire({
+          title: 'Error en la operación',
+          icon: 'error',
+          text: `${JSON.stringify(error)}`,
+          showConfirmButton: false,
+          timer: 2500
+        })
+      }
   }
 
   iniciarRevision() {

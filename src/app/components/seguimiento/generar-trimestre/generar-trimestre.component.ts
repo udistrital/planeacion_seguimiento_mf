@@ -125,7 +125,10 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
   denominadorOriginal: number[] = [];
   calcular: boolean = true;
   abrirDocs: boolean = true;
+  txtObservaciones: string = '';
+  txtPlaceHolderObservaciones: string = '';
   codigoNotificacion: string = "";
+
   private gestorMethods = new GestorDocumentalMethods();
   private autenticationService = new ImplicitAutenticationService();
 
@@ -197,6 +200,10 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
       roles.__zone_symbol__value.find((x: string) => x == 'PLANEACION')
     ) {
       this.rol = 'PLANEACION';
+    } else if (
+      roles.__zone_symbol__value.find((x: string) => x == 'ASISTENTE_PLANEACION')
+    ) {
+      this.rol = 'ASISTENTE_PLANEACION';
     }
   }
 
@@ -265,7 +272,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
   }
 
   verificarFormulario() {
-    if (this.rol === 'PLANEACION') {
+    if (this.rol === 'PLANEACION' || this.rol === 'ASISTENTE_PLANEACION') {
       if (
         this.estadoActividad === 'Actividad en reporte' ||
         this.estadoActividad === 'Sin reporte'
@@ -275,15 +282,18 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
         this.mostrarObservaciones = false;
       } else if (
         this.estadoActividad === 'Actividad reportada' ||
-        this.estadoActividad ===
-        'Con observaciones' /*|| this.estadoActividad === 'Actividad Verificada'*/
+        this.estadoActividad === 'Con observaciones' ||
+        this.estadoActividad === 'Actividad Verificada'
       ) {
         this.readonlyFormulario = true;
         this.readonlyObservacion = !(
           this.estadoSeguimiento === 'En revisión OAPC'
         );
         this.mostrarObservaciones = true;
-      } else if (this.estadoActividad === 'Actividad avalada') {
+      } else if (
+        this.estadoActividad === 'Actividad avalada' ||
+        this.estadoActividad === 'Actividad Verificada'
+      ) {
         this.readonlyFormulario = true;
         this.readonlyObservacion = true;
         this.mostrarObservaciones = true;
@@ -299,20 +309,77 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
         this.mostrarObservaciones = false;
       } else if (this.estadoActividad === 'Actividad reportada') {
         this.readonlyFormulario = true;
-        this.readonlyObservacion = true;
-        this.mostrarObservaciones = false;
+        if(this.estadoSeguimiento === 'En revisión JU') {
+          this.readonlyObservacion = !(this.estadoSeguimiento === 'En revisión JU');
+          this.mostrarObservaciones = true;
+        } else {
+          this.readonlyObservacion = true;
+          this.mostrarObservaciones = false;
+        }
+      } else if (this.estadoActividad === 'Con observaciones') {
+        if (
+          this.estadoSeguimiento === 'Con observaciones' ||
+          this.estadoSeguimiento === 'Revisión Verificada con Observaciones'
+        ) {
+          this.readonlyFormulario = false;
+        } else {
+          this.readonlyFormulario = true;
+        }
+        if(this.estadoSeguimiento === 'En revisión JU') {
+          this.readonlyObservacion = !(this.estadoSeguimiento === 'En revisión JU');
+          this.mostrarObservaciones = true;
+        } else {
+          this.readonlyObservacion = true;
+          this.mostrarObservaciones = true;
+        }
       } else if (
-        this.estadoActividad ===
-        'Con observaciones' /* || this.estadoActividad === 'Actividad Verificada'*/
+        this.estadoActividad === 'Actividad avalada' ||
+        this.estadoActividad === 'Actividad Verificada'
       ) {
-        this.readonlyFormulario = this.estadoSeguimiento != 'Con observaciones';
-        this.readonlyObservacion = true;
-        this.mostrarObservaciones = true;
-      } else if (this.estadoActividad === 'Actividad avalada') {
         this.readonlyFormulario = true;
         this.readonlyObservacion = true;
         this.mostrarObservaciones = true;
       }
+    } else if (this.rol == 'ASISTENTE_DEPENDENCIA') {
+      if (
+        this.estadoActividad === 'Actividad en reporte' ||
+        this.estadoActividad === 'Habilitado' ||
+        this.estadoActividad === 'Sin reporte'
+      ) {
+        this.readonlyFormulario = false;
+        this.readonlyObservacion = true;
+        this.mostrarObservaciones = false;
+      } else if (this.estadoActividad === 'Actividad reportada') {
+        this.readonlyFormulario = true;
+        this.readonlyObservacion = true;
+        this.mostrarObservaciones = false;
+      } else if (this.estadoActividad === 'Con observaciones') {
+        if (
+          this.estadoSeguimiento === 'Con observaciones' ||
+          this.estadoSeguimiento === 'Revisión Verificada con Observaciones'
+        ) {
+          this.readonlyFormulario = false;
+        } else {
+          this.readonlyFormulario = true;
+        }
+        this.readonlyObservacion = true;
+        this.mostrarObservaciones = true;
+      } else if (
+        this.estadoActividad === 'Actividad avalada' ||
+        this.estadoActividad === 'Actividad Verificada'
+      ) {
+        this.readonlyFormulario = true;
+        this.readonlyObservacion = true;
+        this.mostrarObservaciones = true;
+      }
+    }
+
+    if (this.estadoSeguimiento === 'Habilitado' || this.estadoSeguimiento === 'En reporte' || this.estadoSeguimiento === 'Enviado a revisión' || this.estadoSeguimiento === 'En revisión JU' || this.estadoSeguimiento === 'Revisión Verificada' || this.estadoSeguimiento === 'Revisión Verificada con Observaciones') {
+      this.txtObservaciones = 'Observaciones Jefe Dependencia'
+      this.txtPlaceHolderObservaciones = '* Observaciones realizadas por parte del Jefe de Dependencia para el componente cualitativo.'
+    } else if (this.estadoSeguimiento === 'Con observaciones' || this.estadoSeguimiento === 'En revisión OAPC' || this.estadoSeguimiento === 'Reporte Avalado') {
+      this.txtObservaciones = 'Observaciones Oficina Asesora de Planeación y Control'
+      this.txtPlaceHolderObservaciones = '* Observaciones realizadas desde la OAPC a la unidad para el componente cualitativo.'
     }
   }
 
@@ -403,7 +470,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
 
   async onChangeDocumento(event: any) {
     if (event != undefined) {
-      let aux = event.files[0];
+      let aux = event.target.files[0];
       if (!this.FORMATOS.includes(aux.type)) {
         Swal.fire({
           title: 'Archivo no válido',
@@ -476,7 +543,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
                 this.documentos.pop();
                 Swal.fire({
                   title: 'Error en la operación',
-                  text: `No se pudo subir el documento`,
+                  text: `No se pudo subir el documento2`,
                   icon: 'warning',
                   showConfirmButton: false,
                   timer: 2500,
@@ -496,7 +563,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
     } else {
       Swal.fire({
         title: 'Error en la operación',
-        text: `No se pudo subir el documento`,
+        text: `No se pudo subir el documento1`,
         icon: 'warning',
         showConfirmButton: false,
         timer: 2500,
@@ -605,9 +672,8 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
               const indicador = this.datosIndicadores[index];
               if (this.estadoActividad != 'Sin reporte') {
                 if (
-                  (indicador.observaciones == '' ||
-                    indicador.observaciones == undefined) &&
-                  this.rol != 'JEFE_DEPENDENCIA'
+                  (indicador.observaciones == '' || indicador.observaciones == undefined) &&
+                  (this.rol != "JEFE_DEPENDENCIA" && this.rol != "ASISTENTE_DEPENDENCIA")
                 ) {
                   this.datosIndicadores[index].observaciones = '';
                 }
@@ -648,12 +714,9 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
 
   guardarCualitativo() {
     var mensaje = `¿Desea guardar la información del componente cualitativo?`;
-    if (
-      this.rol ===
-      'PLANEACION' /* && this.estadoActividad === 'Actividad Verificada'*/
-    ) {
+    if (this.rol === 'PLANEACION' || this.rol === 'ASISTENTE_PLANEACION') {
       mensaje = `¿Desea avalar la actividad?`;
-      if (this.veririficarObservaciones()) {
+      if (this.verificarObservaciones()) {
         mensaje = `¿Desea guardar las observaciones del componente cualitativo?`;
       }
     }
@@ -668,18 +731,17 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
     }).then(
       (result) => {
         if (result.isConfirmed) {
+          let cualitativoBody = {
+            _id: this.seguimiento.id,
+            informacion: this.seguimiento.informacion,
+            evidencias: this.seguimiento.evidencia,
+            cualitativo: this.seguimiento.cualitativo,
+            cuantitativo: this.seguimiento.cuantitativo,
+            dependencia: this.rol == 'JEFE_DEPENDENCIA',
+          };
           this.request
             .put(
-              environment.SEGUIMIENTO_MID,
-              `detalles/cualitativo`,
-              {
-                _id: this.seguimiento.id,
-                informacion: this.seguimiento.informacion,
-                evidencias: this.seguimiento.evidencia,
-                cualitativo: this.seguimiento.cualitativo,
-                cuantitativo: this.seguimiento.cuantitativo,
-                dependencia: this.rol == 'JEFE_DEPENDENCIA',
-              },
+              environment.SEGUIMIENTO_MID,`detalles/cualitativo`,cualitativoBody,
               this.planId + `/` + this.indexActividad + `/` + this.trimestreId
             )
             .subscribe(
@@ -728,12 +790,9 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
 
   guardarCuantitativo() {
     var mensaje = `¿Desea guardar la información del componente cuantitativo?`;
-    if (
-      this.rol ===
-      'PLANEACION' /* && this.estadoActividad === 'Actividad Verificada'*/
-    ) {
+    if (this.rol === 'PLANEACION' || this.rol === 'ASISTENTE_PLANEACION') {
       mensaje = `¿Desea avalar la actividad?`;
-      if (this.veririficarObservaciones()) {
+      if (this.verificarObservaciones()) {
         mensaje = `¿Desea guardar las observaciones del componente cuantitativo?`;
       }
     }
@@ -1309,9 +1368,73 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
     this.abrirDocs = true;
   }
 
+  guardarRevisionJefeDependencia() {
+    var mensaje = `¿Desea verificar la actividad?`
+    if (this.verificarObservaciones()) {
+      mensaje = `¿Desea enviar las observaciones realizadas para este reporte?`
+    }
+
+    Swal.fire({
+      title: 'Guardar seguimiento',
+      text: mensaje,
+      icon: 'warning',
+      confirmButtonText: `Sí`,
+      cancelButtonText: `No`,
+      showCancelButton: true
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.request.put(environment.SEGUIMIENTO_MID, `actividades/revision_jefe_dependencia`, this.seguimiento, this.planId + `/` + this.indexActividad + `/` + this.trimestreId).subscribe((data: any) => {
+          if (data) {
+            if (data.Data.Observación) {
+              Swal.fire({
+                title: 'Información de seguimiento actualizada',
+                text: 'Las observaciones hechas al seguimiento se ha guardado satisfactoriamente',
+                icon: 'success'
+              }).then(res => {
+                this.loadData();
+              });
+            } else {
+              Swal.fire({
+                title: 'Información de seguimiento actualizada',
+                text: 'La actividad ha sido verificada satisfactoriamente',
+                icon: 'success'
+              }).then(res => {
+                this.loadData();
+              });
+            }
+          }
+        }, (error) => {
+          Swal.fire({
+            title: 'Error en la operación',
+            text: `No fue posible guardar el seguimiento`,
+            icon: 'error',
+            showConfirmButton: false,
+            timer: 2500
+          });
+        });
+      } else if (result.dismiss === Swal.DismissReason.cancel) {
+        Swal.fire({
+          title: 'Generación de seguimiento cancelado',
+          icon: 'error',
+          showConfirmButton: false,
+          timer: 2500
+        })
+      }
+    }),
+      (error: any) => {
+        Swal.fire({
+          title: 'Error en la operación',
+          icon: 'error',
+          text: `${JSON.stringify(error)}`,
+          showConfirmButton: false,
+          timer: 2500
+        })
+      }
+  }
+
   guardarRevision() {
     var mensaje = `¿Desea avalar la actividad?`;
-    if (this.veririficarObservaciones()) {
+    if (this.verificarObservaciones()) {
       mensaje = `¿Desea enviar las observaciones realizadas para este reporte?`;
     }
 
@@ -1386,10 +1509,11 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
     );
   }
 
-  veririficarObservaciones() {
+  verificarObservaciones() {
     if (
       this.seguimiento.cualitativo.observaciones != '' &&
-      this.seguimiento.cualitativo.observaciones != 'Sin observación'
+      this.seguimiento.cualitativo.observaciones != 'Sin observación' &&
+      this.seguimiento.cualitativo.observaciones != undefined
     ) {
       return true;
     }
@@ -1402,7 +1526,8 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
       const indicador = this.seguimiento.cuantitativo.indicadores[index];
       if (
         indicador.observaciones != '' &&
-        indicador.observaciones != 'Sin observación'
+        indicador.observaciones != 'Sin observación' &&
+        indicador.observaciones != undefined
       ) {
         return true;
       }
@@ -1412,13 +1537,63 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
       const evidencia = this.seguimiento.evidencia[index];
       if (
         evidencia.Observacion != '' &&
-        evidencia.Observacion != 'Sin observación'
+        evidencia.Observacion != 'Sin observación' &&
+        evidencia.Observacion != undefined
       ) {
         return true;
       }
     }
 
     return false;
+  }
+
+  retornarRevisionJefeDependencia() {
+    Swal.fire({
+      title: 'Retornar estado',
+      text: `¿Desea retornar la actividad al estado Actividad reportada?`,
+      icon: 'warning',
+      confirmButtonText: `Sí`,
+      cancelButtonText: `No`,
+      showCancelButton: true
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.request.put(environment.SEGUIMIENTO_MID, `actividades/retornar_jefe_dependencia`, this.seguimiento, this.planId + `/` + this.indexActividad + `/` + this.trimestreId).subscribe((data: any) => {
+          if (data) {
+            Swal.fire({
+              title: 'Información de seguimiento actualizada',
+              text: 'Se ha actualizado el estado de la actividad satisfactoriamente',
+              icon: 'success'
+            }).then(res => {
+              this.loadData();
+            });
+          }
+        }, (error) => {
+          Swal.fire({
+            title: 'Error en la operación',
+            text: `No fue posible retornar el estado`,
+            icon: 'error',
+            showConfirmButton: false,
+            timer: 2500
+          });
+        });
+      } else if (result.dismiss === Swal.DismissReason.cancel) {
+        Swal.fire({
+          title: 'Cambio de estado cancelado',
+          icon: 'error',
+          showConfirmButton: false,
+          timer: 2500
+        })
+      }
+    }),
+      (error: any) => {
+        Swal.fire({
+          title: 'Error en la operación',
+          icon: 'error',
+          text: `${JSON.stringify(error)}`,
+          showConfirmButton: false,
+          timer: 2500
+        })
+      }
   }
 
   retornarRevision() {

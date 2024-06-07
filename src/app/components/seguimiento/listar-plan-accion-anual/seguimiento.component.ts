@@ -99,6 +99,10 @@ export class ListComponent implements OnInit, AfterViewInit {
       roles.__zone_symbol__value.find((x: string) => x == 'PLANEACION')
     ) {
       this.rol = 'PLANEACION';
+    } else if (
+      roles.__zone_symbol__value.find((x: string) => x == 'ASISTENTE_PLANEACION')
+    ) {
+      this.rol = 'ASISTENTE_PLANEACION';
     }
     this.unidadSelected = false;
 
@@ -445,10 +449,9 @@ export class ListComponent implements OnInit, AfterViewInit {
                                       Object.keys(this.trimestres[3]).length !== 0
                                     ) {
                                       if (
-                                        (this.rol != undefined &&
-                                          this.rol == 'PLANEACION') ||
+                                        this.rol != undefined && this.rol == 'PLANEACION' || this.rol == 'ASISTENTE_PLANEACION' ||
                                         this.rol == 'JEFE_DEPENDENCIA'
-                                      ) {
+                                      ){
                                         await this.evaluarFechasPlan();
                                       }
                                     }
@@ -543,10 +546,9 @@ export class ListComponent implements OnInit, AfterViewInit {
                                       Object.keys(this.trimestres[3]).length !== 0
                                     ) {
                                       if (
-                                        (this.rol != undefined &&
-                                          this.rol == 'PLANEACION') ||
+                                        this.rol != undefined && this.rol == 'PLANEACION' || this.rol == 'ASISTENTE_PLANEACION' ||
                                         this.rol == 'JEFE_DEPENDENCIA'
-                                      ) {
+                                      ){
                                         await this.evaluarFechasPlan();
                                       }
                                     }
@@ -640,7 +642,7 @@ export class ListComponent implements OnInit, AfterViewInit {
     this.auxEstadosSeguimientos = [];
 
     for (let index = 0; index < this.dataSource.data.length; index++) {
-      if (this.rol != undefined && this.rol == 'PLANEACION') {
+      if (this.rol != undefined && (this.rol == 'PLANEACION' || this.rol == 'ASISTENTE_PLANEACION')) {
         Swal.update({
           text: `${index + 1} de ${this.dataSource.data.length}`,
         });
@@ -772,11 +774,10 @@ export class ListComponent implements OnInit, AfterViewInit {
     } else {
       this.planesMostrar = this.searchPlanById(plan._id);
       this.dataSource = new MatTableDataSource(this.planesMostrar);
-      if (this.rol != undefined && this.rol == 'PLANEACION') {
+      if (this.rol != undefined && (this.rol == 'PLANEACION' || this.rol == 'ASISTENTE_PLANEACION')) {
         await this.getUnidades();
         await this.getEstados();
         await this.getVigencias();
-        // await this.evaluarFechasPlan();
       }
       await this.loadFechas();
     }
@@ -798,7 +799,7 @@ export class ListComponent implements OnInit, AfterViewInit {
         (this.plan == undefined && this.vigencia == undefined)
       )
     ) {
-      if (this.rol != undefined && this.rol == 'PLANEACION') {
+      if (this.rol != undefined && (this.rol == 'PLANEACION' || this.rol == 'ASISTENTE_PLANEACION')) {
         await this.loadPlanes('vigencia');
       } else {
         await this.loadPlanes('unidad');

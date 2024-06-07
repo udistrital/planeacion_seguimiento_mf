@@ -75,23 +75,30 @@
         <button class="background-button" mat-raised-button color="primary" (click)="backClicked()"
           style="color:white;">Regresar</button>
 
-        <button *ngIf="rol=='JEFE_DEPENDENCIA' && this.estado === 'Habilitado'" class="background-button"
-          mat-raised-button color="primary" (click)="reportar()">Enviar
+        <button *ngIf="(rol=='JEFE_DEPENDENCIA' || rol=='ASISTENTE_DEPENDENCIA') && this.estado == 'En reporte'"
+          class="background-button" mat-raised-button color="primary" (click)="reportar()" style="color: white">Enviar
           reporte</button>
 
-        <button *ngIf="rol=='JEFE_DEPENDENCIA' && this.estado == 'Con observaciones'" class="background-button"
-          mat-raised-button color="primary" (click)="reportar()">Enviar corrección</button>
+        <button *ngIf="(rol=='JEFE_DEPENDENCIA' || rol=='ASISTENTE_DEPENDENCIA') &&
+          (estado == 'Con observaciones' || estado == 'Revisión Verificada con Observaciones')"
+          class="background-button" mat-raised-button color="primary"
+          (click)="reportar()" style="color: white">Enviar corrección</button>
 
-        <button *ngIf="rol=='PLANEACION' && estado=='Enviado a revisión'"
-          class="background-button" mat-raised-button color="primary" (click)="iniciarRevision()">Iniciar
-          revisión</button>
+        <button *ngIf="rol=='JEFE_DEPENDENCIA' && estado=='Enviado a revisión'" class="background-button"
+          mat-raised-button color="primary"
+          (click)="iniciarRevisionJefeUnidad()" style="color: white">Iniciar revisión Jefe Dependencia</button>
 
-        <button *ngIf="rol=='PLANEACION' && estado=='En reporte'" class="background-button"
-          mat-raised-button color="primary" (click)="verificarRevision()">Verificar revisión</button>
+        <button *ngIf="rol=='JEFE_DEPENDENCIA' && estado=='En revisión JU'" class="background-button"
+          mat-raised-button color="primary"
+          (click)="finalizarRevisionJefeDependencia()" style="color: white">Finalizar revisión Jefe Dependencia</button>
 
-        <button *ngIf="rol=='PLANEACION' && estado=='En revisión OAPC'" class="background-button" mat-raised-button
-          color="primary" (click)="finalizarRevision()">Finalizar revisión</button>
+        <button *ngIf="(rol=='PLANEACION' || rol=='ASISTENTE_PLANEACION') && estado=='Revisión Verificada'"
+          class="background-button" mat-raised-button color="primary"
+          (click)="iniciarRevision()" style="color: white">Iniciar revisión OAPC</button>
 
+        <button *ngIf="rol=='PLANEACION' && estado=='En revisión OAPC'"
+          class="background-button" mat-raised-button color="primary"
+          (click)="finalizarRevision()" style="color: white">Finalizar revisión OAPC</button>
       </div>
     </form>
   </mat-card-content>
