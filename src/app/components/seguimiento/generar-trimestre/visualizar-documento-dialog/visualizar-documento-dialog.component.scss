@@ -1,19 +1,26 @@
-container-border {
-    border: 1px solid var(--primary);
-    padding: 1%;
-    border-radius: 15px 15px 15px 15px;
+.container-border {
+  border: 1px solid var(--primary);
+  border-radius: 16px;
+  padding: 24px;
+  button {
+    color: var(--md-primary-contrast-700);
+  }
 }
 
 .contenedor {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-gap: 10px;
-    grid-auto-rows: minmax(100px, auto);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-gap: 10px;
+  grid-auto-rows: minmax(100px, auto);
 }
 
 .mat-raised-button {
-    display: block !important;
-    margin-top: 20px;
-    margin-left: auto;
-    margin-right: auto;
+  display: block !important;
+  margin-top: 20px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+textarea {
+  resize: vertical;
 }

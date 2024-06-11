@@ -1,18 +1,15 @@
 import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
-import {
-  FormBuilder,
-  FormControl,
-  FormGroup,
-  Validators,
-} from '@angular/forms';
-import { MatPaginator, MatPaginatorIntl } from '@angular/material/paginator';
+import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
+import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
+import { Router } from '@angular/router';
+import { ImplicitAutenticationService } from '@udistrital/planeacion-utilidades-module';
 import { DataRequest } from 'src/app/models/dataRequest';
 import { Dependencia } from 'src/app/models/dependencia';
 import { EstadoPlan } from 'src/app/models/estadoPlan';
 import Plan from 'src/app/models/plan';
+import { ReformulacionAux } from 'src/app/models/reformulacion';
 import { Vigencia } from 'src/app/models/vigencia';
-import { ImplicitAutenticationService } from '@udistrital/planeacion-utilidades-module';
 import { RequestManager } from 'src/app/services/requestManager.service';
 import { environment } from 'src/environments/environment';
 import Swal from 'sweetalert2';
@@ -40,30 +37,11 @@ export class ReformulacionComponent implements OnInit {
     'nombre',
     'acciones',
   ];
-  informacionTabla: MatTableDataSource<any>;
+  informacionTabla: MatTableDataSource<Plan>;
   inputsFiltros!: NodeListOf<HTMLInputElement>;
-  planesCargadosDinamicamente = [
-    {
-      dependencia_nombre: 'VICERRECTORIA ACADEMICA',
-      vigencia: 2202,
-      nombre: 'Plan 1',
-    },
-    {
-      dependencia_nombre: 'VICERRECTORIA ACADEMICA',
-      vigencia: 2202,
-      nombre: 'Plan 2',
-    },
-    {
-      dependencia_nombre: 'FACULTAD DE INGENIERIA',
-      vigencia: 2202,
-      nombre: 'Plan 3',
-    },
-    {
-      dependencia_nombre: 'VICERRECTORIA ACADEMICA',
-      vigencia: 2202,
-      nombre: 'Plan 4',
-    },
-  ];
+
+  auxPlanesTabla: Plan[] = [];
+  planesTabla: Plan[] = [];
 
   private autenticationService = new ImplicitAutenticationService();
 
@@ -72,6 +50,8 @@ export class ReformulacionComponent implements OnInit {
   constructor(
     private formBuilder: FormBuilder,
     private request: RequestManager,
+
+    private router: Router,
     private _changeDetectorRef: ChangeDetectorRef
   ) {
     this.formSelect = this.formBuilder.group({
@@ -79,9 +59,7 @@ export class ReformulacionComponent implements OnInit {
       selectVigencia: new FormControl({ value: '', disabled: true }),
       selectPlan: new FormControl({ value: '', disabled: true }),
     });
-    this.informacionTabla = new MatTableDataSource<any>(
-      this.planesCargadosDinamicamente
-    );
+    this.informacionTabla = new MatTableDataSource<any>(this.planesTabla);
     this.informacionTabla.filterPredicate = (data, _) => this.filtroTabla(data);
     this.informacionTabla.paginator = this.paginator;
   }
@@ -107,11 +85,87 @@ export class ReformulacionComponent implements OnInit {
     } else {
       await this.cargarUnidades();
     }
-    this.cargarVigencias();
+    await this.cargarVigencias();
+    this.cargarPlanesTabla();
+  }
+  cargarPlanesTabla() {
+    Swal.fire({
+      title: 'Cargando planes',
+      allowEscapeKey: false,
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+    this.auxPlanesTabla = [];
+    this.unidades.forEach((unidad: Dependencia) => {
+      this.request
+        .get(
+          environment.PLANES_CRUD,
+          `estado-plan?query=codigo_abreviacion:A_SP`
+        )
+        .subscribe({
+          next: (data: DataRequest) => {
+            const idCodigo: string = (data.Data[0] as EstadoPlan)._id;
+            this.request
+              .get(
+                environment.PLANES_CRUD,
+                `plan?query=activo:true,formato:false,dependencia_id:${unidad.Id},estado_plan_id:${idCodigo}`
+              )
+              .subscribe({
+                next: async (data: DataRequest) => {
+                  if (data) {
+                    (data.Data as Plan[]).forEach((plan) => {
+                      if (
+                        !this.planesTabla.some(
+                          (p) =>
+                            p.nombre === plan.nombre &&
+                            p.dependencia_id === plan.dependencia_id &&
+                            p.vigencia === plan.vigencia
+                        )
+                      ) {
+                        plan.dependencia_nombre = this.unidades.filter(
+                          (u) => u.Id.toString() === plan.dependencia_id
+                        )[0].Nombre;
+                        const vigencia = this.vigencias.filter(
+                          (v) => v.Id.toString() === plan.vigencia?.toString()
+                        )[0];
+                        if (vigencia) {
+                          plan.vigencia_nombre = vigencia.Nombre;
+                          this.planesTabla.push(plan);
+                        }
+                      }
+                    });
+                    Swal.close();
+                    if (this.planesTabla.length !== 0) {
+                      this.informacionTabla = new MatTableDataSource<Plan>(
+                        this.planesTabla
+                      );
+                      this.informacionTabla.filterPredicate = (plan, _) =>
+                        this.filtroTabla(plan);
+                      this.informacionTabla.paginator = this.paginator;
+                    }
+                  }
+                },
+                error: (error) => {
+                  Swal.close();
+                  console.error(error);
+                  Swal.fire({
+                    title: 'Error en la operación',
+                    text: `No se encontraron planes registrados`,
+                    icon: 'warning',
+                    showConfirmButton: false,
+                    timer: 2500,
+                  });
+                },
+              });
+          },
+        });
+    });
   }
 
   ngAfterViewInit(): void {
-    this.inputsFiltros = document.querySelectorAll('input');
+    this.inputsFiltros = document.querySelectorAll('th > input');
     this._changeDetectorRef.markForCheck();
   }
 
@@ -149,14 +203,21 @@ export class ReformulacionComponent implements OnInit {
                     )
                     .subscribe((dataUnidad: any) => {
                       if (dataUnidad) {
-                        let unidad = dataUnidad[0]['DependenciaId'];
+                        let unidad = dataUnidad[0][
+                          'DependenciaId'
+                        ] as Dependencia;
                         unidad['TipoDependencia'] =
                           dataUnidad[0]['TipoDependenciaId']['Id'];
-                        this.unidades.push(unidad);
-                        this.formSelect.get('selectUnidad')!.setValue(unidad);
-                        this.onChangeUnidad(unidad);
+                        if (!this.unidades.find((u) => u.Id === unidad.Id)) {
+                          this.unidades.push(unidad);
+                        }
                       }
                     });
+                }
+                if (this.unidades.length > 0) {
+                  this.formSelect
+                    .get('selectUnidad')!
+                    .setValue(this.unidades[0]);
                 }
                 Swal.close();
                 resolve('Operación Exitosa');
@@ -202,7 +263,7 @@ export class ReformulacionComponent implements OnInit {
     });
   }
 
-  cargarVigencias() {
+  async cargarVigencias() {
     Swal.fire({
       title: 'Cargando vigencias',
       allowEscapeKey: false,
@@ -211,30 +272,34 @@ export class ReformulacionComponent implements OnInit {
         Swal.showLoading();
       },
     });
-    this.request
-      .get(
-        environment.PARAMETROS_SERVICE,
-        `periodo?query=CodigoAbreviacion:VG,activo:true`
-      )
-      .subscribe({
-        next: (data: DataRequest) => {
-          if (data) {
-            this.vigencias = data.Data as Vigencia[];
+    return new Promise((resolve, reject) => {
+      this.request
+        .get(
+          environment.PARAMETROS_SERVICE,
+          `periodo?query=CodigoAbreviacion:VG,activo:true`
+        )
+        .subscribe({
+          next: (data: DataRequest) => {
+            if (data) {
+              this.vigencias = data.Data as Vigencia[];
+              Swal.close();
+              resolve(this.vigencias);
+            }
+          },
+          error: (error) => {
+            console.error(error);
             Swal.close();
-          }
-        },
-        error: (error) => {
-          console.error(error);
-          Swal.close();
-          Swal.fire({
-            title: 'Error en la operación',
-            text: `No se encontraron vigencias registradas`,
-            icon: 'warning',
-            showConfirmButton: false,
-            timer: 2500,
-          });
-        },
-      });
+            Swal.fire({
+              title: 'Error en la operación',
+              text: `No se encontraron vigencias registradas`,
+              icon: 'warning',
+              showConfirmButton: false,
+              timer: 2500,
+            });
+            reject(error);
+          },
+        });
+    });
   }
 
   cargarPlanes() {
@@ -262,7 +327,7 @@ export class ReformulacionComponent implements OnInit {
                   this.planes = [];
                   (data.Data as Plan[]).forEach((plan) => {
                     if (!this.planes.some((p) => p.nombre === plan.nombre)) {
-                      this.planes = [...this.planes, plan];
+                      this.planes.push(plan);
                     }
                   });
                   Swal.close();
@@ -306,6 +371,7 @@ export class ReformulacionComponent implements OnInit {
       this.onChangeVigencia(undefined);
     }
   }
+
   onChangeVigencia(vigencia: Vigencia | undefined) {
     this.vigenciaSeleccionada = vigencia;
     if (vigencia) {
@@ -318,52 +384,72 @@ export class ReformulacionComponent implements OnInit {
     this.planSeleccionado = undefined;
     this.planes = [];
   }
+
   onChangePlan(plan: Plan) {
     this.planSeleccionado = plan;
   }
-  buscarPlan() {
-    let faltanPorSeleccionar = 0;
-    if (!this.unidadSeleccionada) {
-      faltanPorSeleccionar += 1;
-    }
-    if (!this.vigenciaSeleccionada) {
-      faltanPorSeleccionar += 1;
-    }
-    if (!this.planSeleccionado) {
-      faltanPorSeleccionar += 1;
-    }
-    if (faltanPorSeleccionar > 0) {
-      Swal.fire({
-        title: 'Error en la operación',
-        text: `Falta${
-          faltanPorSeleccionar > 1 ? 'n' : ''
-        } ${faltanPorSeleccionar} campo${
-          faltanPorSeleccionar > 1 ? 's' : ''
-        } por diligenciar`,
-        icon: 'warning',
-        showConfirmButton: false,
-        timer: 2500,
-      });
+
+  consultar(planTraido?: Plan) {
+    if (planTraido) {
+      const dependencia = this.unidades.filter(
+        (u) => u.Id.toString() === planTraido.dependencia_id
+      )[0];
+      const vigencia = this.vigencias.filter(
+        (v) => v.Id.toString() === planTraido.vigencia
+      )[0];
+      localStorage.setItem(
+        'plan_reformulacion',
+        JSON.stringify({
+          dependencia_nombre: dependencia,
+          vigencia,
+          plan: planTraido,
+        })
+      );
+      this.router.navigate(['reformulacion', 'solicitud']);
     } else {
-      this.consultar({
-        dependencia_nombre: this.formSelect.get('selectUnidad')?.value,
-        vigencia: this.formSelect.get('selectVigencia')?.value,
-        nombre: this.formSelect.get('selectPlan')?.value,
-      });
+      let faltanPorSeleccionar = 0;
+      if (!this.unidadSeleccionada) {
+        faltanPorSeleccionar += 1;
+      }
+      if (!this.vigenciaSeleccionada) {
+        faltanPorSeleccionar += 1;
+      }
+      if (!this.planSeleccionado) {
+        faltanPorSeleccionar += 1;
+      }
+      if (faltanPorSeleccionar > 0) {
+        Swal.fire({
+          title: 'Error en la operación',
+          text: `Falta${
+            faltanPorSeleccionar > 1 ? 'n' : ''
+          } ${faltanPorSeleccionar} campo${
+            faltanPorSeleccionar > 1 ? 's' : ''
+          } por diligenciar`,
+          icon: 'warning',
+          showConfirmButton: false,
+          timer: 2500,
+        });
+      } else {
+        localStorage.setItem(
+          'plan_reformulacion',
+          JSON.stringify({
+            dependencia_nombre: this.formSelect.get('selectUnidad')?.value,
+            vigencia: this.formSelect.get('selectVigencia')?.value,
+            plan: this.formSelect.get('selectPlan')?.value,
+          })
+        );
+        this.router.navigate(['reformulacion', 'solicitud']);
+      }
     }
-  }
-  consultar(value: any) {
-    console.log(value);
   }
 
-  filtroTabla(seg: any) {
+  filtroTabla(p: Plan) {
     let filtrosPasados: number = 0;
     const valoresAComparar = [
-      seg.dependencia_nombre.toLowerCase(),
-      seg.vigencia.toString(),
-      seg.nombre.toLowerCase(),
+      p.dependencia_nombre!.toLowerCase(),
+      p.vigencia_nombre!.toLowerCase(),
+      p.nombre.toLowerCase(),
     ];
-    console.log(this.inputsFiltros);
     this.inputsFiltros.forEach((input, posicion) => {
       if (
         valoresAComparar[posicion].includes(input.value.trim().toLowerCase())
@@ -374,19 +460,6 @@ export class ReformulacionComponent implements OnInit {
     return filtrosPasados === valoresAComparar.length;
   }
 
-  async ajustarData(event: any) {
-    // TODO: Actualizar para traer los datos pertinentes dependiendo de la dependencia
-    let nombreUnidad = event.value;
-    // await this.cargarPlanes(event.value);
-    this.planesCargadosDinamicamente = this.planesCargadosDinamicamente.filter(
-      (data) => data.dependencia_nombre === nombreUnidad
-    );
-    this.informacionTabla = new MatTableDataSource<any>(
-      this.planesCargadosDinamicamente
-    );
-    this.informacionTabla.filterPredicate = (plan, _) => this.filtroTabla(plan);
-    this.informacionTabla.paginator = this.paginator;
-  }
   aplicarFiltro(event: Event) {
     let filtro: string = (event.target as HTMLInputElement).value;
     if (filtro === '') {
