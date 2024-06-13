@@ -17,14 +17,13 @@ const FORMATOS = ['application/pdf'];
 })
 export class SolicitudComponent implements OnInit {
   unidad: any;
-  seguimiento: any;
   formVisualizacionPlan: FormGroup;
   rol: string = '';
   estado: string = '';
   fileName!: string;
   archivoCodificado: string = '';
   observaciones: string = '';
-  planTraido: any;
+  planTraido: ReformulacionAux;
   private gestorMethods = new GestorDocumentalMethods();
 
   constructor(
@@ -80,16 +79,57 @@ export class SolicitudComponent implements OnInit {
               Swal.showLoading();
             },
           });
-          setTimeout(() => {
-            Swal.close();
-            Swal.fire({
-              title: 'Solicitud realizada',
-              text: 'La petición de reformulación ha sido recibida y será procesada por la Oficina de Planeación.',
-              icon: 'success',
-              showConfirmButton: false,
-              timer: 2500,
+          const bodyRequest = {
+            documento: [
+              {
+                IdTipoDocumento: 60,
+                nombre: this.fileName,
+                metadatos: {
+                  dato_a: 'Soporte planeacion',
+                },
+                descripcion:
+                  'Documento de soporte para reformulación de plan de acción',
+                file: this.archivoCodificado,
+                Activo: true,
+              },
+            ],
+            plan: this.planTraido.plan,
+            observaciones: this.observaciones,
+          };
+          // environment.SEGUIMIENTO_MID,
+          // `detalles/documento`,
+          this.request
+            .post(
+              environment.PRUEBAS,
+              `reformulacion`,
+              bodyRequest
+            )
+            .subscribe({
+              next: (data) => {
+                if (data) {
+                  Swal.close();
+                  Swal.fire({
+                    title: 'Solicitud realizada',
+                    text: 'La petición de reformulación ha sido recibida y será procesada por la Oficina de Planeación.',
+                    icon: 'success',
+                    showConfirmButton: false,
+                    timer: 2500,
+                  });
+                }
+              },
+              error: (error) => {
+                console.error(error);
+                Swal.close();
+                Swal.fire({
+                  title: 'Error en la operación',
+                  text: 'No fue posible realizar la solicitud.',
+                  icon: 'error',
+                  showConfirmButton: false,
+                  timer: 2500,
+                });
+              },
             });
-          }, 4000);
+          setTimeout(() => {}, 4000);
         } else if (result.dismiss === Swal.DismissReason.cancel) {
           Swal.fire({
             title: 'Solicitud de reformulación cancelada',
@@ -209,39 +249,12 @@ export class SolicitudComponent implements OnInit {
                 file
               )) as string;
 
-              const bodyRequest = {
-                documento: [
-                  {
-                    IdTipoDocumento: 60,
-                    nombre: file.name,
-                    metadatos: {
-                      dato_a: 'Soporte planeacion',
-                    },
-                    descripcion:
-                      'Documento de soporte para reformulación de plan de acción',
-                    file: this.archivoCodificado,
-                    Activo: true,
-                  },
-                ],
-                // _id: this.seguimiento.id,
-              };
-              // TODO: Hacer guardado por medio de la API
-              // this.request
-              //   .put(
-              //     environment.SEGUIMIENTO_MID,
-              //     `detalles/documento`,
-              //     bodyRequest,
-              //     this.planId + `/` + this.indexActividad + `/` + this.trimestreId
-              //   )
-              //   .subscribe()
-              setTimeout(() => {
-                Swal.close();
-                Swal.fire({
-                  title: 'Documento guardado con éxito',
-                  icon: 'success',
-                  timer: 2500,
-                });
-              }, 3000);
+              Swal.close();
+              Swal.fire({
+                title: 'Documento guardado con éxito',
+                icon: 'success',
+                timer: 2500,
+              });
             } else if (result.dismiss === Swal.DismissReason.cancel) {
               Swal.fire({
                 title: 'No se guardó el archivo',

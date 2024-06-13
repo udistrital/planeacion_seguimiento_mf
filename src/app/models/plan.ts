@@ -4,6 +4,7 @@ type Plan = {
   dependencia_nombre?: string;
   estado?: string;
   estado_id?: string;
+  estado_plan_id?: string;
   nombre: string;
   ultima_modificacion?: Date;
   version?: number;
