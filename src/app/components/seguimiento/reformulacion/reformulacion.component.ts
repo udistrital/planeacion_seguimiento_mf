@@ -8,7 +8,7 @@ import { DataRequest } from 'src/app/models/dataRequest';
 import { Dependencia } from 'src/app/models/dependencia';
 import { EstadoPlan } from 'src/app/models/estadoPlan';
 import Plan from 'src/app/models/plan';
-import { ReformulacionAux } from 'src/app/models/reformulacion';
+import { Reformulacion, ReformulacionAux } from 'src/app/models/reformulacion';
 import { Vigencia } from 'src/app/models/vigencia';
 import { RequestManager } from 'src/app/services/requestManager.service';
 import { environment } from 'src/environments/environment';
@@ -31,16 +31,10 @@ export class ReformulacionComponent implements OnInit {
   vigenciaSeleccionada: Vigencia | undefined = undefined;
   planSeleccionado: Plan | undefined = undefined;
 
-  columnasMostradas: string[] = [
-    'dependencia',
-    'vigencia',
-    'nombre',
-    'acciones',
-  ];
+  columnasMostradas!: string[];
   informacionTabla: MatTableDataSource<Plan>;
   inputsFiltros!: NodeListOf<HTMLInputElement>;
 
-  auxPlanesTabla: Plan[] = [];
   planesTabla: Plan[] = [];
 
   private autenticationService = new ImplicitAutenticationService();
@@ -76,19 +70,39 @@ export class ReformulacionComponent implements OnInit {
     } else if (roles.find((x) => x == 'JEFE_UNIDAD_PLANEACION')) {
       this.rol = 'JEFE_UNIDAD_PLANEACION';
     }
+    if (this.rol === 'PLANEACION') {
+      this.columnasMostradas = [
+        'dependencia',
+        'vigencia',
+        'nombre',
+        'estado',
+        'fecha-creacion',
+        'acciones',
+      ];
+    } else {
+      this.columnasMostradas = [
+        'dependencia',
+        'vigencia',
+        'nombre',
+        'acciones',
+      ];
+    }
+
     if (
       this.rol == 'JEFE_DEPENDENCIA' ||
       this.rol == 'ASISTENTE_DEPENDENCIA' ||
       this.rol == 'JEFE_UNIDAD_PLANEACION'
     ) {
       await this.validarUnidad();
+      await this.cargarVigencias();
     } else {
       await this.cargarUnidades();
+      await this.cargarVigencias();
     }
-    await this.cargarVigencias();
-    this.cargarPlanesTabla();
+    this.cargarDatosTabla();
   }
-  cargarPlanesTabla() {
+
+  cargarDatosTabla() {
     Swal.fire({
       title: 'Cargando planes',
       allowEscapeKey: false,
@@ -97,75 +111,138 @@ export class ReformulacionComponent implements OnInit {
         Swal.showLoading();
       },
     });
-    this.auxPlanesTabla = [];
-    this.unidades.forEach((unidad: Dependencia) => {
-      this.request
-        .get(
-          environment.PLANES_CRUD,
-          `estado-plan?query=codigo_abreviacion:A_SP`
-        )
-        .subscribe({
-          next: (data: DataRequest) => {
-            const idCodigo: string = (data.Data[0] as EstadoPlan)._id;
-            this.request
-              .get(
-                environment.PLANES_CRUD,
-                `plan?query=activo:true,formato:false,dependencia_id:${unidad.Id},estado_plan_id:${idCodigo}`
-              )
-              .subscribe({
-                next: async (data: DataRequest) => {
-                  if (data) {
-                    (data.Data as Plan[]).forEach((plan) => {
-                      if (
-                        !this.planesTabla.some(
-                          (p) =>
-                            p.nombre === plan.nombre &&
-                            p.dependencia_id === plan.dependencia_id &&
-                            p.vigencia === plan.vigencia
-                        )
-                      ) {
-                        plan.dependencia_nombre = this.unidades.filter(
-                          (u) => u.Id.toString() === plan.dependencia_id
+    this.planesTabla = [];
+    if (this.rol !== 'PLANEACION') {
+      this.unidades.forEach((unidad: Dependencia) => {
+        this.request
+          .get(
+            environment.PLANES_CRUD,
+            `estado-plan?query=codigo_abreviacion:A_SP`
+          )
+          .subscribe({
+            next: (data: DataRequest) => {
+              const idCodigo: string = (data.Data[0] as EstadoPlan)._id;
+              this.request
+                .get(
+                  environment.PLANES_CRUD,
+                  `plan?query=activo:true,formato:false,dependencia_id:${unidad.Id},estado_plan_id:${idCodigo}`
+                )
+                .subscribe({
+                  next: async (data: DataRequest) => {
+                    if (data) {
+                      (data.Data as Plan[]).forEach((plan) => {
+                        if (
+                          !this.planesTabla.some(
+                            (p) =>
+                              p.nombre === plan.nombre &&
+                              p.dependencia_id === plan.dependencia_id &&
+                              p.vigencia === plan.vigencia
+                          )
+                        ) {
+                          plan.dependencia_nombre = this.unidades.filter(
+                            (u) => u.Id.toString() === plan.dependencia_id
+                          )[0].Nombre;
+                          const vigencia = this.vigencias.filter(
+                            (v) => v.Id.toString() === plan.vigencia?.toString()
+                          )[0];
+                          if (vigencia) {
+                            plan.vigencia_nombre = vigencia.Nombre;
+                            this.planesTabla.push(plan);
+                          }
+                        }
+                      });
+                      Swal.close();
+                      if (this.planesTabla.length !== 0) {
+                        this.informacionTabla = new MatTableDataSource<Plan>(
+                          this.planesTabla
+                        );
+                        this.informacionTabla.filterPredicate = (plan, _) =>
+                          this.filtroTabla(plan);
+                        this.informacionTabla.paginator = this.paginator;
+                      }
+                    }
+                  },
+                  error: (error) => {
+                    Swal.close();
+                    console.error(error);
+                    Swal.fire({
+                      title: 'Error en la operación',
+                      text: `No se encontraron planes registrados`,
+                      icon: 'warning',
+                      showConfirmButton: false,
+                      timer: 2500,
+                    });
+                  },
+                });
+            },
+          });
+      });
+    } else {
+      this.request.get(environment.PLANES_CRUD, `reformulacion`).subscribe({
+        next: async (data: DataRequest) => {
+          if (data) {
+            console.log(data.Data);
+            const reformulacion = data.Data as Reformulacion[];
+            for (const ref of reformulacion) {
+              await new Promise<Plan>((resolve) => {
+                this.request
+                  .get(environment.PLANES_CRUD, `plan/${ref.plan_id}`)
+                  .subscribe({
+                    next: (data: DataRequest) => {
+                      if (data.Data) {
+                        let planAux: Plan = data.Data;
+                        planAux.dependencia_nombre = this.unidades.filter(
+                          (u) => u.Id.toString() === planAux.dependencia_id
                         )[0].Nombre;
                         const vigencia = this.vigencias.filter(
-                          (v) => v.Id.toString() === plan.vigencia?.toString()
+                          (v) =>
+                            v.Id.toString() === planAux.vigencia?.toString()
                         )[0];
                         if (vigencia) {
-                          plan.vigencia_nombre = vigencia.Nombre;
-                          this.planesTabla.push(plan);
+                          planAux.vigencia_nombre = vigencia.Nombre;
+                          planAux.estado = ref.estado_id.toString();
+                          planAux.fecha_creacion = ref.fecha_creacion;
+                          this.planesTabla.push(planAux);
+                          resolve(planAux);
                         }
                       }
-                    });
-                    Swal.close();
-                    if (this.planesTabla.length !== 0) {
-                      this.informacionTabla = new MatTableDataSource<Plan>(
-                        this.planesTabla
-                      );
-                      this.informacionTabla.filterPredicate = (plan, _) =>
-                        this.filtroTabla(plan);
-                      this.informacionTabla.paginator = this.paginator;
-                    }
-                  }
-                },
-                error: (error) => {
-                  Swal.close();
-                  console.error(error);
-                  Swal.fire({
-                    title: 'Error en la operación',
-                    text: `No se encontraron planes registrados`,
-                    icon: 'warning',
-                    showConfirmButton: false,
-                    timer: 2500,
+                    },
                   });
-                },
               });
-          },
-        });
-    });
+            }
+            // reformulacion.forEach((ref) => {
+            // });
+            Swal.close();
+            if (this.planesTabla.length !== 0) {
+              this.informacionTabla = new MatTableDataSource<Plan>(
+                this.planesTabla
+              );
+              this.informacionTabla.filterPredicate = (plan, _) =>
+                this.filtroTabla(plan);
+              this.informacionTabla.paginator = this.paginator;
+            } else {
+              console.log('Datos vacios');
+              console.log(this.planesTabla);
+            }
+            Swal.close();
+          }
+        },
+        error: (err) => {
+          console.error(err);
+          Swal.close();
+          Swal.fire({
+            title: 'Error en la operación',
+            text: `No se encontraron unidades registradas`,
+            icon: 'warning',
+            showConfirmButton: false,
+            timer: 2500,
+          });
+        },
+      });
+    }
   }
 
   ngAfterViewInit(): void {
-    this.inputsFiltros = document.querySelectorAll('th > input');
     this._changeDetectorRef.markForCheck();
   }
 
@@ -444,15 +521,37 @@ export class ReformulacionComponent implements OnInit {
   }
 
   filtroTabla(p: Plan) {
+    if (!this.inputsFiltros) {
+      this.inputsFiltros = document.querySelectorAll('th > input');
+    }
     let filtrosPasados: number = 0;
-    const valoresAComparar = [
-      p.dependencia_nombre!.toLowerCase(),
-      p.vigencia_nombre!.toLowerCase(),
-      p.nombre.toLowerCase(),
-    ];
+    let valoresAComparar: string[];
+    if (this.rol !== 'PLANEACION') {
+      valoresAComparar = [
+        p.dependencia_nombre!.toLowerCase(),
+        p.vigencia_nombre!.toLowerCase(),
+        p.nombre.toLowerCase(),
+      ];
+    } else {
+      function agregarCero(valor: number): string {
+        return valor < 10 ? `0${valor}` : valor.toString();
+      }
+      const fecha = new Date(p.fecha_creacion!);
+      valoresAComparar = [
+        p.dependencia_nombre!,
+        p.vigencia_nombre!,
+        p.nombre,
+        p.estado!,
+        `${agregarCero(fecha.getDate())}/${agregarCero(
+          fecha.getMonth() + 1
+        )}/${fecha.getFullYear()}`,
+      ];
+    }
     this.inputsFiltros.forEach((input, posicion) => {
       if (
-        valoresAComparar[posicion].includes(input.value.trim().toLowerCase())
+        valoresAComparar[posicion]
+          .toLowerCase()
+          .includes(input.value.trim().toLowerCase())
       ) {
         filtrosPasados++;
       }
@@ -470,7 +569,7 @@ export class ReformulacionComponent implements OnInit {
         }
       });
     }
-    // Se debe poner algún valor que no sea vacio  para que se accione el filtro la tabla
+    // Se debe poner algún valor que no sea vacio para que se accione el filtro de la tabla
     this.informacionTabla.filter = filtro.trim().toLowerCase();
   }
 }

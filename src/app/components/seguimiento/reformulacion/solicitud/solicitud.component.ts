@@ -1,12 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
-import { GestorDocumentalMethods } from '@udistrital/planeacion-utilidades-module';
+import {
+  GestorDocumentalMethods,
+  ImplicitAutenticationService,
+} from '@udistrital/planeacion-utilidades-module';
+import { ReformulacionAux } from 'src/app/models/reformulacion';
 import { RequestManager } from 'src/app/services/requestManager.service';
+import { environment } from 'src/environments/environment';
 import Swal from 'sweetalert2';
 import { VisualizarDocumentoDialogComponent } from '../../generar-trimestre/visualizar-documento-dialog/visualizar-documento-dialog.component';
-import { environment } from 'src/environments/environment';
-import { ReformulacionAux } from 'src/app/models/reformulacion';
 
 const FORMATOS = ['application/pdf'];
 
@@ -25,7 +28,7 @@ export class SolicitudComponent implements OnInit {
   observaciones: string = '';
   planTraido: ReformulacionAux;
   private gestorMethods = new GestorDocumentalMethods();
-
+  private autenticationService = new ImplicitAutenticationService();
   constructor(
     private formBuilder: FormBuilder,
     private request: RequestManager,
@@ -44,7 +47,17 @@ export class SolicitudComponent implements OnInit {
       vigencia: [this.planTraido.vigencia.Nombre],
     });
   }
-  ngOnInit() {
+  async ngOnInit() {
+    const roles: string[] = await this.autenticationService.getRoles();
+    if (roles.find((x: string) => x == 'PLANEACION')) {
+      this.rol = 'PLANEACION';
+    } else if (roles.find((x: string) => x == 'ASISTENTE_PLANEACION')) {
+      this.rol = 'ASISTENTE_PLANEACION';
+    } else if (roles.find((x: string) => x == 'JEFE_DEPENDENCIA')) {
+      this.rol = 'JEFE_DEPENDENCIA';
+    } else if (roles.find((x: string) => x == 'ASISTENTE_DEPENDENCIA')) {
+      this.rol = 'ASISTENTE_DEPENDENCIA';
+    }
     this.request
       .get(
         environment.PLANES_CRUD,
@@ -82,28 +95,21 @@ export class SolicitudComponent implements OnInit {
           const bodyRequest = {
             documento: [
               {
-                IdTipoDocumento: 60,
+                IdTipoDocumento: 87,
                 nombre: this.fileName,
                 metadatos: {
                   dato_a: 'Soporte planeacion',
                 },
-                descripcion:
-                  'Documento de soporte para reformulación de plan de acción',
+                descripcion: `Documento de soporte para reformulación para el plan de acción con ID ${this.planTraido.plan._id}`,
                 file: this.archivoCodificado,
                 Activo: true,
               },
             ],
-            plan: this.planTraido.plan,
+            plan_id: this.planTraido.plan._id,
             observaciones: this.observaciones,
           };
-          // environment.SEGUIMIENTO_MID,
-          // `detalles/documento`,
           this.request
-            .post(
-              environment.PRUEBAS,
-              `reformulacion`,
-              bodyRequest
-            )
+            .post(environment.SEGUIMIENTO_MID, `reformulacion`, bodyRequest)
             .subscribe({
               next: (data) => {
                 if (data) {
@@ -129,7 +135,6 @@ export class SolicitudComponent implements OnInit {
                 });
               },
             });
-          setTimeout(() => {}, 4000);
         } else if (result.dismiss === Swal.DismissReason.cancel) {
           Swal.fire({
             title: 'Solicitud de reformulación cancelada',
@@ -265,6 +270,7 @@ export class SolicitudComponent implements OnInit {
             }
           },
           (error) => {
+            console.error(error);
             Swal.fire({
               title: 'Error en la operación',
               icon: 'error',
