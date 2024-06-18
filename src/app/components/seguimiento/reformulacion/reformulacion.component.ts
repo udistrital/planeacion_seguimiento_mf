@@ -7,9 +7,14 @@ import { ImplicitAutenticationService } from '@udistrital/planeacion-utilidades-
 import { DataRequest } from 'src/app/models/dataRequest';
 import { Dependencia } from 'src/app/models/dependencia';
 import { EstadoPlan } from 'src/app/models/estadoPlan';
+import { Parametro } from 'src/app/models/parametro';
 import Plan from 'src/app/models/plan';
-import { Reformulacion, ReformulacionAux } from 'src/app/models/reformulacion';
+import {
+  Reformulacion,
+  ReformulacionStorage,
+} from 'src/app/models/reformulacion';
 import { Vigencia } from 'src/app/models/vigencia';
+import { CodigosEstados } from 'src/app/services/codigosEstados.service';
 import { RequestManager } from 'src/app/services/requestManager.service';
 import { environment } from 'src/environments/environment';
 import Swal from 'sweetalert2';
@@ -44,9 +49,8 @@ export class ReformulacionComponent implements OnInit {
   constructor(
     private formBuilder: FormBuilder,
     private request: RequestManager,
-
     private router: Router,
-    private _changeDetectorRef: ChangeDetectorRef
+    private codigosEstados: CodigosEstados
   ) {
     this.formSelect = this.formBuilder.group({
       selectUnidad: new FormControl({ value: '', disabled: false }),
@@ -79,6 +83,8 @@ export class ReformulacionComponent implements OnInit {
         'fecha-creacion',
         'acciones',
       ];
+      await this.cargarUnidades();
+      await this.cargarVigencias();
     } else {
       this.columnasMostradas = [
         'dependencia',
@@ -86,17 +92,7 @@ export class ReformulacionComponent implements OnInit {
         'nombre',
         'acciones',
       ];
-    }
-
-    if (
-      this.rol == 'JEFE_DEPENDENCIA' ||
-      this.rol == 'ASISTENTE_DEPENDENCIA' ||
-      this.rol == 'JEFE_UNIDAD_PLANEACION'
-    ) {
       await this.validarUnidad();
-      await this.cargarVigencias();
-    } else {
-      await this.cargarUnidades();
       await this.cargarVigencias();
     }
     this.cargarDatosTabla();
@@ -139,12 +135,12 @@ export class ReformulacionComponent implements OnInit {
                               p.vigencia === plan.vigencia
                           )
                         ) {
-                          plan.dependencia_nombre = this.unidades.filter(
+                          plan.dependencia_nombre = this.unidades.find(
                             (u) => u.Id.toString() === plan.dependencia_id
-                          )[0].Nombre;
-                          const vigencia = this.vigencias.filter(
+                          )!.Nombre;
+                          const vigencia = this.vigencias.find(
                             (v) => v.Id.toString() === plan.vigencia?.toString()
-                          )[0];
+                          )!;
                           if (vigencia) {
                             plan.vigencia_nombre = vigencia.Nombre;
                             this.planesTabla.push(plan);
@@ -178,72 +174,92 @@ export class ReformulacionComponent implements OnInit {
           });
       });
     } else {
-      this.request.get(environment.PLANES_CRUD, `reformulacion`).subscribe({
-        next: async (data: DataRequest) => {
-          if (data) {
-            console.log(data.Data);
-            const reformulacion = data.Data as Reformulacion[];
-            for (const ref of reformulacion) {
-              await new Promise<Plan>((resolve) => {
-                this.request
-                  .get(environment.PLANES_CRUD, `plan/${ref.plan_id}`)
-                  .subscribe({
-                    next: (data: DataRequest) => {
-                      if (data.Data) {
-                        let planAux: Plan = data.Data;
-                        planAux.dependencia_nombre = this.unidades.filter(
-                          (u) => u.Id.toString() === planAux.dependencia_id
-                        )[0].Nombre;
-                        const vigencia = this.vigencias.filter(
-                          (v) =>
-                            v.Id.toString() === planAux.vigencia?.toString()
-                        )[0];
-                        if (vigencia) {
-                          planAux.vigencia_nombre = vigencia.Nombre;
-                          planAux.estado = ref.estado_id.toString();
-                          planAux.fecha_creacion = ref.fecha_creacion;
-                          this.planesTabla.push(planAux);
-                          resolve(planAux);
+      this.request
+        .get(
+          environment.PLANES_CRUD,
+          `reformulacion?sortby=fecha_modificacion&order=desc`
+        )
+        .subscribe({
+          next: async (data: DataRequest) => {
+            if (data) {
+              const reformulaciones = data.Data as Reformulacion[];
+              let estadosReformulacion: Parametro[] = [];
+              for (const reformulacion of reformulaciones) {
+                await new Promise<Plan>((resolve) => {
+                  this.request
+                    .get(
+                      environment.PLANES_CRUD,
+                      `plan/${reformulacion.plan_id}`
+                    )
+                    .subscribe({
+                      next: (data: DataRequest) => {
+                        if (data.Data) {
+                          let planAux: Plan = data.Data;
+                          planAux.dependencia_nombre = this.unidades.find(
+                            (u) => u.Id.toString() === planAux.dependencia_id
+                          )!.Nombre;
+                          const vigencia = this.vigencias.find(
+                            (v) =>
+                              v.Id.toString() === planAux.vigencia?.toString()
+                          )!;
+                          if (vigencia) {
+                            planAux.vigencia_nombre = vigencia.Nombre;
+                            let estado = estadosReformulacion.find(
+                              (e) => e.Id === reformulacion.estado_id
+                            );
+                            if (!estado) {
+                              this.request
+                                .get(
+                                  environment.PARAMETROS_SERVICE,
+                                  `parametro/${reformulacion.estado_id}`
+                                )
+                                .subscribe({
+                                  next: (data) => {
+                                    estado = data.Data as Parametro;
+                                    estadosReformulacion.push(estado);
+                                    reformulacion.estado_nombre = estado.Nombre;
+                                  },
+                                });
+                            } else {
+                              reformulacion.estado_nombre = estado.Nombre;
+                            }
+                            planAux.reformulacion = reformulacion;
+                            this.planesTabla.push(planAux);
+                            resolve(planAux);
+                          }
                         }
-                      }
-                    },
-                  });
-              });
+                      },
+                    });
+                });
+              }
+              Swal.close();
+              if (this.planesTabla.length !== 0) {
+                this.informacionTabla = new MatTableDataSource<Plan>(
+                  this.planesTabla
+                );
+                this.informacionTabla.filterPredicate = (plan, _) =>
+                  this.filtroTabla(plan);
+                this.informacionTabla.paginator = this.paginator;
+              } else {
+                console.log('Datos vacios');
+                console.log(this.planesTabla);
+              }
+              Swal.close();
             }
-            // reformulacion.forEach((ref) => {
-            // });
+          },
+          error: (err) => {
+            console.error(err);
             Swal.close();
-            if (this.planesTabla.length !== 0) {
-              this.informacionTabla = new MatTableDataSource<Plan>(
-                this.planesTabla
-              );
-              this.informacionTabla.filterPredicate = (plan, _) =>
-                this.filtroTabla(plan);
-              this.informacionTabla.paginator = this.paginator;
-            } else {
-              console.log('Datos vacios');
-              console.log(this.planesTabla);
-            }
-            Swal.close();
-          }
-        },
-        error: (err) => {
-          console.error(err);
-          Swal.close();
-          Swal.fire({
-            title: 'Error en la operación',
-            text: `No se encontraron unidades registradas`,
-            icon: 'warning',
-            showConfirmButton: false,
-            timer: 2500,
-          });
-        },
-      });
+            Swal.fire({
+              title: 'Error en la operación',
+              text: `No se encontraron unidades registradas`,
+              icon: 'warning',
+              showConfirmButton: false,
+              timer: 2500,
+            });
+          },
+        });
     }
-  }
-
-  ngAfterViewInit(): void {
-    this._changeDetectorRef.markForCheck();
   }
 
   async validarUnidad() {
@@ -379,7 +395,7 @@ export class ReformulacionComponent implements OnInit {
     });
   }
 
-  cargarPlanes() {
+  async cargarPlanes() {
     Swal.fire({
       title: 'Cargando planes',
       allowEscapeKey: false,
@@ -388,49 +404,51 @@ export class ReformulacionComponent implements OnInit {
         Swal.showLoading();
       },
     });
+
     this.request
-      .get(environment.PLANES_CRUD, `estado-plan?query=codigo_abreviacion:A_SP`)
+      .get(
+        environment.PLANES_CRUD,
+        `plan?query=activo:true,formato:false,dependencia_id:${
+          this.unidadSeleccionada?.Id
+        },vigencia:${
+          this.vigenciaSeleccionada?.Id
+        },estado_plan_id:${await this.codigosEstados.getId(
+          'PLANES_CRUD',
+          'estado-plan',
+          'A_SP'
+        )}`
+      )
       .subscribe({
-        next: (data: DataRequest) => {
-          const idCodigo: string = (data.Data[0] as EstadoPlan)._id;
-          this.request
-            .get(
-              environment.PLANES_CRUD,
-              `plan?query=activo:true,formato:false,dependencia_id:${this.unidadSeleccionada?.Id},vigencia:${this.vigenciaSeleccionada?.Id},estado_plan_id:${idCodigo}`
-            )
-            .subscribe({
-              next: async (data: DataRequest) => {
-                if (data) {
-                  this.planes = [];
-                  (data.Data as Plan[]).forEach((plan) => {
-                    if (!this.planes.some((p) => p.nombre === plan.nombre)) {
-                      this.planes.push(plan);
-                    }
-                  });
-                  Swal.close();
-                  if (this.planes.length === 0) {
-                    Swal.fire({
-                      title:
-                        'No se lograron obtener planes avalados para la unidad y la vigencia',
-                      icon: 'info',
-                      showConfirmButton: false,
-                      timer: 2500,
-                    });
-                  }
-                }
-              },
-              error: (error) => {
-                Swal.close();
-                console.error(error);
-                Swal.fire({
-                  title: 'Error en la operación',
-                  text: `No se encontraron planes registrados`,
-                  icon: 'warning',
-                  showConfirmButton: false,
-                  timer: 2500,
-                });
-              },
+        next: async (data: DataRequest) => {
+          if (data) {
+            this.planes = [];
+            (data.Data as Plan[]).forEach((plan) => {
+              if (!this.planes.some((p) => p.nombre === plan.nombre)) {
+                this.planes.push(plan);
+              }
             });
+            Swal.close();
+            if (this.planes.length === 0) {
+              Swal.fire({
+                title:
+                  'No se lograron obtener planes avalados para la unidad y la vigencia',
+                icon: 'info',
+                showConfirmButton: false,
+                timer: 2500,
+              });
+            }
+          }
+        },
+        error: (error) => {
+          Swal.close();
+          console.error(error);
+          Swal.fire({
+            title: 'Error en la operación',
+            text: `No se encontraron planes registrados`,
+            icon: 'warning',
+            showConfirmButton: false,
+            timer: 2500,
+          });
         },
       });
   }
@@ -468,19 +486,25 @@ export class ReformulacionComponent implements OnInit {
 
   consultar(planTraido?: Plan) {
     if (planTraido) {
-      const dependencia = this.unidades.filter(
+      const dependencia = this.unidades.find(
         (u) => u.Id.toString() === planTraido.dependencia_id
-      )[0];
-      const vigencia = this.vigencias.filter(
+      )!;
+      const vigencia = this.vigencias.find(
         (v) => v.Id.toString() === planTraido.vigencia
-      )[0];
+      )!;
+
       localStorage.setItem(
-        'plan_reformulacion',
+        'reformulacion',
         JSON.stringify({
-          dependencia_nombre: dependencia,
-          vigencia,
-          plan: planTraido,
-        })
+          dependencia: dependencia.Nombre,
+          vigencia: vigencia.Nombre,
+          plan: planTraido.nombre,
+          plan_id: planTraido._id,
+          // reformulacion_id: planTraido.reformulacion
+          //   ? planTraido.reformulacion?._id
+          //   : undefined,
+          reformulacion: planTraido.reformulacion,
+        } as ReformulacionStorage)
       );
       this.router.navigate(['reformulacion', 'solicitud']);
     } else {
@@ -536,12 +560,12 @@ export class ReformulacionComponent implements OnInit {
       function agregarCero(valor: number): string {
         return valor < 10 ? `0${valor}` : valor.toString();
       }
-      const fecha = new Date(p.fecha_creacion!);
+      const fecha = new Date(p.reformulacion!.fecha_creacion);
       valoresAComparar = [
         p.dependencia_nombre!,
         p.vigencia_nombre!,
         p.nombre,
-        p.estado!,
+        p.reformulacion!.estado_nombre!,
         `${agregarCero(fecha.getDate())}/${agregarCero(
           fecha.getMonth() + 1
         )}/${fecha.getFullYear()}`,

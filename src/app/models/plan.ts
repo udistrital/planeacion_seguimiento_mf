@@ -1,8 +1,9 @@
+import { Reformulacion } from './reformulacion';
+
 type Plan = {
   _id: string;
   dependencia_id: string;
   dependencia_nombre?: string;
-  estado?: string;
   estado_id?: string;
   estado_plan_id?: string;
   nombre: string;
@@ -13,6 +14,7 @@ type Plan = {
   vigencia: string;
   vigencia_id?: string;
   vigencia_nombre?: string;
+  reformulacion?: Reformulacion;
 };
 
 export default Plan;

@@ -148,14 +148,14 @@
               <div>Estado</div>
               <input matInput (keyup)="aplicarFiltro($event)" placeholder="Estado" #input />
             </th>
-            <td mat-cell *matCellDef="let reformulacion">{{ reformulacion.estado }}</td>
+            <td mat-cell *matCellDef="let reformulacion">{{ reformulacion.reformulacion.estado_nombre }}</td>
           </ng-container>
           <ng-container matColumnDef="fecha-creacion">
             <th mat-header-cell *matHeaderCellDef>
               <div>Fecha de creación</div>
               <input matInput (keyup)="aplicarFiltro($event)" placeholder="DD/MM/AAAA" #input />
             </th>
-            <td mat-cell *matCellDef="let reformulacion">{{ reformulacion.fecha_creacion | date:'dd/MM/yyyy' }}</td>
+            <td mat-cell *matCellDef="let reformulacion">{{ reformulacion.reformulacion.fecha_creacion | date:'dd/MM/yyyy' }}</td>
           </ng-container>
           <ng-container matColumnDef="acciones">
             <th mat-header-cell *matHeaderCellDef>Acciones</th>

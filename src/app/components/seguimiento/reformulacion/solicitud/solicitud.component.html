@@ -23,7 +23,7 @@
           </div>
           <div class="state">
             <span>
-              Estado reporte
+              Estado
             </span>
             <input type="text" matInput formControlName="estado" placeholder="Estado" readonly>
           </div>
@@ -42,7 +42,7 @@
             <p>Realice el cargue del documento con la petición detallada y evidencias que sustenten los cambios
               sugeridos</p>
             <div class="botones">
-              <div>
+              <div *ngIf="!estado">
                 <input id="archivo" type="file" matInput accept="application/pdf" (change)="onChangeArchivo($event)">
                 <button mat-icon-button (click)="activarCargarArchivo()">
                   <img src="https://cdn-icons-png.flaticon.com/512/888/888034.png" alt="archivo">
@@ -66,7 +66,7 @@
         <div class="container-border">
           <h4>Observaciones</h4>
           <textarea matInput placeholder="Ingrese observaciones" [(ngModel)]="observaciones"
-            maxlength="1000"></textarea>
+            [disabled]="estado !== undefined" maxlength="1000"></textarea>
           <mat-hint>{{observaciones.length}} / 1000</mat-hint>
         </div>
       </div>
@@ -74,7 +74,10 @@
     <div class="container-button">
       <button *ngIf="rol!=='PLANEACION'" class="background-button" mat-raised-button color="primary"
         (click)="solicitarReformulacion()">Enviar Solicitud De Reformulación</button>
-
+      <button *ngIf="rol==='PLANEACION' && estado && estado.Id.toString() === ID_ESTADO_FORMULADO" class="background-button"
+        mat-raised-button color="primary" (click)="aprobarReformulacion()">Aprobar</button>
+      <button *ngIf="rol==='PLANEACION' && estado && estado.Id.toString() === ID_ESTADO_FORMULADO" class="background-button"
+        mat-raised-button color="primary" (click)="rechazarReformulacion()">Rechazar</button>
     </div>
   </mat-card-content>
 </mat-card>

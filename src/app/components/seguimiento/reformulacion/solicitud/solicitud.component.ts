@@ -5,11 +5,19 @@ import {
   GestorDocumentalMethods,
   ImplicitAutenticationService,
 } from '@udistrital/planeacion-utilidades-module';
-import { ReformulacionAux } from 'src/app/models/reformulacion';
+import {
+  Reformulacion,
+  ReformulacionStorage,
+} from 'src/app/models/reformulacion';
 import { RequestManager } from 'src/app/services/requestManager.service';
 import { environment } from 'src/environments/environment';
 import Swal from 'sweetalert2';
 import { VisualizarDocumentoDialogComponent } from '../../generar-trimestre/visualizar-documento-dialog/visualizar-documento-dialog.component';
+import { CodigosEstados } from 'src/app/services/codigosEstados.service';
+import { Parametro } from 'src/app/models/parametro';
+import { DataRequest } from 'src/app/models/dataRequest';
+import { GestorDocumentalService } from 'src/app/services/gestorDocumental.service';
+import { Router } from '@angular/router';
 
 const FORMATOS = ['application/pdf'];
 
@@ -22,29 +30,45 @@ export class SolicitudComponent implements OnInit {
   unidad: any;
   formVisualizacionPlan: FormGroup;
   rol: string = '';
-  estado: string = '';
   fileName!: string;
   archivoCodificado: string = '';
   observaciones: string = '';
-  planTraido: ReformulacionAux;
+  reformulacionStorage: ReformulacionStorage;
+  reformulacionActual!: Reformulacion;
+  estado!: Parametro;
+
   private gestorMethods = new GestorDocumentalMethods();
   private autenticationService = new ImplicitAutenticationService();
+
+  ID_ESTADO_APROBADO = '';
+  ID_ESTADO_RECHAZADO = '';
+  ID_ESTADO_FORMULADO = '';
+
   constructor(
     private formBuilder: FormBuilder,
     private request: RequestManager,
-    public dialog: MatDialog
+    public dialog: MatDialog,
+    private codigosEstados: CodigosEstados,
+    private gestorDocumental: GestorDocumentalService,
+    private router: Router
   ) {
-    this.planTraido = JSON.parse(
-      localStorage.getItem('plan_reformulacion')!
-    ) as ReformulacionAux;
+    let reformulacionData = localStorage.getItem('reformulacion');
+    if (!reformulacionData) {
+      this.router.navigate(['reformulacion']);
+    }
+    this.reformulacionStorage = JSON.parse(
+      localStorage.getItem('reformulacion')!
+    ) as ReformulacionStorage;
+    localStorage.removeItem('reformulacion');
+
     this.formVisualizacionPlan = this.formBuilder.group({
       unidad: [
-        this.planTraido.dependencia_nombre.Nombre || '',
+        this.reformulacionStorage.dependencia || '',
         Validators.required,
       ],
-      estado: [this.planTraido.plan.estado_plan_id || '', Validators.required],
-      plan: [this.planTraido.plan.nombre || '', Validators.required],
-      vigencia: [this.planTraido.vigencia.Nombre],
+      estado: ['', Validators.required],
+      plan: [this.reformulacionStorage.plan || '', Validators.required],
+      vigencia: [this.reformulacionStorage.vigencia],
     });
   }
   async ngOnInit() {
@@ -58,22 +82,66 @@ export class SolicitudComponent implements OnInit {
     } else if (roles.find((x: string) => x == 'ASISTENTE_DEPENDENCIA')) {
       this.rol = 'ASISTENTE_DEPENDENCIA';
     }
-    this.request
-      .get(
-        environment.PLANES_CRUD,
-        `estado-plan?query=_id:${this.planTraido.plan.estado_plan_id}`
-      )
-      .subscribe({
-        next: (data) => {
-          if (data.Data) {
-            this.formVisualizacionPlan
-              .get('estado')!
-              .setValue(data.Data[0].nombre);
-          }
-        },
-      });
+
+    this.ID_ESTADO_APROBADO = await this.codigosEstados.getId(
+      'PARAMETROS_SERVICE',
+      'parametro',
+      'RPA-A'
+    );
+    this.ID_ESTADO_RECHAZADO = await this.codigosEstados.getId(
+      'PARAMETROS_SERVICE',
+      'parametro',
+      'RPA-R'
+    );
+    this.ID_ESTADO_FORMULADO = await this.codigosEstados.getId(
+      'PARAMETROS_SERVICE',
+      'parametro',
+      'RPA-F'
+    );
+
+    if (this.reformulacionStorage.reformulacion) {
+      this.cargarReformulacion(this.reformulacionStorage.reformulacion);
+    } else {
+      this.request
+        .get(
+          environment.PLANES_CRUD,
+          `reformulacion?query=plan_id:${this.reformulacionStorage.plan_id},activo:true`
+        )
+        .subscribe({
+          next: async (data: DataRequest) => {
+            if ((data?.Data as Reformulacion[]).length > 0) {
+              this.cargarReformulacion(data.Data[0]);
+            } else {
+              this.formVisualizacionPlan.get('estado')!.setValue('Habilitado');
+            }
+          },
+        });
+    }
   }
 
+  private cargarReformulacion(ref: Reformulacion) {
+    this.reformulacionActual = ref;
+    this.observaciones = this.reformulacionActual.observaciones;
+    this.request
+      .get(
+        environment.PARAMETROS_SERVICE,
+        `parametro/${this.reformulacionActual.estado_id}`
+      )
+      .subscribe({
+        next: (data: DataRequest) => {
+          this.estado = data.Data;
+          console.log('this.estado', this.estado);
+          this.formVisualizacionPlan
+            .get('estado')!
+            .setValue(this.estado.Nombre);
+        },
+      });
+    console.log(this.reformulacionActual.archivos);
+    this.fileName = JSON.parse(this.reformulacionActual.archivos)[
+      'documentos'
+    ][0]['nombre'];
+    console.log(JSON.parse(this.reformulacionActual.archivos)['documentos'][0]);
+  }
   solicitarReformulacion() {
     if (this.archivoCodificado !== '') {
       Swal.fire({
@@ -100,12 +168,12 @@ export class SolicitudComponent implements OnInit {
                 metadatos: {
                   dato_a: 'Soporte planeacion',
                 },
-                descripcion: `Documento de soporte para reformulación para el plan de acción con ID ${this.planTraido.plan._id}`,
+                descripcion: `Documento de soporte para reformulación para el plan de acción con ID ${this.reformulacionStorage.plan_id}`,
                 file: this.archivoCodificado,
                 Activo: true,
               },
             ],
-            plan_id: this.planTraido.plan._id,
+            plan_id: this.reformulacionStorage.plan_id,
             observaciones: this.observaciones,
           };
           this.request
@@ -157,55 +225,40 @@ export class SolicitudComponent implements OnInit {
   }
   async visualizarArchivo() {
     if (this.fileName != undefined) {
-      this.dialog.open(VisualizarDocumentoDialogComponent, {
-        width: '1200',
-        minHeight: 'calc(100vh - 90px)',
-        height: '80%',
-        data: {
-          url: 'data:application/pdf;base64,' + this.archivoCodificado,
-          editable: false,
-          Observacion: this.observaciones,
-        },
-      });
-      // this.gestorDocumental.get([{ file: this.fileName }]).subscribe({
-      //   next: (documento: any[]) => {
-      //     const dialogRef = this.dialog.open(
-      //       VisualizarDocumentoDialogComponent,
-      //       {
-      //         width: '1200px',
-      //         minHeight: 'calc(100vh - 90px)',
-      //         height: '800px',
-      //         data: { ...documento[0], editable: false },
-      //       }
-      //     );
-
-      //     dialogRef.afterClosed().subscribe((result) => {
-      //       if (result == undefined) {
-      //         return undefined;
-      //       } else {
-      //         for (
-      //           let index = 0;
-      //           index < this.dataSource.data.length;
-      //           index++
-      //         ) {
-      //           if (this.dataSource.data[index]['Id'] == result['Id']) {
-      //             this.dataSource.data[index]['Observacion'] =
-      //               result['Observacion'];
-      //           }
-      //         }
-      //       }
-      //     });
-      //   },
-      //   error: (error: any) => {
-      //     Swal.fire({
-      //       title: 'Error en la operación',
-      //       text: `No se pudo cargar el documento ${JSON.stringify(error)}`,
-      //       icon: 'warning',
-      //       showConfirmButton: false,
-      //       timer: 2500,
-      //     });
-      //   },
-      // });
+      if (!this.estado) {
+        this.dialog.open(VisualizarDocumentoDialogComponent, {
+          width: '80%',
+          minHeight: 'calc(100vh - 90px)',
+          height: '80%',
+          data: {
+            url: 'data:application/pdf;base64,' + this.archivoCodificado,
+            editable: false,
+            Observacion: this.observaciones,
+          },
+        });
+      } else {
+        this.gestorDocumental
+          .get(JSON.parse(this.reformulacionActual.archivos)['documentos'])
+          .subscribe({
+            next: (documento: any[]) => {
+              this.dialog.open(VisualizarDocumentoDialogComponent, {
+                width: '80%',
+                minHeight: 'calc(100vh - 90px)',
+                height: '80%',
+                data: { ...documento[0], editable: false },
+              });
+            },
+            error: (error) => {
+              Swal.fire({
+                title: 'Error en la operación',
+                text: `No se pudo cargar el documento ${JSON.stringify(error)}`,
+                icon: 'warning',
+                showConfirmButton: false,
+                timer: 2500,
+              });
+            },
+          });
+      }
     } else {
       Swal.fire({
         title: 'Error en la operación',
@@ -292,5 +345,50 @@ export class SolicitudComponent implements OnInit {
   }
   activarCargarArchivo() {
     (document.getElementById('archivo') as HTMLInputElement).click();
+  }
+
+  actualizarReformulacion(activo: boolean, estado_id: number) {
+    this.request
+      .put(
+        environment.PLANES_CRUD,
+        'reformulacion',
+        {
+          ...this.reformulacionActual,
+          activo,
+          estado_id,
+        } as Reformulacion,
+        this.reformulacionActual._id
+      )
+      .subscribe({
+        next: (data) => {
+          if (data) {
+            Swal.fire({
+              title: `Reformulación ${
+                estado_id.toString() === this.ID_ESTADO_APROBADO
+                  ? 'Aprobada'
+                  : 'Rechazada'
+              }`,
+              text: 'La reformulación ha sido procesada exitosamente.',
+              icon: 'success',
+              showConfirmButton: false,
+              timer: 2500,
+            }).then(() => {
+              window.location.reload();
+            });
+          }
+        },
+      });
+  }
+  aprobarReformulacion() {
+    this.actualizarReformulacion(
+      false,
+      Number.parseInt(this.ID_ESTADO_APROBADO)
+    );
+  }
+  rechazarReformulacion() {
+    this.actualizarReformulacion(
+      false,
+      Number.parseInt(this.ID_ESTADO_RECHAZADO)
+    );
   }
 }
