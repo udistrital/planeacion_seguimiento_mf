@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { catchError, map, mergeMap } from 'rxjs/operators';
-import { HttpErrorManager } from './errorManager.service';
+import { HttpErrorManager } from './errorManager';
 import { BehaviorSubject } from 'rxjs';
 import { retry } from 'rxjs/operators';
 

@@ -1,0 +1,169 @@
+@use "../../../styles/global";
+
+@mixin border-primary() {
+  border: 1px solid var(--primary);
+  padding: 1%;
+  border-radius: 15px;
+}
+
+.container-border {
+  @include border-primary();
+
+  h4 {
+    border: 1px solid var(--primary);
+    border-radius: 15px;
+    text-align: initial;
+    width: 20%;
+    background: var(--md-primary-contrast-700);
+    color: var(--primary);
+    font-size: 15px;
+    margin-top: -28px;
+    margin-bottom: 10px;
+    margin-left: 7px;
+    padding: 0.5%;
+    position: relative;
+    font-weight: normal;
+  }
+}
+
+input {
+  background: none;
+}
+
+.contenedor {
+  padding: 12px;
+  display: grid;
+  grid-template-areas:
+    "unidad estado"
+    "plan estado"
+    "vigencia estado";
+
+  grid-template-columns: 66% auto;
+  grid-template-rows: auto auto auto;
+  gap: 10px;
+  align-items: center;
+
+  div {
+    display: flex;
+    padding-right: 2%;
+
+    mat-label {
+      flex: 1;
+    }
+
+    input {
+      flex: 2;
+      border: none;
+      border-bottom: solid 1px;
+      outline: none;
+    }
+    #unidad {
+      grid-area: unidad;
+    }
+    #plan {
+      grid-area: plan;
+    }
+    #vigencia {
+      grid-area: vigencia;
+    }
+  }
+
+  .state {
+    grid-area: estado;
+    display: flex;
+    gap: 5px;
+    text-align: center;
+    @include border-primary();
+    border-radius: 5px;
+
+    span {
+      background-color: var(--primary);
+      color: var(--md-primary-contrast-700);
+      @include border-primary();
+      border-radius: 5px;
+      width: 35%;
+    }
+    input {
+      width: 65%;
+      text-align: center;
+      @include border-primary();
+      border-radius: 5px;
+    }
+  }
+}
+
+.background-button {
+  border-radius: 8px;
+  width: 29%;
+  height: 40px;
+  margin: 1%;
+}
+
+.container-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  button {
+    color: var(--md-primary-contrast-700);
+  }
+}
+
+.solicitud {
+  background-color: var(--md-primary-contrast-700);
+  border-radius: 15px;
+  padding: 1%;
+  padding-top: 2%;
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+
+  .container-border {
+    width: 50%;
+    h4 {
+      width: 35%;
+      padding-left: 8px;
+      background: var(--primary);
+      color: var(--md-primary-contrast-700);
+      font-size: 14px;
+    }
+    .contenido {
+      display: flex;
+      p {
+        width: 50%;
+        align-self: center;
+      }
+      .botones {
+        display: flex;
+        width: 50%;
+        div {
+          display: flex;
+          flex-direction: column;
+          button {
+            width: 95%;
+            color: var(--md-primary-contrast-700);
+          }
+          .mdc-icon-button {
+            height: auto;
+          }
+          img,
+          .mat-icon {
+            font-size: 5rem;
+            width: 100%;
+            height: auto;
+            color: #0a0a0a;
+          }
+        }
+      }
+    }
+  }
+}
+
+input[type="file"] {
+  display: none;
+}
+textarea {
+  width: 100%;
+  height: 90%;
+  resize: vertical;
+  min-height: 90%;
+}

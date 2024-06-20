@@ -4,43 +4,17 @@ import { Subject } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { RequestManager } from './requestManager.service';
 import Documento from '../models/documento';
+import { GestorDocumentalMethods } from '@udistrital/planeacion-utilidades-module';
 
 @Injectable({
   providedIn: 'root',
 })
 export class GestorDocumentalService {
+  private gestorMethods = new GestorDocumentalMethods();
   constructor(
     private anyService: RequestManager,
     private sanitization: DomSanitizer
-  ) {}
-
-  getUrlFile(base64: any, minetype: any) {
-    return new Promise<string>((resolve) => {
-      const url = `data:${minetype};base64,${base64}`;
-      fetch(url)
-        .then((res) => res.blob())
-        .then((blob) => {
-          const file = new File([blob], 'File name', { type: minetype });
-          const url = URL.createObjectURL(file);
-          resolve(url);
-        });
-    });
-  }
-
-  fileToBase64(file: Blob) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => {
-        let encoded = reader.result!.toString().replace(/^data:(.*,)?/, '');
-        if (encoded.length % 4 > 0) {
-          encoded += '='.repeat(4 - (encoded.length % 4));
-        }
-        resolve(encoded);
-      };
-      reader.onerror = (error) => reject(error);
-    });
-  }
+  ) { }
 
   uploadFiles(files: any[]) {
     const documentsSubject = new Subject<Documento[]>();
@@ -55,7 +29,7 @@ export class GestorDocumentalService {
           nombre: file.nombre,
           metadatos: file.metadatos ? file.metadatos : {},
           descripcion: file.descripcion ? file.descripcion : '',
-          file: await this.fileToBase64(file.file),
+          file: await this.gestorMethods.fileToBase64(file.file),
         },
       ];
 
@@ -94,7 +68,7 @@ export class GestorDocumentalService {
                 )
                 .subscribe({
                   next: async (f: any) => {
-                    const url = await this.getUrlFile(
+                    const url = await this.gestorMethods.getUrlFile(
                       f.file,
                       f['file:content']['mime-type']
                     );
@@ -133,7 +107,7 @@ export class GestorDocumentalService {
       .get(environment.GESTOR_DOCUMENTAL_MID, `document/${uuid}`)
       .subscribe({
         next: async (f) => {
-          const url = await this.getUrlFile(
+          const url = await this.gestorMethods.getUrlFile(
             f.file,
             f['file:content']['mime-type']
           );

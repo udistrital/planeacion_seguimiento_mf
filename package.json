@@ -8,7 +8,8 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "build:single-spa:planeacion-seguimiento-mf": "ng build planeacion-seguimiento-mf --configuration production",
-    "serve:single-spa:planeacion-seguimiento-mf": "ng s --project planeacion-seguimiento-mf --disable-host-check --port 4204 --live-reload false"
+    "serve:single-spa:planeacion-seguimiento-mf": "ng s --project planeacion-seguimiento-mf --disable-host-check --port 4204 --live-reload false",
+    "build:test": "ng build --progress --configuration=development"
   },
   "private": true,
   "dependencies": {
