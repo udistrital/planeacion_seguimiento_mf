@@ -7,68 +7,70 @@ import { DataRequest } from '../models/dataRequest';
   providedIn: 'root',
 })
 export class CodigosEstados {
-  private idPlanEstadoAvalado: string = '';
-  private idSeguimientoPlanAccion: string = '';
-  private idTipoPlanProyecto: string = '';
-  private constructor(public request: RequestManager) {}
+  private consultasCodigos: {
+    [key: string]: { [key: string]: { [key: string]: string } };
+  } = {
+    PLANES_CRUD: {
+      'estado-plan': {
+        A_SP: '',
+      },
+      'tipo-plan': {
+        PR_SP: '',
+      },
+      'tipo-seguimiento': { S_SP: '' },
+    },
+    PARAMETROS_SERVICE: {
+      parametro: {
+        'RPA-A': '',
+        'RPA-R': '',
+        'RPA-F': '',
+      },
+    },
+  };
 
-  public async cargarIdentificadores() {
-    await new Promise((resolve, _) => {
-      this.request
-        .get(
-          environment.PLANES_CRUD,
-          `estado-plan?query=codigo_abreviacion:A_SP,activo=true`
-        )
-        .subscribe({
-          next: (data: DataRequest) => {
-            if (data.Data[0]) {
-              this.idPlanEstadoAvalado = data.Data[0]._id;
-              resolve(data.Data[0]._id);
-            }
-          },
+  constructor(private request: RequestManager) {}
+
+  /**
+   * Obtener el Id cargado previamente
+   * @param ruta nombre de la variable como se encuentra en environment
+   * @param endpoint endpoint al que se apunta en el API
+   * @param abreviacion codigo de abreviación del objeto al que se le obtendra el id
+   * @returns codigo del objeto
+   */
+  public async getId(ruta: string, endpoint: string, abreviacion: string) {
+    if (this.consultasCodigos[ruta][endpoint][abreviacion] === '') {
+      this.consultasCodigos[ruta][endpoint][abreviacion] =
+        await new Promise<string>((resolve) => {
+          if (ruta == 'PLANES_CRUD') {
+            this.request
+              .get(
+                environment.PLANES_CRUD,
+                `${endpoint}?query=codigo_abreviacion:${abreviacion},activo:true`
+              )
+              .subscribe({
+                next: (data: DataRequest) => {
+                  if (data.Data[0]) {
+                    data.Data[0]._id;
+                    resolve(data.Data[0]._id);
+                  }
+                },
+              });
+          } else if (ruta == 'PARAMETROS_SERVICE') {
+            this.request
+              .get(
+                environment.PARAMETROS_SERVICE,
+                `${endpoint}?query=CodigoAbreviacion:${abreviacion},Activo:true`
+              )
+              .subscribe({
+                next: (data: DataRequest) => {
+                  if (data.Data[0]) {
+                    resolve(data.Data[0].Id.toString());
+                  }
+                },
+              });
+          }
         });
-    });
-    await new Promise((resolve) => {
-      this.request
-        .get(
-          environment.PLANES_CRUD,
-          `tipo-seguimiento?query=codigo_abreviacion:S_SP,activo=true`
-        )
-        .subscribe({
-          next: (data: DataRequest) => {
-            if (data.Data[0]) {
-              this.idSeguimientoPlanAccion = data.Data[0]._id;
-              resolve(data.Data[0]._id);
-            }
-          },
-        });
-    });
-    await new Promise((resolve) => {
-      this.request
-        .get(
-          environment.PLANES_CRUD,
-          `tipo-plan?query=codigo_abreviacion:PR_SP,activo=true`
-        )
-        .subscribe({
-          next: (data: DataRequest) => {
-            if (data.Data[0]) {
-              this.idTipoPlanProyecto = data.Data[0]._id;
-              resolve(data.Data[0]._id);
-            }
-          },
-        });
-    });
-  }
-
-  public getIdPlanEstadoAvalado() {
-    return this.idPlanEstadoAvalado;
-  }
-
-  public getIdSeguimientoPlanAccion() {
-    return this.idSeguimientoPlanAccion;
-  }
-
-  public getIdTipoPlanProyecto() {
-    return this.idTipoPlanProyecto;
+    }
+    return this.consultasCodigos[ruta][endpoint][abreviacion];
   }
 }

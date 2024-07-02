@@ -1,107 +1,176 @@
-<!-- Reformulacion Component -->
-<mat-card class="card-oas">
-  <mat-card-header>
-    <mat-card-title>Solicitud De Reformulación A Planes de Acción</mat-card-title>
-    <div>Listado de unidades académicas y/o administrativas</div>
-  </mat-card-header>
-  <u class="textGuide">
-    A continuación encontrará un listado de Planes de Acción anuales relacionados con cada una de las unidades
-    académicas y/o administrativas, para iniciar seleccione el de su interés y posteriormente de click en el trimestre
-    habilitado.
-  </u>
+<ng-container *ngIf="rol !== 'PLANEACION'">
+  <mat-card class="card-oas">
+    <mat-card-header>
+      <mat-card-title>Solicitud De Reformulación A Planes de Acción</mat-card-title>
+      <div>Listado de unidades académicas y/o administrativas</div>
+    </mat-card-header>
+    <u class="textGuide">
+      A continuación encontrará un listado de Planes de Acción anuales relacionados con cada una de las unidades
+      académicas y/o administrativas, para iniciar seleccione el de su interés y posteriormente de click en el trimestre
+      habilitado.
+    </u>
 
-  <mat-card-content>
-    <form [formGroup]="formSelect">
-      <div class="sameRow">
-        <h4>Unidad Académica/Administrativa</h4>
-        <mat-form-field appearance="fill" [style.width.%]="100">
-          <mat-label id="tipo-input-label">Seleccione la unidad de interés</mat-label>
-          <mat-select (selectionChange)="onChangeUnidad($event.value)" formControlName="selectUnidad"
-            hideSingleSelectionIndicator=true>
-            <mat-option>--</mat-option>
-            <mat-option *ngFor="let dependencia of unidades" [value]="dependencia">
-              {{dependencia.Nombre}}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
-      <div class="sameRow">
-        <h4>Fechas guía para cada trimestre para la vigencia</h4>
-        <mat-form-field appearance="fill" [style.width.%]="100">
-          <mat-label id="tipo-input-label">Seleccione la vigencia</mat-label>
-          <mat-select (selectionChange)="onChangeVigencia($event.value)" formControlName="selectVigencia"
-            hideSingleSelectionIndicator=true>
-            <mat-option>--</mat-option>
-            <mat-option *ngFor="let vigencia of vigencias" [value]="vigencia">
-              {{vigencia.Nombre}}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
+    <mat-card-content>
+      <form [formGroup]="formSelect">
         <div class="sameRow">
-          <h4>Plan de Acción</h4>
+          <h4>Unidad Académica/Administrativa</h4>
           <mat-form-field appearance="fill" [style.width.%]="100">
-            <mat-label id="tipo-input-label">Seleccione el plan de interés</mat-label>
-            <mat-select (selectionChange)="onChangePlan($event.value)" formControlName="selectPlan"
+            <mat-label id="tipo-input-label">Seleccione la unidad de interés</mat-label>
+            <mat-select (selectionChange)="onChangeUnidad($event.value)" formControlName="selectUnidad"
               hideSingleSelectionIndicator=true>
               <mat-option>--</mat-option>
-              <mat-option *ngFor="let plan of planes" [value]="plan">
-                {{plan.nombre}}
+              <mat-option *ngFor="let dependencia of unidades" [value]="dependencia">
+                {{dependencia.Nombre}}
               </mat-option>
             </mat-select>
           </mat-form-field>
         </div>
+        <div class="sameRow">
+          <h4>Fechas guía para cada trimestre para la vigencia</h4>
+          <mat-form-field appearance="fill" [style.width.%]="100">
+            <mat-label id="tipo-input-label">Seleccione la vigencia</mat-label>
+            <mat-select (selectionChange)="onChangeVigencia($event.value)" formControlName="selectVigencia"
+              hideSingleSelectionIndicator=true>
+              <mat-option>--</mat-option>
+              <mat-option *ngFor="let vigencia of vigencias" [value]="vigencia">
+                {{vigencia.Nombre}}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          <div class="sameRow">
+            <h4>Plan de Acción</h4>
+            <mat-form-field appearance="fill" [style.width.%]="100">
+              <mat-label id="tipo-input-label">Seleccione el plan de interés</mat-label>
+              <mat-select (selectionChange)="onChangePlan($event.value)" formControlName="selectPlan"
+                hideSingleSelectionIndicator=true>
+                <mat-option>--</mat-option>
+                <mat-option *ngFor="let plan of planes" [value]="plan">
+                  {{plan.nombre}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </div>
+      </form>
+      <div style="text-align: center">
+        <button mat-raised-button color="primary" style="color: white" (click)="consultar(undefined)">Buscar Plan De
+          Acción</button>
       </div>
-    </form>
-    <div style="text-align: center">
-      <button mat-raised-button color="primary" style="color: white" (click)="consultar(undefined)">Buscar Plan De
-        Acción</button>
-    </div>
-  </mat-card-content>
-</mat-card>
-<br>
-<mat-card class="card-oas">
-  <mat-card-header>
-    <mat-card-title>Tabla de planes de acción en fase de seguimiento</mat-card-title>
-  </mat-card-header>
-  <mat-card-content>
-    <div class="mat-elevation-z8">
-      <table mat-table [dataSource]="informacionTabla">
-        <ng-container matColumnDef="dependencia">
-          <th mat-header-cell *matHeaderCellDef>
-            <div>Unidad Académica y/o Administrativa</div>
-            <input matInput (keyup)="aplicarFiltro($event)" placeholder="Unidad" #input/>
-          </th>
-          <td mat-cell *matCellDef="let plan" class="mat-column-dependencia">
-            {{ plan.dependencia_nombre }}
-          </td>
-        </ng-container>
-        <ng-container matColumnDef="vigencia">
-          <th mat-header-cell *matHeaderCellDef>
-            <div>Vigencia</div>
-            <input matInput (keyup)="aplicarFiltro($event)" placeholder="Vigencia" type="number" #input />
-          </th>
-          <td mat-cell *matCellDef="let plan">{{ plan.vigencia_nombre }}</td>
-        </ng-container>
-        <ng-container matColumnDef="nombre">
-          <th mat-header-cell *matHeaderCellDef>
-            <div>Plan de acción</div>
-            <input matInput (keyup)="aplicarFiltro($event)" placeholder="Plan" #input />
-          </th>
-          <td mat-cell *matCellDef="let plan">{{ plan.nombre }}</td>
-        </ng-container>
-        <ng-container matColumnDef="acciones">
-          <th mat-header-cell *matHeaderCellDef>Acciones</th>
-          <td mat-cell *matCellDef="let plan">
-            <button mat-icon-button (click)="consultar(plan)" [disabled]="plan.version === -1 || plan.vigencia === 0">
-              <mat-icon>launch</mat-icon>
-            </button>
-          </td>
-        </ng-container>
-        <tr mat-header-row *matHeaderRowDef="columnasMostradas"></tr>
-        <tr mat-row matRipple *matRowDef="let row; columns: columnasMostradas"></tr>
+    </mat-card-content>
+  </mat-card>
+  <br>
+  <mat-card class="card-oas">
+    <mat-card-header>
+      <mat-card-title>Tabla de planes de acción en fase de seguimiento</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="mat-elevation-z8">
+        <table mat-table [dataSource]="informacionTabla">
+          <ng-container matColumnDef="dependencia">
+            <th mat-header-cell *matHeaderCellDef>
+              <div>Unidad Académica y/o Administrativa</div>
+              <input matInput (keyup)="aplicarFiltro($event)" placeholder="Unidad" #input />
+            </th>
+            <td mat-cell *matCellDef="let plan" class="mat-column-dependencia">
+              {{ plan.dependencia_nombre }}
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="vigencia">
+            <th mat-header-cell *matHeaderCellDef>
+              <div>Vigencia</div>
+              <input matInput (keyup)="aplicarFiltro($event)" placeholder="Vigencia" type="number" #input />
+            </th>
+            <td mat-cell *matCellDef="let plan">{{ plan.vigencia_nombre }}</td>
+          </ng-container>
+          <ng-container matColumnDef="nombre">
+            <th mat-header-cell *matHeaderCellDef>
+              <div>Plan de acción</div>
+              <input matInput (keyup)="aplicarFiltro($event)" placeholder="Plan" #input />
+            </th>
+            <td mat-cell *matCellDef="let plan">{{ plan.nombre }}</td>
+          </ng-container>
+          <ng-container matColumnDef="acciones">
+            <th mat-header-cell *matHeaderCellDef>Acciones</th>
+            <td mat-cell *matCellDef="let plan">
+              <button mat-icon-button (click)="consultar(plan)" [disabled]="plan.version === -1 || plan.vigencia === 0">
+                <mat-icon>launch</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="columnasMostradas"></tr>
+          <tr mat-row matRipple *matRowDef="let row; columns: columnasMostradas"></tr>
 
-      </table>
-      <mat-paginator [pageSizeOptions]="[5, 10, 25, 100]"></mat-paginator>
-    </div>
-  </mat-card-content>
-</mat-card>
+        </table>
+        <mat-paginator [pageSizeOptions]="[5, 10, 25, 100]"></mat-paginator>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</ng-container>
+<ng-container *ngIf="rol === 'PLANEACION'">
+  <mat-card class="card-oas">
+    <mat-card-header>
+      <mat-card-title>Solicitud De Reformulación A Planes de Acción</mat-card-title>
+      <div>Listado de unidades académicas y/o administrativas</div>
+    </mat-card-header>
+    <u class="textGuide">
+      A continuación encontrará un listado de Planes de Acción anuales relacionados con cada una de las unidades
+      académicas y/o administrativas.
+    </u>
+
+    <mat-card-content>
+      <div class="mat-elevation-z8">
+        <table mat-table [dataSource]="informacionTabla">
+          <ng-container matColumnDef="dependencia">
+            <th mat-header-cell *matHeaderCellDef>
+              <div>Unidad Académica y/o Administrativa</div>
+              <input matInput (keyup)="aplicarFiltro($event)" placeholder="Unidad" #input />
+            </th>
+            <td mat-cell *matCellDef="let reformulacion" class="mat-column-dependencia">
+              {{ reformulacion.dependencia_nombre }}
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="vigencia">
+            <th mat-header-cell *matHeaderCellDef>
+              <div>Vigencia</div>
+              <input matInput (keyup)="aplicarFiltro($event)" placeholder="Vigencia" type="number" #input />
+            </th>
+            <td mat-cell *matCellDef="let reformulacion">{{ reformulacion.vigencia_nombre }}</td>
+          </ng-container>
+          <ng-container matColumnDef="nombre">
+            <th mat-header-cell *matHeaderCellDef>
+              <div>Plan de acción</div>
+              <input matInput (keyup)="aplicarFiltro($event)" placeholder="Plan" #input />
+            </th>
+            <td mat-cell *matCellDef="let reformulacion">{{ reformulacion.nombre }}</td>
+          </ng-container>
+          <ng-container matColumnDef="estado">
+            <th mat-header-cell *matHeaderCellDef>
+              <div>Estado</div>
+              <input matInput (keyup)="aplicarFiltro($event)" placeholder="Estado" #input />
+            </th>
+            <td mat-cell *matCellDef="let reformulacion">{{ reformulacion.reformulacion.estado_nombre }}</td>
+          </ng-container>
+          <ng-container matColumnDef="fecha-creacion">
+            <th mat-header-cell *matHeaderCellDef>
+              <div>Fecha de creación</div>
+              <input matInput (keyup)="aplicarFiltro($event)" placeholder="DD/MM/AAAA" #input />
+            </th>
+            <td mat-cell *matCellDef="let reformulacion">{{ reformulacion.reformulacion.fecha_creacion | date:'dd/MM/yyyy' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="acciones">
+            <th mat-header-cell *matHeaderCellDef>Acciones</th>
+            <td mat-cell *matCellDef="let reformulacion">
+              <button mat-icon-button (click)="consultar(reformulacion)">
+                <mat-icon>launch</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="columnasMostradas"></tr>
+          <tr mat-row matRipple *matRowDef="let row; columns: columnasMostradas"></tr>
+
+        </table>
+        <mat-paginator [pageSizeOptions]="[5, 10, 25, 100]"></mat-paginator>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</ng-container>

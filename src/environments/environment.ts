@@ -12,11 +12,12 @@ export const environment = {
   appMenu: 'PLANEACION',
   SINTOMAS_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/sintomas_crud/v1/',
   //SERVICES PLANEACIÓN
-  // PLANES_CRUD: 'http://localhost:8080/',
+  PLANES_CRUD: 'http://localhost:8080/',
   // PLANES_MID: 'http://localhost:8082/v1/',
-  PLANES_CRUD: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/planes_crud/',
+  // PLANES_CRUD: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/planes_crud/',
   FORMULACION_MID: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/planeacion_formulacion_mid/v1/',
-  SEGUIMIENTO_MID: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/planeacion_seguimiento_mid/v1/',
+  // SEGUIMIENTO_MID: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/planeacion_seguimiento_mid/v1/',
+  SEGUIMIENTO_MID: 'http://localhost:8525/v1/',
   PLANES_MID_PROXY: 'https://autenticacion.portaloas.udistrital.edu.co/go_api/planeacion_mid/v1/',
   // OIKOS_SERVICE: 'http://api.intranetoas.udistrital.edu.co:8087/v1/',
   OIKOS_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/oikos_crud_api/v1/',
@@ -36,15 +37,15 @@ export const environment = {
   // DOCUMENTO_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/documento_crud/v2/',
   ///
   KRONOS_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/plan_cuentas_mongo_crud/v1/',
-  PRUEBAS: 'http://pruebasapi.intranetoas.udistrital.edu.co:8121/v1/',
+  PRUEBAS: 'http://localhost:8525/v1/',
   TERCEROS_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/terceros_crud/v1/',
   //PARAMETROS_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/parametros/v1/',
   CONFIGURACION_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/configuracion_crud_api/v1/',
   CONF_MENU_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/configuracion_crud_api/v1/menu_opcion_padre/ArbolMenus/',
-  
+
   // Notificaciones
   NOTIFICACION_MID_SERVICE: "https://autenticacion.portaloas.udistrital.edu.co/apioas/notificacion_mid/v1/",
-  ARN_TOPIC_NOTIFICACIONES: "arn:aws:sns:us-east-1:699001025740:test-Planeacion_pruebas.fifo",  
+  ARN_TOPIC_NOTIFICACIONES: "arn:aws:sns:us-east-1:699001025740:test-Planeacion_pruebas.fifo",
 
   TOKEN: {
     AUTORIZATION_URL: 'https://autenticacion.portaloas.udistrital.edu.co/oauth2/authorize',
