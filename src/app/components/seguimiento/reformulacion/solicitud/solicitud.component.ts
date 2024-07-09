@@ -98,8 +98,17 @@ export class SolicitudComponent implements OnInit {
       'parametro',
       'RPA-F'
     );
+    console.log('estado inicial', this.estado);
 
     if (this.reformulacionStorage.reformulacion) {
+      Swal.fire({
+        title: 'Cargando información',
+        timerProgressBar: true,
+        showConfirmButton: false,
+        willOpen: () => {
+          Swal.showLoading();
+        },
+      });
       this.cargarReformulacion(this.reformulacionStorage.reformulacion);
     } else {
       this.request
@@ -110,6 +119,14 @@ export class SolicitudComponent implements OnInit {
         .subscribe({
           next: async (data: DataRequest) => {
             if ((data?.Data as Reformulacion[]).length > 0) {
+              Swal.fire({
+                title: 'Cargando información',
+                timerProgressBar: true,
+                showConfirmButton: false,
+                willOpen: () => {
+                  Swal.showLoading();
+                },
+              });
               this.cargarReformulacion(data.Data[0]);
             } else {
               this.formVisualizacionPlan.get('estado')!.setValue('Habilitado');
@@ -130,10 +147,10 @@ export class SolicitudComponent implements OnInit {
       .subscribe({
         next: (data: DataRequest) => {
           this.estado = data.Data;
-          console.log('this.estado', this.estado);
           this.formVisualizacionPlan
             .get('estado')!
             .setValue(this.estado.Nombre);
+          Swal.close();
         },
       });
     console.log(this.reformulacionActual.archivos);
@@ -177,7 +194,7 @@ export class SolicitudComponent implements OnInit {
             observaciones: this.observaciones,
           };
           this.request
-            .post(environment.SEGUIMIENTO_MID, `reformulacion`, bodyRequest)
+            .post(environment.SEGUIMIENTO_MID, `reformulacion/`, bodyRequest)
             .subscribe({
               next: (data) => {
                 if (data) {
@@ -189,6 +206,17 @@ export class SolicitudComponent implements OnInit {
                     showConfirmButton: false,
                     timer: 2500,
                   });
+                  localStorage.setItem(
+                    'reformulacion',
+                    JSON.stringify({
+                      dependencia: this.reformulacionStorage.dependencia,
+                      vigencia: this.reformulacionStorage.vigencia,
+                      plan: this.reformulacionStorage.plan,
+                      plan_id: this.reformulacionStorage.plan_id,
+                      reformulacion: data.data
+                    } as ReformulacionStorage)
+                  );
+                  window.location.reload();
                 }
               },
               error: (error) => {

@@ -26,6 +26,8 @@ import Swal from 'sweetalert2';
 })
 export class ReformulacionComponent implements OnInit {
   formSelect: FormGroup;
+  ID_ESTADO_FORMULACION: string = '';
+  ID_ESTADO_APROBADO: string = '';
 
   unidades: Dependencia[] = [];
   vigencias: Vigencia[] = [];
@@ -62,6 +64,16 @@ export class ReformulacionComponent implements OnInit {
     this.informacionTabla.paginator = this.paginator;
   }
   async ngOnInit() {
+    this.ID_ESTADO_FORMULACION = await this.codigosEstados.getId(
+      'PARAMETROS_SERVICE',
+      'parametro',
+      'RPA-F'
+    );
+    this.ID_ESTADO_APROBADO = await this.codigosEstados.getId(
+      'PARAMETROS_SERVICE',
+      'parametro',
+      'RPA-A'
+    );
     let roles: string[] = await this.autenticationService.getRoles();
     if (
       roles.find(
@@ -532,18 +544,55 @@ export class ReformulacionComponent implements OnInit {
         });
       } else {
         localStorage.setItem(
-          'plan_reformulacion',
+          'reformulacion',
           JSON.stringify({
-            dependencia_nombre: this.formSelect.get('selectUnidad')?.value,
-            vigencia: this.formSelect.get('selectVigencia')?.value,
-            plan: this.formSelect.get('selectPlan')?.value,
-          })
+            dependencia: (
+              this.formSelect.get('selectUnidad')?.value as Dependencia
+            ).Nombre,
+            vigencia: (this.formSelect.get('selectVigencia')?.value as Vigencia)
+              .Nombre,
+            plan: (this.formSelect.get('selectPlan')?.value as Plan).nombre,
+            plan_id: (this.formSelect.get('selectPlan')?.value as Plan)._id,
+          } as ReformulacionStorage)
         );
         this.router.navigate(['reformulacion', 'solicitud']);
       }
     }
   }
 
+  async aprobar({ reformulacion }: Plan) {
+    if (reformulacion) {
+      console.log(reformulacion);
+      console.log(this.informacionTabla.data);
+      let nuevaReformulacion: Reformulacion = {
+        ...reformulacion,
+        activo: false,
+        estado_id: parseInt(this.ID_ESTADO_APROBADO),
+      };
+      if (reformulacion.estado_id.toString() === this.ID_ESTADO_FORMULACION) {
+        this.request
+          .put(
+            environment.PLANES_CRUD,
+            'reformulacion',
+            nuevaReformulacion,
+            nuevaReformulacion._id
+          )
+          .subscribe({
+            next: (data) => {
+              if (data.Data) {
+                Swal.fire({
+                  title: 'Reformulación aprobada',
+                  icon: 'success',
+                  showConfirmButton: false,
+                  timer: 2000,
+                });
+                window.location.reload();
+              }
+            },
+          });
+      }
+    }
+  }
   filtroTabla(p: Plan) {
     if (!this.inputsFiltros) {
       this.inputsFiltros = document.querySelectorAll('th > input');

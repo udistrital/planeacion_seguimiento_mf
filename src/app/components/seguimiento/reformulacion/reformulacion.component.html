@@ -6,8 +6,7 @@
     </mat-card-header>
     <u class="textGuide">
       A continuación encontrará un listado de Planes de Acción anuales relacionados con cada una de las unidades
-      académicas y/o administrativas, para iniciar seleccione el de su interés y posteriormente de click en el trimestre
-      habilitado.
+      académicas y/o administrativas, para iniciar seleccione el de su interés.
     </u>
 
     <mat-card-content>
@@ -113,8 +112,7 @@
       <div>Listado de unidades académicas y/o administrativas</div>
     </mat-card-header>
     <u class="textGuide">
-      A continuación encontrará un listado de Planes de Acción anuales relacionados con cada una de las unidades
-      académicas y/o administrativas.
+      A continuación encontrará un listado de solicitudes de reformulación de Planes de Acción anuales relacionados con cada una de las unidades académicas y/o administrativas.
     </u>
 
     <mat-card-content>
@@ -160,6 +158,9 @@
           <ng-container matColumnDef="acciones">
             <th mat-header-cell *matHeaderCellDef>Acciones</th>
             <td mat-cell *matCellDef="let reformulacion">
+              <button mat-icon-button *ngIf="reformulacion.reformulacion?.estado_id.toString() === ID_ESTADO_FORMULACION" (click)="aprobar(reformulacion)">
+                <mat-icon>check</mat-icon>
+              </button>
               <button mat-icon-button (click)="consultar(reformulacion)">
                 <mat-icon>launch</mat-icon>
               </button>
