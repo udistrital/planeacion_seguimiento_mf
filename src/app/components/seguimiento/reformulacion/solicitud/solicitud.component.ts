@@ -86,19 +86,18 @@ export class SolicitudComponent implements OnInit {
     this.ID_ESTADO_APROBADO = await this.codigosEstados.getId(
       'PARAMETROS_SERVICE',
       'parametro',
-      'RPA-A'
+      'RPA-A-SP'
     );
     this.ID_ESTADO_RECHAZADO = await this.codigosEstados.getId(
       'PARAMETROS_SERVICE',
       'parametro',
-      'RPA-R'
+      'RPA-R-SP'
     );
     this.ID_ESTADO_FORMULADO = await this.codigosEstados.getId(
       'PARAMETROS_SERVICE',
       'parametro',
-      'RPA-F'
+      'RPA-F-SP'
     );
-    console.log('estado inicial', this.estado);
 
     if (this.reformulacionStorage.reformulacion) {
       Swal.fire({
@@ -153,11 +152,9 @@ export class SolicitudComponent implements OnInit {
           Swal.close();
         },
       });
-    console.log(this.reformulacionActual.archivos);
     this.fileName = JSON.parse(this.reformulacionActual.archivos)[
       'documentos'
     ][0]['nombre'];
-    console.log(JSON.parse(this.reformulacionActual.archivos)['documentos'][0]);
   }
   solicitarReformulacion() {
     if (this.archivoCodificado !== '') {
@@ -167,7 +164,7 @@ export class SolicitudComponent implements OnInit {
         confirmButtonText: `Sí`,
         cancelButtonText: `No`,
         showCancelButton: true,
-      }).then((result) => {
+      }).then(async (result) => {
         if (result.isConfirmed) {
           Swal.fire({
             title: 'Solicitud en proceso',
@@ -180,7 +177,13 @@ export class SolicitudComponent implements OnInit {
           const bodyRequest = {
             documento: [
               {
-                IdTipoDocumento: 87,
+                IdTipoDocumento: parseInt(
+                  await this.codigosEstados.getId(
+                    'DOCUMENTO_SERVICE',
+                    'tipo_documento',
+                    'DRPA-S'
+                  )
+                ),
                 nombre: this.fileName,
                 metadatos: {
                   dato_a: 'Soporte planeacion',
@@ -213,7 +216,7 @@ export class SolicitudComponent implements OnInit {
                       vigencia: this.reformulacionStorage.vigencia,
                       plan: this.reformulacionStorage.plan,
                       plan_id: this.reformulacionStorage.plan_id,
-                      reformulacion: data.data
+                      reformulacion: data.data,
                     } as ReformulacionStorage)
                   );
                   window.location.reload();

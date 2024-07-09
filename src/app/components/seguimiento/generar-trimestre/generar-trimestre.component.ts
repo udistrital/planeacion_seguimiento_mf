@@ -20,6 +20,7 @@ import { Notificaciones } from "src/app/services/notificaciones";
 import { environment } from 'src/environments/environment';
 import Swal from 'sweetalert2';
 import { EvidenciasDialogComponent } from '../evidencias/evidencias-dialog.component';
+import { CodigosEstados } from 'src/app/services/codigosEstados.service';
 
 @Component({
   selector: 'app-generar-trimestre',
@@ -139,6 +140,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
     private request: RequestManager,
     private notificacionesService: Notificaciones,
     private gestorDocumental: GestorDocumentalService,
+    private codigosEstados: CodigosEstados,
     private _location: Location,
     public dialog: MatDialog
   ) {
@@ -495,7 +497,13 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
 
           let documento = [
             {
-              IdTipoDocumento: 60,
+              IdTipoDocumento: parseInt(
+                await this.codigosEstados.getId(
+                  'DOCUMENTO_SERVICE',
+                  'tipo_documento',
+                  'DSPA'
+                )
+              ),
               nombre: aux.name,
               metadatos: {
                 dato_a: 'Soporte planeacion',

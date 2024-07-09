@@ -19,11 +19,17 @@ export class CodigosEstados {
       },
       'tipo-seguimiento': { S_SP: '' },
     },
+    DOCUMENTO_SERVICE: {
+      tipo_documento: {
+        'DRPA-S': '',
+        'DSPA': '',
+      }
+    },
     PARAMETROS_SERVICE: {
       parametro: {
-        'RPA-A': '',
-        'RPA-R': '',
-        'RPA-F': '',
+        'RPA-A-SP': '',
+        'RPA-R-SP': '',
+        'RPA-F-SP': '',
       },
     },
   };
@@ -65,6 +71,19 @@ export class CodigosEstados {
                 next: (data: DataRequest) => {
                   if (data.Data[0]) {
                     resolve(data.Data[0].Id.toString());
+                  }
+                },
+              });
+          } else if (ruta == 'DOCUMENTO_SERVICE') {
+            this.request
+              .get(
+                environment.DOCUMENTO_SERVICE,
+                `${endpoint}?query=CodigoAbreviacion:${abreviacion},Activo:true`
+              )
+              .subscribe({
+                next: (data: any[]) => {
+                  if (data[0]) {
+                    resolve(data[0].Id.toString());
                   }
                 },
               });

@@ -67,12 +67,12 @@ export class ReformulacionComponent implements OnInit {
     this.ID_ESTADO_FORMULACION = await this.codigosEstados.getId(
       'PARAMETROS_SERVICE',
       'parametro',
-      'RPA-F'
+      'RPA-F-SP'
     );
     this.ID_ESTADO_APROBADO = await this.codigosEstados.getId(
       'PARAMETROS_SERVICE',
       'parametro',
-      'RPA-A'
+      'RPA-A-SP'
     );
     let roles: string[] = await this.autenticationService.getRoles();
     if (
@@ -252,9 +252,6 @@ export class ReformulacionComponent implements OnInit {
                 this.informacionTabla.filterPredicate = (plan, _) =>
                   this.filtroTabla(plan);
                 this.informacionTabla.paginator = this.paginator;
-              } else {
-                console.log('Datos vacios');
-                console.log(this.planesTabla);
               }
               Swal.close();
             }
@@ -562,8 +559,6 @@ export class ReformulacionComponent implements OnInit {
 
   async aprobar({ reformulacion }: Plan) {
     if (reformulacion) {
-      console.log(reformulacion);
-      console.log(this.informacionTabla.data);
       let nuevaReformulacion: Reformulacion = {
         ...reformulacion,
         activo: false,
