@@ -181,7 +181,7 @@ export class SolicitudComponent implements OnInit {
                   await this.codigosEstados.getId(
                     'DOCUMENTO_SERVICE',
                     'tipo_documento',
-                    'DRPA-S'
+                    'DSPA'
                   )
                 ),
                 nombre: this.fileName,
