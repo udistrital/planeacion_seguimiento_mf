@@ -209,7 +209,7 @@
 
             <ng-container matColumnDef="detalleReporte">
               <td class="rowText" mat-cell *matCellDef="let element">
-                <textarea class="form-control" style="width: 90%;" matInput placeholder="Detalle"
+                <textarea class="form-control" style="width: 90%; min-height: 50px; max-height:100px;" matInput placeholder="Detalle"
                   [readonly]="readonlyFormulario" [value]="element.detalleReporte" [(ngModel)]="element.detalleReporte"
                   [ngModelOptions]="{standalone: true}" required></textarea>
               </td>
@@ -217,7 +217,7 @@
 
             <ng-container matColumnDef="observaciones">
               <td class="rowText" mat-cell *matCellDef="let element">
-                <textarea class="form-control" style="width: 90%;" matInput placeholder="Sin observación"
+                <textarea class="form-control" style="width: 90%; min-height: 50px; max-height:100px;" matInput placeholder="Sin observación"
                   [readonly]="readonlyObservacion" [value]="element.observaciones" [(ngModel)]="element.observaciones"
                   [ngModelOptions]="{standalone: true}" required></textarea>
               </td>
