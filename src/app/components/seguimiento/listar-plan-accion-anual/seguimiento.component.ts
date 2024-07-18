@@ -22,7 +22,7 @@ import { ImplicitAutenticationService } from '@udistrital/planeacion-utilidades-
 import Plan from 'src/app/models/plan';
 import { DataRequest } from 'src/app/models/dataRequest';
 import Trimestre from 'src/app/models/trimestre';
-import { CodigosEstados } from 'src/app/services/codigosEstados.service';
+import { CodigosService } from '@udistrital/planeacion-utilidades-module';
 
 @Component({
   selector: 'app-seguimiento',
@@ -79,6 +79,8 @@ export class ListComponent implements OnInit, AfterViewInit {
 
   private autenticationService = new ImplicitAutenticationService();
 
+  private codigosService = new CodigosService();
+
   constructor(
     public dialog: MatDialog,
     private request: RequestManager,
@@ -86,7 +88,6 @@ export class ListComponent implements OnInit, AfterViewInit {
     private notificacionesService: Notificaciones,
     private formBuilder: FormBuilder,
     private activatedRoute: ActivatedRoute,
-    private codigosEstados: CodigosEstados
   ) {
     let roles: any = this.autenticationService.getRoles();
     if (
@@ -321,6 +322,12 @@ export class ListComponent implements OnInit, AfterViewInit {
     }
   }
 
+  async filterPlanes(data: any) {
+    const CODIGO_TIPO_PLAN_PROYECTO:string = await this.codigosService.getId('PLANES_CRUD', 'tipo-plan', 'PR_SP')
+    var dataAux = data.filter((e: { tipo_plan_id: string; }) => e.tipo_plan_id != CODIGO_TIPO_PLAN_PROYECTO);
+    return dataAux.filter((e: { activo: boolean; }) => e.activo == true);
+  }
+
   async loadPeriodos() {
     Swal.fire({
       title: 'Cargando períodos',
@@ -400,11 +407,7 @@ export class ListComponent implements OnInit, AfterViewInit {
                         };
                         let body = {
                           periodo_id: periodos[i].Id,
-                          tipo_seguimiento_id: await this.codigosEstados.getId(
-                            'PLANES_CRUD',
-                            'tipo-seguimiento',
-                            'S_SP'
-                          ),
+                          tipo_seguimiento_id: await this.codigosService.getId('PLANES_CRUD', 'tipo-seguimiento', 'S_SP'),
                           planes_interes: JSON.stringify([plan]),
                           unidades_interes: JSON.stringify([unidad]),
                           activo: true,
@@ -509,11 +512,7 @@ export class ListComponent implements OnInit, AfterViewInit {
                       } else {
                         let body = {
                           periodo_id: periodos[i].Id,
-                          tipo_seguimiento_id: await this.codigosEstados.getId(
-                            'PLANES_CRUD',
-                            'tipo-seguimiento',
-                            'S_SP'
-                          ),
+                          tipo_seguimiento_id: await this.codigosService.getId('PLANES_CRUD', 'tipo-seguimiento', 'S_SP'),
                           activo: true,
                         };
                         await new Promise((resolve, reject) => {
@@ -690,16 +689,8 @@ export class ListComponent implements OnInit, AfterViewInit {
             this.request
               .get(
                 environment.PLANES_CRUD,
-                `seguimiento?query=activo:true,tipo_seguimiento_id:${await this.codigosEstados.getId(
-                  'PLANES_CRUD',
-                  'tipo-seguimiento',
-                  'S_SP'
-                )},plan_id:` +
-                  plan._id +
-                  `,periodo_seguimiento_id:` +
-                  trimestre.id
-              )
-              .subscribe(async (data: DataRequest) => {
+                `seguimiento?query=activo:true,tipo_seguimiento_id:${await this.codigosService.getId('PLANES_CRUD', 'tipo-seguimiento', 'S_SP')}
+                ,plan_id:` + plan._id + `,periodo_seguimiento_id:` + trimestre.id).subscribe(async (data: DataRequest) => {
                 if (data.Data.length != 0) {
                   let estadoTemp;
                   if (
@@ -872,47 +863,38 @@ export class ListComponent implements OnInit, AfterViewInit {
     if (tipo == 'unidad') {
       return await new Promise(async (resolve, reject) => {
         this.request
-          .get(
-            environment.PLANES_CRUD,
-            `plan?query=activo:true,estado_plan_id:${await this.codigosEstados.getId(
-              'PLANES_CRUD',
-              'estado-plan',
-              'A_SP'
-            )},vigencia:${this.vigencia.Id},dependencia_id:${this.unidad.Id}`
-          )
-          .subscribe({
-            next: async (data: DataRequest) => {
-              if (data?.Data.length != 0) {
-                data.Data.sort(function (
-                  a: { vigencia: number },
-                  b: { vigencia: number }
-                ) {
-                  return b.vigencia - a.vigencia;
-                });
-                this.planes = data.Data;
-                this.auxPlanes = this.planes;
-                await this.getEstados();
-                await this.getVigencias();
-                this.dataSource.data = [];
-                this.allPlanes = this.dataSource.data;
-                this.onPageChange({ length: 0, pageIndex: 0, pageSize: 5 });
-                Swal.close();
-                resolve(true);
-              } else {
-                this.unidadSelected = false;
-                this.dataSource.data = this.planes;
-                this.vigencia = undefined;
-                this.limpiarCampoFechas();
-                Swal.fire({
-                  title: 'No se encontraron planes',
-                  icon: 'error',
-                  text: `No se encontraron planes para realizar seguimiento`,
-                  showConfirmButton: false,
-                  timer: 3500,
-                });
-                Swal.close();
-                reject(false);
-              }
+          .get(environment.PLANES_CRUD, `plan?query=activo:true,estado_plan_id:${await this.codigosService.getId('PLANES_CRUD', 'estado-plan', 'A_SP')},vigencia:${this.vigencia.Id},dependencia_id:${this.unidad.Id}`).subscribe({next: async (data: DataRequest) => {
+            if (data?.Data.length != 0) {
+              data.Data.sort(function (
+                a: { vigencia: number },
+                b: { vigencia: number }
+              ) {
+                return b.vigencia - a.vigencia;
+              });
+              this.planes = data.Data;
+              this.auxPlanes = this.planes;
+              await this.getEstados();
+              await this.getVigencias();
+              this.dataSource.data = [];
+              this.allPlanes = this.dataSource.data;
+              this.onPageChange({ length: 0, pageIndex: 0, pageSize: 5 });
+              Swal.close();
+              resolve(true);
+            } else {
+              this.unidadSelected = false;
+              this.dataSource.data = this.planes;
+              this.vigencia = undefined;
+              this.limpiarCampoFechas();
+              Swal.fire({
+                title: 'No se encontraron planes',
+                icon: 'error',
+                text: `No se encontraron planes para realizar seguimiento`,
+                showConfirmButton: false,
+                timer: 3500,
+              });
+              Swal.close();
+              reject(false);
+            }
             },
             error: (error) => {
               Swal.close();
@@ -932,14 +914,7 @@ export class ListComponent implements OnInit, AfterViewInit {
         this.request
           .get(
             environment.PLANES_CRUD,
-            `plan?query=activo:true,estado_plan_id:${await this.codigosEstados.getId(
-              'PLANES_CRUD',
-              'estado-plan',
-              'A_SP'
-            )},vigencia:${this.vigencia.Id},dependencia_id:${this.unidad.Id}`
-          )
-          .subscribe({
-            next: async (data: DataRequest) => {
+            `plan?query=activo:true,estado_plan_id:${await this.codigosService.getId('PLANES_CRUD', 'estado-plan', 'A_SP')},vigencia:${this.vigencia.Id},dependencia_id:${this.unidad.Id}`).subscribe({next: async (data: DataRequest) => {
               if (data) {
                 if (data.Data.length != 0) {
                   data.Data.sort(function (
