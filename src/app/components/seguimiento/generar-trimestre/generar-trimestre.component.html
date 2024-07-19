@@ -22,16 +22,20 @@
         <h1>&nbsp;&nbsp;&nbsp;&nbsp;Información del Plan</h1>
         <div class="contenedor3c">
           <div class="row1">
-            <mat-label id="desc-input-label">Código actividad:</mat-label>
+            <mat-label id="desc-input-label">Número de actividad:</mat-label>
             <textarea class="unidad" [readonly]="true"
               placeholder="Actividad">{{seguimiento.informacion.index}}</textarea>
           </div>
           <div class="row1" style="grid-row: 2/2;">
+            <mat-label id="desc-input-label">Id de actividad:</mat-label>
+            <textarea class="unidad" [readonly]="true" placeholder="Actividad">{{this.id_actividad}}</textarea>
+          </div>
+          <div class="row1" style="grid-row: 3/3;">
             <mat-label id="desc-input-label">Ponderación:</mat-label>
             <textarea class="unidad" [readonly]="true" placeholder="0%">{{seguimiento.informacion.ponderacion/100 |
               percent}}</textarea>
           </div>
-          <div class="row1" style="grid-row: 3/3;">
+          <div class="row1" style="grid-row: 4/4;">
             <mat-label id="desc-input-label">Periodo de ejecución:</mat-label>
             <textarea class="unidad" [readonly]="true"
               placeholder="Periodo">{{seguimiento.informacion.periodo}}</textarea>

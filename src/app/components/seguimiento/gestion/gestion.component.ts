@@ -10,6 +10,8 @@ import { RequestManager } from 'src/app/services/requestManager.service';
 import { Notificaciones } from 'src/app/services/notificaciones';
 import { environment } from 'src/environments/environment';
 import Swal from 'sweetalert2';
+import * as CryptoJS from 'crypto-js';
+import * as bigInt from 'big-integer'
 import { DataRequest } from 'src/app/models/dataRequest';
 
 @Component({
@@ -132,17 +134,17 @@ export class GestionComponent implements OnInit {
     }
   }
 
-  enviarNotificacion(){
+  enviarNotificacion() {
     if (this.codigoNotificacion != "") {
       // Bifurcación en estado En revisión JU
       if (this.codigoNotificacion === 'SERJU') {
-        const estadoPlanMap:any = {'Revisión Verificada con Observaciones': "SERJU1", 'Revisión Verificada': "SERJU2"};
+        const estadoPlanMap: any = { 'Revisión Verificada con Observaciones': "SERJU1", 'Revisión Verificada': "SERJU2" };
         this.codigoNotificacion = estadoPlanMap[this.estado];
       }
 
       // Bifurcación en estado 'En revisión OAPC'
       if (this.codigoNotificacion === "SEROAPC") {
-        const estadoPlanMap:any = {'Con observaciones': "SEROAPC1", 'Reporte Avalado': "SEROAPC2"};
+        const estadoPlanMap: any = { 'Con observaciones': "SEROAPC1", 'Reporte Avalado': "SEROAPC2" };
         this.codigoNotificacion = estadoPlanMap[this.estado];
       }
 
@@ -197,14 +199,14 @@ export class GestionComponent implements OnInit {
       });
   }
 
-  loadVigencia(vigencia_id:any) {
+  loadVigencia(vigencia_id: any) {
     this.request.get(environment.PARAMETROS_SERVICE, `periodo?query=CodigoAbreviacion:VG,Id:${vigencia_id},activo:true`)
       .subscribe(
         (data: any) => {
           if (data) {
             this.vigencia = data.Data[0];
           }
-        }, (error) => {}
+        }, (error) => { }
       )
   }
 
@@ -242,43 +244,27 @@ export class GestionComponent implements OnInit {
   }
 
   loadActividades() {
-    this.request
-      .get(
-        environment.SEGUIMIENTO_MID,
-        `actividades/` + this.seguimiento._id
-      )
-      .subscribe({
-        next: (data: any) => {
-          if (data) {
-            for (let index = 0; index < data.Data.length; index++) {
-              const actividad = data.Data[index];
-              if (actividad.estado.nombre == 'Con observaciones') {
-                data.Data[index].estado.color = 'conObservacion';
-              }
-              if (
-                actividad.estado.nombre == 'Actividad avalada' ||
-                actividad.estado.nombre == "Actividad Verificada"
-              ) {
-                data.Data[index].estado.color = 'avalada';
-              }
-            }
-            this.dataSource.data = data.Data;
-            this.allActividades = this.dataSource.data;
-            Swal.close();
+    this.request.get(environment.SEGUIMIENTO_MID, `actividades/` + this.seguimiento._id).subscribe((data: any) => {
+      if (data) {
+        data.Data.forEach((actividad: any, index: number) => {
+          if (actividad.estado.nombre === "Con observaciones") {
+            actividad.estado.color = "conObservacion";
+          } else if (actividad.estado.nombre === "Actividad avalada" || actividad.estado.nombre === "Actividad Verificada") {
+            actividad.estado.color = "avalada";
           }
-        },
-        error: (error) => {
-          Swal.fire({
-            title: 'Error en la operación',
-            text: `No se encontraron datos registrados ${JSON.stringify(
-              error
-            )}`,
-            icon: 'warning',
-            showConfirmButton: false,
-            timer: 2500,
-          });
-        },
+        });
+        this.dataSource.data = data.Data;
+        Swal.close();
+      }
+    }, (error) => {
+      Swal.fire({
+        title: 'Error en la operación',
+        text: `No se encontraron datos registrados ${JSON.stringify(error)}`,
+        icon: 'warning',
+        showConfirmButton: false,
+        timer: 2500
       });
+    });
   }
 
   reportar() {
@@ -453,7 +439,19 @@ export class GestionComponent implements OnInit {
       }
   }
 
-  finalizarRevision() {
+  async finalizarRevision() {
+    if (await this.validacionActividades() && this.rol === 'ASISTENTE_PLANEACION') {
+      /* Si todas las actividades están avaladas y el rol es ASISTENTE_PLANEACION
+      NO se puede finalizar la revisión (Avalar Reporte) debe hacerlo el rol PLANEACION. */
+      Swal.fire({
+        title: 'Finalización de revisión cancelada',
+        text: `Solo el JEFE_PLANEACION puede avalar el reporte de seguimiento`,
+        icon: 'error',
+        showConfirmButton: false,
+        timer: 3500
+      });
+      return;
+    }
     Swal.fire({
       title: 'Finalizar revisión',
       text: `¿Confirma que desea finalizar la revisión del seguimiento al Plan de Acción?`,
@@ -510,7 +508,7 @@ export class GestionComponent implements OnInit {
               for (let llave of llaves) {
                 message += llave + ' - ' + actividades[llave] + '<br/>';
               }
-    
+
               Swal.fire({
                 title: 'Actividades sin revisar',
                 icon: 'error',
@@ -842,5 +840,34 @@ export class GestionComponent implements OnInit {
         });
       }
     );
+  }
+
+  getShortenedPlanId(): string {
+    return this.planId ? this.planId.substring(0, 6) : '';
+  }
+
+  async validacionActividades() {
+    let actividades = this.allActividades;
+    console.log(actividades);
+    let aux = true;
+    let actividadAvalada: any;
+    await new Promise((resolve) => {
+      this.request
+        .get(
+          environment.PLANES_CRUD,
+          `estado-seguimiento?query=codigo_abreviacion:AAV,activo:true`
+        ).subscribe((data: any) => {
+          if (data?.Data) {
+            actividadAvalada = data.Data[0]
+            resolve(actividadAvalada);
+          }
+        });
+    });
+    actividades.forEach(actividad => {
+      if (actividad.estado.id != actividadAvalada._id) {
+        aux = false;
+      }
+    });
+    return aux;
   }
 }
