@@ -227,7 +227,7 @@ export class SolicitudComponent implements OnInit {
                 Swal.close();
                 Swal.fire({
                   title: 'Error en la operación',
-                  text: 'No fue posible realizar la solicitud.',
+                  text: `No fue posible realizar la solicitud, ${error.error.message}`,
                   icon: 'error',
                   showConfirmButton: false,
                   timer: 2500,
@@ -378,15 +378,107 @@ export class SolicitudComponent implements OnInit {
     (document.getElementById('archivo') as HTMLInputElement).click();
   }
 
-  actualizarReformulacion(activo: boolean, estado_id: number) {
+  aprobarReformulacion() {
+    Swal.fire({
+      title: '¿Desea aprobar la reformulación?',
+      icon: 'question',
+      confirmButtonText: `Sí`,
+      cancelButtonText: `No`,
+      showCancelButton: true,
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        Swal.fire({
+          title: 'Validando si el plan se puede reformular...',
+          timerProgressBar: true,
+          showConfirmButton: false,
+          willOpen: () => {
+            Swal.showLoading();
+          },
+        });
+
+        this.request
+          .get(
+            environment.SEGUIMIENTO_MID,
+            `reformulacion/validar/${this.reformulacionActual._id}`
+          )
+          .subscribe({
+            next: (data) => {
+              if (data) {
+                this.request
+                  .get(
+                    environment.SEGUIMIENTO_MID,
+                    `reformulacion/aprobar/${this.reformulacionActual._id}`
+                  )
+                  .subscribe({
+                    next: (data) => {
+                      if (data) {
+                        Swal.close();
+                        console.log(data);
+                        Swal.fire({
+                          title: 'Reformulación aprobada',
+                          text: 'La reformulación ha sido procesada exitosamente.',
+                          icon: 'success',
+                          showConfirmButton: false,
+                          timer: 2500,
+                        });
+                        localStorage.setItem(
+                          'reformulacion',
+                          JSON.stringify({
+                            dependencia: this.reformulacionStorage.dependencia,
+                            vigencia: this.reformulacionStorage.vigencia,
+                            plan: this.reformulacionStorage.plan,
+                            plan_id: this.reformulacionStorage.plan_id,
+                            reformulacion: data.data,
+                          } as ReformulacionStorage)
+                        );
+                        window.location.reload();
+                      }
+                    },
+                    error: (error) => {
+                      console.error(error);
+                      Swal.close();
+                      Swal.fire({
+                        title: 'Error en la operación',
+                        text: `No fue posible realizar la solicitud, ${error.error.message}`,
+                        icon: 'error',
+                        showConfirmButton: false,
+                        timer: 2500,
+                      });
+                    },
+                  });
+              }
+            },
+            error: (error) => {
+              console.error(error);
+              Swal.close();
+              Swal.fire({
+                title: 'Error en la operación',
+                text: `No fue posible realizar la solicitud, ${error.error.message}`,
+                icon: 'error',
+                showConfirmButton: false,
+                timer: 2500,
+              });
+            },
+          });
+      } else if (result.dismiss === Swal.DismissReason.cancel) {
+        Swal.fire({
+          title: 'Solicitud de reformulación cancelada',
+          icon: 'error',
+          showConfirmButton: false,
+          timer: 2500,
+        });
+      }
+    });
+  }
+  rechazarReformulacion() {
     this.request
       .put(
         environment.PLANES_CRUD,
         'reformulacion',
         {
           ...this.reformulacionActual,
-          activo,
-          estado_id,
+          activo: false,
+          estado_id: Number.parseInt(this.ID_ESTADO_RECHAZADO),
         } as Reformulacion,
         this.reformulacionActual._id
       )
@@ -394,12 +486,8 @@ export class SolicitudComponent implements OnInit {
         next: (data) => {
           if (data) {
             Swal.fire({
-              title: `Reformulación ${
-                estado_id.toString() === this.ID_ESTADO_APROBADO
-                  ? 'Aprobada'
-                  : 'Rechazada'
-              }`,
-              text: 'La reformulación ha sido procesada exitosamente.',
+              title: `Reformulación Rechazada`,
+              text: 'La solicitud ha sido procesada exitosamente.',
               icon: 'success',
               showConfirmButton: false,
               timer: 2500,
@@ -409,17 +497,5 @@ export class SolicitudComponent implements OnInit {
           }
         },
       });
-  }
-  aprobarReformulacion() {
-    this.actualizarReformulacion(
-      false,
-      Number.parseInt(this.ID_ESTADO_APROBADO)
-    );
-  }
-  rechazarReformulacion() {
-    this.actualizarReformulacion(
-      false,
-      Number.parseInt(this.ID_ESTADO_RECHAZADO)
-    );
   }
 }
