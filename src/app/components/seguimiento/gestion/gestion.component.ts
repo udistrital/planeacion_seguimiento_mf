@@ -82,6 +82,7 @@ export class GestionComponent implements OnInit {
       title: 'Cargando información',
       timerProgressBar: true,
       showConfirmButton: false,
+      allowOutsideClick: false,
       willOpen: () => {
         Swal.showLoading();
       },
@@ -166,6 +167,7 @@ export class GestionComponent implements OnInit {
       title: 'Cargando información',
       timerProgressBar: true,
       showConfirmButton: false,
+      allowOutsideClick: false,
       willOpen: () => {
         Swal.showLoading();
       },
@@ -274,6 +276,7 @@ export class GestionComponent implements OnInit {
       icon: 'warning',
       confirmButtonText: `Continuar`,
       cancelButtonText: `Cancelar`,
+      allowOutsideClick: false,
       showCancelButton: true,
     }).then(
       (result) => {
@@ -458,6 +461,7 @@ export class GestionComponent implements OnInit {
       icon: 'warning',
       confirmButtonText: `Continuar`,
       cancelButtonText: `Cancelar`,
+      allowOutsideClick: false,
       showCancelButton: true,
     }).then(
       (result) => {
@@ -567,6 +571,7 @@ export class GestionComponent implements OnInit {
         text: `Está intentando acceder al seguimiento por fuera de las fechas establecidas`,
         icon: 'warning',
         showConfirmButton: true,
+        allowOutsideClick: false,
         timer: 10000,
       });
     }
@@ -622,6 +627,7 @@ export class GestionComponent implements OnInit {
                         text: `Está intentando acceder al seguimiento por fuera de las fechas establecidas`,
                         icon: 'warning',
                         showConfirmButton: true,
+                        allowOutsideClick: false,
                         timer: 10000,
                       });
                     }
@@ -719,6 +725,7 @@ export class GestionComponent implements OnInit {
       icon: 'warning',
       confirmButtonText: `Continuar`,
       cancelButtonText: `Cancelar`,
+      allowOutsideClick: false,
       showCancelButton: true,
     }).then(
       (result) => {
@@ -772,6 +779,7 @@ export class GestionComponent implements OnInit {
       icon: 'warning',
       confirmButtonText: `Continuar`,
       cancelButtonText: `Cancelar`,
+      allowOutsideClick: false,
       showCancelButton: true,
     }).then(
       (result) => {
@@ -807,6 +815,7 @@ export class GestionComponent implements OnInit {
                       title: 'Debe reportar las siguientes actividades:',
                       icon: 'error',
                       showConfirmButton: true,
+                      allowOutsideClick: false,
                       html: message,
                     });
                   } else {
@@ -815,6 +824,7 @@ export class GestionComponent implements OnInit {
                         'Debe revisar las observaciones de las siguientes actividades:',
                       icon: 'error',
                       showConfirmButton: true,
+                      allowOutsideClick: false,
                       html: message,
                     });
                   }

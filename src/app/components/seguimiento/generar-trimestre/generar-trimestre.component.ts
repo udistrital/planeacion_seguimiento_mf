@@ -183,6 +183,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
       title: 'Cargando información',
       timerProgressBar: true,
       showConfirmButton: false,
+      allowOutsideClick: false,
       willOpen: () => {
         Swal.showLoading();
       },
@@ -425,6 +426,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
             title: 'Guardando cambios',
             timerProgressBar: true,
             showConfirmButton: false,
+            allowOutsideClick: false,
             willOpen: () => {
               Swal.showLoading();
             },
@@ -491,6 +493,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
             title: 'Guardando documento',
             timerProgressBar: true,
             showConfirmButton: false,
+            allowOutsideClick: false,
             willOpen: () => {
               Swal.showLoading();
             },
@@ -603,6 +606,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
       title: 'Cargando información',
       timerProgressBar: true,
       showConfirmButton: false,
+      allowOutsideClick: false,
       willOpen: () => {
         Swal.showLoading();
       },
@@ -732,6 +736,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
       confirmButtonText: `Sí`,
       cancelButtonText: `No`,
       showCancelButton: true,
+      allowOutsideClick: false,
     }).then(
       (result) => {
         if (result.isConfirmed) {
@@ -808,6 +813,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
       confirmButtonText: `Sí`,
       cancelButtonText: `No`,
       showCancelButton: true,
+      allowOutsideClick: false,
     }).then(
       (result) => {
         if (result.isConfirmed) {
@@ -877,6 +883,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
       confirmButtonText: `Sí`,
       cancelButtonText: `No`,
       showCancelButton: true,
+      allowOutsideClick: false,
     }).then(
       (result) => {
         if (result.isConfirmed) {
@@ -939,6 +946,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
       confirmButtonText: `Continuar`,
       cancelButtonText: `Cancelar`,
       showCancelButton: true,
+      allowOutsideClick: false,
     }).then(
       (result) => {
         if (result.isConfirmed) {
@@ -1005,6 +1013,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
       confirmButtonText: `Continuar`,
       cancelButtonText: `Cancelar`,
       showCancelButton: true,
+      allowOutsideClick: false,
     }).then(
       (result) => {
         if (result.isConfirmed) {
@@ -1063,6 +1072,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
       confirmButtonText: `Sí`,
       cancelButtonText: `No`,
       showCancelButton: true,
+      allowOutsideClick: false,
     }).then(
       (result) => {
         if (result.isConfirmed) {
@@ -1381,7 +1391,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
       icon: 'warning',
       confirmButtonText: `Sí`,
       cancelButtonText: `No`,
-      showCancelButton: true
+      showCancelButton: true,
     }).then((result) => {
       if (result.isConfirmed) {
         this.request.put(environment.SEGUIMIENTO_MID, `actividades/revision_jefe_dependencia`, this.seguimiento, this.planId + `/` + this.indexActividad + `/` + this.trimestreId).subscribe((data: any) => {
@@ -1446,6 +1456,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
       confirmButtonText: `Sí`,
       cancelButtonText: `No`,
       showCancelButton: true,
+      allowOutsideClick: false,
     }).then(
       (result) => {
         if (result.isConfirmed) {
@@ -1555,7 +1566,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
       icon: 'warning',
       confirmButtonText: `Sí`,
       cancelButtonText: `No`,
-      showCancelButton: true
+      showCancelButton: true,
     }).then((result) => {
       if (result.isConfirmed) {
         this.request.put(environment.SEGUIMIENTO_MID, `actividades/retornar_jefe_dependencia`, this.seguimiento, this.planId + `/` + this.indexActividad + `/` + this.trimestreId).subscribe((data: any) => {
@@ -1605,6 +1616,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
       confirmButtonText: `Sí`,
       cancelButtonText: `No`,
       showCancelButton: true,
+      allowOutsideClick: false,
     }).then(
       (result) => {
         if (result.isConfirmed) {
