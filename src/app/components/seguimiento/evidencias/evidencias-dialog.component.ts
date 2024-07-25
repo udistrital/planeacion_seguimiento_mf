@@ -89,6 +89,7 @@ export class EvidenciasDialogComponent implements OnInit {
         title: 'Cargando información',
         timerProgressBar: true,
         showConfirmButton: false,
+        allowOutsideClick: false,
         willOpen: () => {
           Swal.showLoading();
         },
@@ -148,7 +149,7 @@ export class EvidenciasDialogComponent implements OnInit {
   }
 
   filterActive() {
-    this.dataSource.filterPredicate = function(
+    this.dataSource.filterPredicate = function (
       data: any,
       filterValue: string
     ) {
