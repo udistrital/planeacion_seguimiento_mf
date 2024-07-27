@@ -374,6 +374,7 @@ export class GestionComponent implements OnInit {
         this.request.put(environment.SEGUIMIENTO_MID, `seguimiento/revision_jefe_dependencia`, "{}", this.seguimiento._id).subscribe((data: any) => {
           if (data) {
             if (data.Success) {
+              this.codigoNotificacion = "SERJU"; // NOTIFICACION(SERJU)
               Swal.fire({
                 title: 'El reporte se ha enviado satisfactoriamente',
                 icon: 'success',
@@ -680,6 +681,7 @@ export class GestionComponent implements OnInit {
             this.seguimiento.estado_seguimiento_id = data.Data[0]._id;;
             this.request.put(environment.PLANES_CRUD, `seguimiento`, this.seguimiento, this.seguimiento._id).subscribe((data: any) => {
               if (data) {
+                this.codigoNotificacion = "SEAR"; // NOTIFICACION(SEAR)
                 Swal.fire({
                   title: 'Seguimiento en revisión',
                   icon: 'success',

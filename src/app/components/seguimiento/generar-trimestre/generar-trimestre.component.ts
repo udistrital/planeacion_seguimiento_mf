@@ -1386,6 +1386,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
       if (result.isConfirmed) {
         this.request.put(environment.SEGUIMIENTO_MID, `actividades/revision_jefe_dependencia`, this.seguimiento, this.planId + `/` + this.indexActividad + `/` + this.trimestreId).subscribe((data: any) => {
           if (data) {
+            this.setCodigoNotificacion();
             if (data.Data.Observación) {
               Swal.fire({
                 title: 'Información de seguimiento actualizada',
@@ -1560,6 +1561,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
       if (result.isConfirmed) {
         this.request.put(environment.SEGUIMIENTO_MID, `actividades/retornar_jefe_dependencia`, this.seguimiento, this.planId + `/` + this.indexActividad + `/` + this.trimestreId).subscribe((data: any) => {
           if (data) {
+            this.setCodigoNotificacion();
             Swal.fire({
               title: 'Información de seguimiento actualizada',
               text: 'Se ha actualizado el estado de la actividad satisfactoriamente',
