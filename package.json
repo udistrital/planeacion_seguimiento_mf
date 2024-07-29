@@ -22,6 +22,7 @@
     "@angular/platform-browser": "^16.1.0",
     "@angular/platform-browser-dynamic": "^16.1.0",
     "@angular/router": "^16.1.0",
+    "big-integer": "^1.6.52",
     "crypto-js": "^4.2.0",
     "rxjs": "~7.8.0",
     "single-spa": ">=4.0.0",
