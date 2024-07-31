@@ -20,7 +20,7 @@ import { Notificaciones } from "src/app/services/notificaciones";
 import { environment } from 'src/environments/environment';
 import Swal from 'sweetalert2';
 import { EvidenciasDialogComponent } from '../evidencias/evidencias-dialog.component';
-import { CodigosEstados } from 'src/app/services/codigosEstados.service';
+import { CodigosService } from '@udistrital/planeacion-utilidades-module';
 
 @Component({
   selector: 'app-generar-trimestre',
@@ -133,6 +133,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
 
   private gestorMethods = new GestorDocumentalMethods();
   private autenticationService = new ImplicitAutenticationService();
+  private codigosService = new CodigosService();
 
   constructor(
     private activatedRoute: ActivatedRoute,
@@ -141,7 +142,6 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
     private request: RequestManager,
     private notificacionesService: Notificaciones,
     private gestorDocumental: GestorDocumentalService,
-    private codigosEstados: CodigosEstados,
     private _location: Location,
     public dialog: MatDialog
   ) {
@@ -502,7 +502,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
           let documento = [
             {
               IdTipoDocumento: parseInt(
-                await this.codigosEstados.getId(
+                await this.codigosService.getId(
                   'DOCUMENTO_SERVICE',
                   'tipo_documento',
                   'DSPA'

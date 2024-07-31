@@ -6,13 +6,10 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ImplicitAutenticationService, ServiceCookies } from '@udistrital/planeacion-utilidades-module';
 import { navigateToUrl } from 'single-spa';
 import Indicador from 'src/app/models/indicador';
-import { RequestManager } from 'src/app/services/requestManager.service';
 import { Notificaciones } from 'src/app/services/notificaciones';
+import { RequestManager } from 'src/app/services/requestManager.service';
 import { environment } from 'src/environments/environment';
 import Swal from 'sweetalert2';
-import * as CryptoJS from 'crypto-js';
-import * as bigInt from 'big-integer'
-import { DataRequest } from 'src/app/models/dataRequest';
 
 @Component({
   selector: 'app-gestion',

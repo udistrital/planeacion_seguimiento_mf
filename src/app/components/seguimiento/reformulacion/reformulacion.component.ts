@@ -65,12 +65,12 @@ export class ReformulacionComponent implements OnInit {
     this.informacionTabla.paginator = this.paginator;
   }
   async ngOnInit() {
-    this.ID_ESTADO_FORMULACION = await this.codigosEstados.getId(
+    this.ID_ESTADO_FORMULACION = await this.codigosService.getId(
       'PARAMETROS_SERVICE',
       'parametro',
       'RPA-F-SP'
     );
-    this.ID_ESTADO_APROBADO = await this.codigosEstados.getId(
+    this.ID_ESTADO_APROBADO = await this.codigosService.getId(
       'PARAMETROS_SERVICE',
       'parametro',
       'RPA-A-SP'
