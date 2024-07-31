@@ -21,7 +21,7 @@
 
           </div>
           <div class="row2">
-            <mat-label id="desc-input-label">Plan de Acción ID: </mat-label>
+            <mat-label id="desc-input-label">Plan de Acción: </mat-label>
             <input class="plan" type="text" matInput formControlName="plan" required readonly>
           </div>
         </div>
@@ -67,7 +67,7 @@
             <tr mat-header-row *matHeaderRowDef="displayedColumns" style="background: var(--primary);"></tr>
             <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
             <tr class="mat-row" *matNoDataRow>
-              <td class="mat-cell" colspan="4"></td>
+              <td class="mat-cell" colspan="5"></td>
             </tr>
           </table>
           <mat-paginator #paginator pageSize="5" [length]="dataSource.data.length" [pageSizeOptions]="[5, 10, 25, 100]"

@@ -20,7 +20,6 @@ import { Notificaciones } from "src/app/services/notificaciones";
 import { environment } from 'src/environments/environment';
 import Swal from 'sweetalert2';
 import { EvidenciasDialogComponent } from '../evidencias/evidencias-dialog.component';
-import * as CryptoJS from 'crypto-js';
 import * as bigInt from 'big-integer';
 
 @Component({

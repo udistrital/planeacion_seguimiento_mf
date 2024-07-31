@@ -10,7 +10,6 @@ import { RequestManager } from 'src/app/services/requestManager.service';
 import { Notificaciones } from 'src/app/services/notificaciones';
 import { environment } from 'src/environments/environment';
 import Swal from 'sweetalert2';
-import * as CryptoJS from 'crypto-js';
 import * as bigInt from 'big-integer'
 import { DataRequest } from 'src/app/models/dataRequest';
 
@@ -20,7 +19,7 @@ import { DataRequest } from 'src/app/models/dataRequest';
   styleUrls: ['./gestion.component.scss'],
 })
 export class GestionComponent implements OnInit {
-  displayedColumns: string[] = ['index', 'dato', 'activo', 'gestion'];
+  displayedColumns: string[] = ['idactividad', 'index', 'dato', 'activo', 'gestion'];
   dataSource: MatTableDataSource<any>;
   planId: string = '';
   trimestreId: string = '';
@@ -181,6 +180,7 @@ export class GestionComponent implements OnInit {
         next: async (data: any) => {
           if (data) {
             this.seguimiento = data.Data;
+            this.planId = this.planId;
             this.estado = this.seguimiento.estado_seguimiento_id.nombre;
             await this.loadUnidad(this.seguimiento.plan_id.dependencia_id);
             this.loadVigencia(this.seguimiento.plan_id.vigencia)
