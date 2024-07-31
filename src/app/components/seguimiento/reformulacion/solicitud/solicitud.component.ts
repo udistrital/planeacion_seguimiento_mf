@@ -399,7 +399,7 @@ export class SolicitudComponent implements OnInit {
         this.request
           .get(
             environment.SEGUIMIENTO_MID,
-            `reformulacion/validar/${this.reformulacionActual._id}`
+            `reformulacion/validar/${this.reformulacionActual.plan_id}`
           )
           .subscribe({
             next: (data) => {
