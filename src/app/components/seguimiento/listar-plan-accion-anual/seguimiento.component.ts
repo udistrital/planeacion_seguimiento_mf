@@ -22,7 +22,7 @@ import { ImplicitAutenticationService } from '@udistrital/planeacion-utilidades-
 import Plan from 'src/app/models/plan';
 import { DataRequest } from 'src/app/models/dataRequest';
 import Trimestre from 'src/app/models/trimestre';
-import { CodigosEstados } from 'src/app/services/codigosEstados.service';
+import { CodigosService } from '@udistrital/planeacion-utilidades-module';
 
 @Component({
   selector: 'app-seguimiento',
@@ -79,6 +79,8 @@ export class ListComponent implements OnInit, AfterViewInit {
 
   private autenticationService = new ImplicitAutenticationService();
 
+  private codigosService = new CodigosService();
+
   constructor(
     public dialog: MatDialog,
     private request: RequestManager,
@@ -86,7 +88,6 @@ export class ListComponent implements OnInit, AfterViewInit {
     private notificacionesService: Notificaciones,
     private formBuilder: FormBuilder,
     private activatedRoute: ActivatedRoute,
-    private codigosEstados: CodigosEstados
   ) {
     let roles: any = this.autenticationService.getRoles();
     if (
@@ -211,7 +212,7 @@ export class ListComponent implements OnInit, AfterViewInit {
                     .get(
                       environment.OIKOS_SERVICE,
                       `dependencia_tipo_dependencia?query=DependenciaId:` +
-                        vinculacion.Data[aux]['DependenciaId']
+                      vinculacion.Data[aux]['DependenciaId']
                     )
                     .subscribe((dataUnidad: any) => {
                       if (dataUnidad) {
@@ -321,6 +322,12 @@ export class ListComponent implements OnInit, AfterViewInit {
     }
   }
 
+  async filterPlanes(data: any) {
+    const CODIGO_TIPO_PLAN_PROYECTO: string = await this.codigosService.getId('PLANES_CRUD', 'tipo-plan', 'PR_SP')
+    var dataAux = data.filter((e: { tipo_plan_id: string; }) => e.tipo_plan_id != CODIGO_TIPO_PLAN_PROYECTO);
+    return dataAux.filter((e: { activo: boolean; }) => e.activo == true);
+  }
+
   async loadPeriodos() {
     Swal.fire({
       title: 'Cargando períodos',
@@ -400,11 +407,7 @@ export class ListComponent implements OnInit, AfterViewInit {
                         };
                         let body = {
                           periodo_id: periodos[i].Id,
-                          tipo_seguimiento_id: await this.codigosEstados.getId(
-                            'PLANES_CRUD',
-                            'tipo-seguimiento',
-                            'S_SP'
-                          ),
+                          tipo_seguimiento_id: await this.codigosService.getId('PLANES_CRUD', 'tipo-seguimiento', 'S_SP'),
                           planes_interes: JSON.stringify([plan]),
                           unidades_interes: JSON.stringify([unidad]),
                           activo: true,
@@ -460,13 +463,13 @@ export class ListComponent implements OnInit, AfterViewInit {
 
                                     if (
                                       Object.keys(this.trimestres[0]).length !==
-                                        0 &&
+                                      0 &&
                                       Object.keys(this.trimestres[1]).length !==
-                                        0 &&
+                                      0 &&
                                       Object.keys(this.trimestres[2]).length !==
-                                        0 &&
+                                      0 &&
                                       Object.keys(this.trimestres[3]).length !==
-                                        0
+                                      0
                                     ) {
                                       if (
                                         (this.rol != undefined &&
@@ -509,11 +512,7 @@ export class ListComponent implements OnInit, AfterViewInit {
                       } else {
                         let body = {
                           periodo_id: periodos[i].Id,
-                          tipo_seguimiento_id: await this.codigosEstados.getId(
-                            'PLANES_CRUD',
-                            'tipo-seguimiento',
-                            'S_SP'
-                          ),
+                          tipo_seguimiento_id: await this.codigosService.getId('PLANES_CRUD', 'tipo-seguimiento', 'S_SP'),
                           activo: true,
                         };
                         await new Promise((resolve, reject) => {
@@ -567,13 +566,13 @@ export class ListComponent implements OnInit, AfterViewInit {
 
                                     if (
                                       Object.keys(this.trimestres[0]).length !==
-                                        0 &&
+                                      0 &&
                                       Object.keys(this.trimestres[1]).length !==
-                                        0 &&
+                                      0 &&
                                       Object.keys(this.trimestres[2]).length !==
-                                        0 &&
+                                      0 &&
                                       Object.keys(this.trimestres[3]).length !==
-                                        0
+                                      0
                                     ) {
                                       if (
                                         (this.rol != undefined &&
@@ -666,6 +665,8 @@ export class ListComponent implements OnInit, AfterViewInit {
       text: '',
       timerProgressBar: true,
       showConfirmButton: false,
+      allowEscapeKey: false,
+      allowOutsideClick: false,
       willOpen: () => {
         Swal.showLoading();
       },
@@ -690,94 +691,86 @@ export class ListComponent implements OnInit, AfterViewInit {
             this.request
               .get(
                 environment.PLANES_CRUD,
-                `seguimiento?query=activo:true,tipo_seguimiento_id:${await this.codigosEstados.getId(
-                  'PLANES_CRUD',
-                  'tipo-seguimiento',
-                  'S_SP'
-                )},plan_id:` +
-                  plan._id +
-                  `,periodo_seguimiento_id:` +
-                  trimestre.id
-              )
-              .subscribe(async (data: DataRequest) => {
-                if (data.Data.length != 0) {
-                  let estadoTemp;
-                  if (
-                    this.auxEstadosSeguimientos.some(
-                      (estado) =>
-                        estado.id == data.Data[0].estado_seguimiento_id
-                    ) &&
-                    this.auxEstadosSeguimientos.length > 0
-                  ) {
-                    estadoTemp = this.auxEstadosSeguimientos.find(
-                      (estado) =>
-                        estado.id == data.Data[0].estado_seguimiento_id
-                    ).nombre;
-                  } else {
-                    await new Promise((resolve, reject) => {
-                      this.request
-                        .get(
-                          environment.PLANES_CRUD,
-                          `estado-seguimiento/` +
+                `seguimiento?query=activo:true,tipo_seguimiento_id:${await this.codigosService.getId('PLANES_CRUD', 'tipo-seguimiento', 'S_SP')}
+                ,plan_id:` + plan._id + `,periodo_seguimiento_id:` + trimestre.id).subscribe(async (data: DataRequest) => {
+                  if (data.Data.length != 0) {
+                    let estadoTemp;
+                    if (
+                      this.auxEstadosSeguimientos.some(
+                        (estado) =>
+                          estado.id == data.Data[0].estado_seguimiento_id
+                      ) &&
+                      this.auxEstadosSeguimientos.length > 0
+                    ) {
+                      estadoTemp = this.auxEstadosSeguimientos.find(
+                        (estado) =>
+                          estado.id == data.Data[0].estado_seguimiento_id
+                      ).nombre;
+                    } else {
+                      await new Promise((resolve, reject) => {
+                        this.request
+                          .get(
+                            environment.PLANES_CRUD,
+                            `estado-seguimiento/` +
                             data.Data[0].estado_seguimiento_id
-                        )
-                        .subscribe((estado: DataRequest) => {
-                          if (estado && estado.Data != null) {
-                            estadoTemp = estado.Data.nombre;
-                            this.auxEstadosSeguimientos.push({
-                              id: estado.Data._id,
-                              nombre: estado.Data.nombre,
-                            });
-                            resolve(true);
-                          } else {
-                            Swal.fire({
-                              title: 'Error en la operación',
-                              text: `No se encontraron datos de estado`,
-                              icon: 'warning',
-                              showConfirmButton: false,
-                              timer: 2500,
-                            });
-                            reject(false);
-                          }
-                        });
+                          )
+                          .subscribe((estado: DataRequest) => {
+                            if (estado && estado.Data != null) {
+                              estadoTemp = estado.Data.nombre;
+                              this.auxEstadosSeguimientos.push({
+                                id: estado.Data._id,
+                                nombre: estado.Data.nombre,
+                              });
+                              resolve(true);
+                            } else {
+                              Swal.fire({
+                                title: 'Error en la operación',
+                                text: `No se encontraron datos de estado`,
+                                icon: 'warning',
+                                showConfirmButton: false,
+                                timer: 2500,
+                              });
+                              reject(false);
+                            }
+                          });
+                      });
+                    }
+
+                    let auxFecha = new Date();
+                    let auxFechaCol = auxFecha.toLocaleString('en-US', {
+                      timeZone: 'America/Mexico_City',
                     });
-                  }
+                    let strFechaHoy = new Date(auxFechaCol).toISOString();
+                    let fechaHoy = new Date(strFechaHoy);
 
-                  let auxFecha = new Date();
-                  let auxFechaCol = auxFecha.toLocaleString('en-US', {
-                    timeZone: 'America/Mexico_City',
-                  });
-                  let strFechaHoy = new Date(auxFechaCol).toISOString();
-                  let fechaHoy = new Date(strFechaHoy);
-
-                  if (estadoTemp == 'Reporte Avalado') {
-                    this.dataSource.data[index][
-                      `t${posicionTrimestre + 1}class`
-                    ] = 'verde';
-                    this.dataSource.data[index]['estado'] = estadoTemp;
-                  } else if (
-                    fechaHoy >=
+                    if (estadoTemp == 'Reporte Avalado') {
+                      this.dataSource.data[index][
+                        `t${posicionTrimestre + 1}class`
+                      ] = 'verde';
+                      this.dataSource.data[index]['estado'] = estadoTemp;
+                    } else if (
+                      fechaHoy >=
                       this.trimestres[posicionTrimestre].fecha_inicio &&
-                    fechaHoy <= this.trimestres[posicionTrimestre].fecha_fin
-                  ) {
+                      fechaHoy <= this.trimestres[posicionTrimestre].fecha_fin
+                    ) {
+                      this.dataSource.data[index][
+                        `t${posicionTrimestre + 1}class`
+                      ] = 'amarillo';
+                      this.dataSource.data[index]['estado'] = estadoTemp;
+                    } else {
+                      this.dataSource.data[index][
+                        `t${posicionTrimestre + 1}class`
+                      ] = 'gris';
+                    }
                     this.dataSource.data[index][
-                      `t${posicionTrimestre + 1}class`
-                    ] = 'amarillo';
-                    this.dataSource.data[index]['estado'] = estadoTemp;
+                      `t${posicionTrimestre + 1}estado`
+                    ] = estadoTemp;
+                    this.allPlanes = this.dataSource.data;
+                    resolve(true);
                   } else {
-                    this.dataSource.data[index][
-                      `t${posicionTrimestre + 1}class`
-                    ] = 'gris';
+                    reject();
                   }
-                  this.dataSource.data[index][
-                    `t${posicionTrimestre + 1}estado`
-                  ] = estadoTemp;
-                  this.allPlanes = this.dataSource.data;
-                  resolve(true);
-                } else {
-                  reject();
-                }
-              });
+                });
           });
         }
       );
@@ -862,6 +855,8 @@ export class ListComponent implements OnInit, AfterViewInit {
       title: 'Cargando información',
       timerProgressBar: true,
       showConfirmButton: false,
+      allowEscapeKey: false,
+      allowOutsideClick: false,
       willOpen: () => {
         Swal.showLoading();
       },
@@ -872,15 +867,7 @@ export class ListComponent implements OnInit, AfterViewInit {
     if (tipo == 'unidad') {
       return await new Promise(async (resolve, reject) => {
         this.request
-          .get(
-            environment.PLANES_CRUD,
-            `plan?query=activo:true,estado_plan_id:${await this.codigosEstados.getId(
-              'PLANES_CRUD',
-              'estado-plan',
-              'A_SP'
-            )},vigencia:${this.vigencia.Id},dependencia_id:${this.unidad.Id}`
-          )
-          .subscribe({
+          .get(environment.PLANES_CRUD, `plan?query=activo:true,estado_plan_id:${await this.codigosService.getId('PLANES_CRUD', 'estado-plan', 'A_SP')},vigencia:${this.vigencia.Id},dependencia_id:${this.unidad.Id}`).subscribe({
             next: async (data: DataRequest) => {
               if (data?.Data.length != 0) {
                 data.Data.sort(function (
@@ -932,66 +919,60 @@ export class ListComponent implements OnInit, AfterViewInit {
         this.request
           .get(
             environment.PLANES_CRUD,
-            `plan?query=activo:true,estado_plan_id:${await this.codigosEstados.getId(
-              'PLANES_CRUD',
-              'estado-plan',
-              'A_SP'
-            )},vigencia:${this.vigencia.Id},dependencia_id:${this.unidad.Id}`
-          )
-          .subscribe({
-            next: async (data: DataRequest) => {
-              if (data) {
-                if (data.Data.length != 0) {
-                  data.Data.sort(function (
-                    a: { vigencia: number },
-                    b: { vigencia: number }
-                  ) {
-                    return b.vigencia - a.vigencia;
-                  });
-                  this.planes = data.Data;
-                  this.planes.forEach((plan) => {
-                    let bandera = true;
-                    this.auxPlanes.forEach((auxplan) => {
-                      if (auxplan.nombre == plan.nombre) {
-                        bandera = false;
+            `plan?query=activo:true,estado_plan_id:${await this.codigosService.getId('PLANES_CRUD', 'estado-plan', 'A_SP')},vigencia:${this.vigencia.Id},dependencia_id:${this.unidad.Id}`).subscribe({
+              next: async (data: DataRequest) => {
+                if (data) {
+                  if (data.Data.length != 0) {
+                    data.Data.sort(function (
+                      a: { vigencia: number },
+                      b: { vigencia: number }
+                    ) {
+                      return b.vigencia - a.vigencia;
+                    });
+                    this.planes = data.Data;
+                    this.planes.forEach((plan) => {
+                      let bandera = true;
+                      this.auxPlanes.forEach((auxplan) => {
+                        if (auxplan.nombre == plan.nombre) {
+                          bandera = false;
+                        }
+                      });
+                      if (bandera) {
+                        this.auxPlanes.push(plan);
                       }
                     });
-                    if (bandera) {
-                      this.auxPlanes.push(plan);
-                    }
-                  });
-                  // await this.loadFechas();
-                  this.dataSource.data = this.planes;
-                  this.allPlanes = this.dataSource.data;
-                  this.onPageChange({ length: 0, pageIndex: 0, pageSize: 5 });
-                  Swal.close();
-                  resolve(true);
-                } else {
-                  this.unidadSelected = false;
-                  Swal.close();
-                  Swal.fire({
-                    title: 'No se encontraron planes',
-                    icon: 'error',
-                    text: `No se encontraron planes para realizar el seguimiento`,
-                    showConfirmButton: false,
-                    timer: 2500,
-                  });
-                  reject();
+                    // await this.loadFechas();
+                    this.dataSource.data = this.planes;
+                    this.allPlanes = this.dataSource.data;
+                    this.onPageChange({ length: 0, pageIndex: 0, pageSize: 5 });
+                    Swal.close();
+                    resolve(true);
+                  } else {
+                    this.unidadSelected = false;
+                    Swal.close();
+                    Swal.fire({
+                      title: 'No se encontraron planes',
+                      icon: 'error',
+                      text: `No se encontraron planes para realizar el seguimiento`,
+                      showConfirmButton: false,
+                      timer: 2500,
+                    });
+                    reject();
+                  }
                 }
-              }
-            },
-            error: (error) => {
-              Swal.close();
-              Swal.fire({
-                title: 'Error en la operación',
-                text: 'No se encontraron datos registrados',
-                icon: 'warning',
-                showConfirmButton: false,
-                timer: 2500,
-              });
-              reject(error);
-            },
-          });
+              },
+              error: (error) => {
+                Swal.close();
+                Swal.fire({
+                  title: 'Error en la operación',
+                  text: 'No se encontraron datos registrados',
+                  icon: 'warning',
+                  showConfirmButton: false,
+                  timer: 2500,
+                });
+                reject(error);
+              },
+            });
       });
     }
     return;

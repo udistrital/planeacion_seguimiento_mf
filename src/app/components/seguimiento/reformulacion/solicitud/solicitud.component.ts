@@ -13,11 +13,11 @@ import { RequestManager } from 'src/app/services/requestManager.service';
 import { environment } from 'src/environments/environment';
 import Swal from 'sweetalert2';
 import { VisualizarDocumentoDialogComponent } from '../../generar-trimestre/visualizar-documento-dialog/visualizar-documento-dialog.component';
-import { CodigosEstados } from 'src/app/services/codigosEstados.service';
 import { Parametro } from 'src/app/models/parametro';
 import { DataRequest } from 'src/app/models/dataRequest';
 import { GestorDocumentalService } from 'src/app/services/gestorDocumental.service';
 import { Router } from '@angular/router';
+import { CodigosService } from '@udistrital/planeacion-utilidades-module';
 
 const FORMATOS = ['application/pdf'];
 
@@ -44,11 +44,12 @@ export class SolicitudComponent implements OnInit {
   ID_ESTADO_RECHAZADO = '';
   ID_ESTADO_FORMULADO = '';
 
+  private codigosService = new CodigosService();
+
   constructor(
     private formBuilder: FormBuilder,
     private request: RequestManager,
     public dialog: MatDialog,
-    private codigosEstados: CodigosEstados,
     private gestorDocumental: GestorDocumentalService,
     private router: Router
   ) {
@@ -83,21 +84,10 @@ export class SolicitudComponent implements OnInit {
       this.rol = 'ASISTENTE_DEPENDENCIA';
     }
 
-    this.ID_ESTADO_APROBADO = await this.codigosEstados.getId(
-      'PARAMETROS_SERVICE',
-      'parametro',
-      'RPA-A-SP'
-    );
-    this.ID_ESTADO_RECHAZADO = await this.codigosEstados.getId(
-      'PARAMETROS_SERVICE',
-      'parametro',
-      'RPA-R-SP'
-    );
-    this.ID_ESTADO_FORMULADO = await this.codigosEstados.getId(
-      'PARAMETROS_SERVICE',
-      'parametro',
-      'RPA-F-SP'
-    );
+
+    this.ID_ESTADO_APROBADO = await this.codigosService.getId('PARAMETROS_SERVICE', 'parametro', 'RPA-A-SP');
+    this.ID_ESTADO_RECHAZADO = await this.codigosService.getId('PARAMETROS_SERVICE','parametro','RPA-R-SP');
+    this.ID_ESTADO_FORMULADO = await this.codigosService.getId('PARAMETROS_SERVICE','parametro','RPA-F-SP');
 
     if (this.reformulacionStorage.reformulacion) {
       Swal.fire({
@@ -178,7 +168,7 @@ export class SolicitudComponent implements OnInit {
             documento: [
               {
                 IdTipoDocumento: parseInt(
-                  await this.codigosEstados.getId(
+                  await this.codigosService.getId(
                     'DOCUMENTO_SERVICE',
                     'tipo_documento',
                     'DSPA'

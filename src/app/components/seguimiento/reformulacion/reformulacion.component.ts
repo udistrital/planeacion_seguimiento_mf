@@ -14,10 +14,10 @@ import {
   ReformulacionStorage,
 } from 'src/app/models/reformulacion';
 import { Vigencia } from 'src/app/models/vigencia';
-import { CodigosEstados } from 'src/app/services/codigosEstados.service';
 import { RequestManager } from 'src/app/services/requestManager.service';
 import { environment } from 'src/environments/environment';
 import Swal from 'sweetalert2';
+import { CodigosService } from '@udistrital/planeacion-utilidades-module';
 
 @Component({
   selector: 'app-reformulacion',
@@ -48,11 +48,12 @@ export class ReformulacionComponent implements OnInit {
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
+  private codigosService = new CodigosService();
+
   constructor(
     private formBuilder: FormBuilder,
     private request: RequestManager,
     private router: Router,
-    private codigosEstados: CodigosEstados
   ) {
     this.formSelect = this.formBuilder.group({
       selectUnidad: new FormControl({ value: '', disabled: false }),
@@ -421,11 +422,7 @@ export class ReformulacionComponent implements OnInit {
           this.unidadSeleccionada?.Id
         },vigencia:${
           this.vigenciaSeleccionada?.Id
-        },estado_plan_id:${await this.codigosEstados.getId(
-          'PLANES_CRUD',
-          'estado-plan',
-          'A_SP'
-        )}`
+        },estado_plan_id:${await this.codigosService.getId('PLANES_CRUD', 'estado-plan', 'A_SP')}`
       )
       .subscribe({
         next: async (data: DataRequest) => {
