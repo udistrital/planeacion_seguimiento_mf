@@ -1132,80 +1132,43 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
         const meta = parseFloat(this.datosIndicadores[index].meta);
         this.calcular = false;
 
-        if (denominador == 0.0 && numerador == 0.0) {
-          denominador = 100;
-          numerador = 100;
-          this.datosResultados.data[index].indicadorAcumulado = 1;
-          this.datosResultados.data[index].acumuladoNumerador = this.datosResultados.data[index].acumuladoNumerador;
-          this.datosResultados.data[index].acumuladoDenominador = this.datosResultados.data[index].acumuladoDenominador;
-          this.datosResultados.data[index].indicador = numerador / denominador;
-          var indicadorAcumulado = this.datosResultados.data[index].indicadorAcumulado;
-          var metaEvaluada = meta / 100;
-          this.datosResultados.data[index].avanceAcumulado = this.datosResultados.data[index].indicadorAcumulado / metaEvaluada;
-
-          if (indicador.tendencia == "Creciente") {
-            if (this.datosResultados.data[index].indicadorAcumulado > metaEvaluada) {
-              this.datosResultados.data[index].brechaExistente = 0;
-            } else {
-              this.datosResultados.data[index].brechaExistente = metaEvaluada - indicadorAcumulado;
-            }
-          } else {
-            if (this.datosResultados.data[index].indicadorAcumulado < metaEvaluada) {
-              this.datosResultados.data[index].brechaExistente = 0;
-            } else {
-              this.datosResultados.data[index].brechaExistente = indicadorAcumulado - metaEvaluada;
-            }
-          }
-
-          this.seguimiento.cuantitativo.resultados[index] = this.datosResultados.data[index];
-          continue;
-        }
-
         if (denominador == 0.0) {
           if (numerador == 0.0) {
-            if (indicador.denominador != "Denominador variable") {
+            if (indicador.denominador === "Denominador variable") {
+              denominador = 100;
+              numerador = 100;
+              this.datosResultados.data[index].indicadorAcumulado = 1 * 0.25;
+              this.datosResultados.data[index].acumuladoNumerador = this.datosResultados.data[index].acumuladoNumerador;
+              this.datosResultados.data[index].acumuladoDenominador = this.datosResultados.data[index].acumuladoDenominador;
+              this.datosResultados.data[index].indicador = numerador / denominador;
+              var metaEvaluada = meta / 100;
+              this.datosResultados.data[index].avanceAcumulado = (this.datosResultados.data[index].indicadorAcumulado / metaEvaluada);
+
+              if (indicador.tendencia == "Creciente") {
+                if (this.datosResultados.data[index].indicadorAcumulado > metaEvaluada) {
+                  this.datosResultados.data[index].brechaExistente = 0;
+                } else {
+                  this.datosResultados.data[index].brechaExistente = metaEvaluada - this.datosResultados.data[index].avanceAcumulado;
+                }
+              } else {
+                if (this.datosResultados.data[index].indicadorAcumulado < metaEvaluada) {
+                  this.datosResultados.data[index].brechaExistente = 0;
+                } else {
+                  this.datosResultados.data[index].brechaExistente = this.datosResultados.data[index].avanceAcumulado - metaEvaluada;
+                }
+              }
+
+              this.seguimiento.cuantitativo.resultados[index] = this.datosResultados.data[index];
+            } else {
               Swal.fire({
                 title: 'Error en la operación',
                 text: `No es posible la división entre cero para denominador fijo`,
                 icon: 'warning',
                 showConfirmButton: false,
                 timer: 3500
-              })
+              });
               indicador.reporteDenominador = null;
               indicador.reporteNumerador = null;
-            } else {
-              if (this.trimestreAbr == "T1" || this.datosResultados.data[index].divisionCero) {
-                this.datosResultados.data[index].divisionCero = true;
-                this.datosResultados.data[index].indicadorAcumulado = 1;
-                this.datosResultados.data[index].acumuladoNumerador = 0;
-                this.datosResultados.data[index].acumuladoDenominador = this.datosResultados.data[index].acumuladoDenominador;
-                this.datosResultados.data[index].indicador = 0;
-                this.numeradorOriginal = [];
-                this.denominadorOriginal = [];
-                this.calcular = true;
-
-                var indicadorAcumulado = this.datosResultados.data[index].indicadorAcumulado;
-                var metaEvaluada = meta / 100;
-
-                this.datosResultados.data[index].avanceAcumulado = this.datosResultados.data[index].indicadorAcumulado / metaEvaluada;
-
-                if (indicador.tendencia == "Creciente") {
-                  if (this.datosResultados.data[index].indicadorAcumulado > metaEvaluada) {
-                    this.datosResultados.data[index].brechaExistente = 0;
-                  } else {
-                    this.datosResultados.data[index].brechaExistente = metaEvaluada - indicadorAcumulado;
-                  }
-                } else {
-                  if (this.datosResultados.data[index].indicadorAcumulado < metaEvaluada) {
-                    this.datosResultados.data[index].brechaExistente = 0;
-                  } else {
-                    this.datosResultados.data[index].brechaExistente = indicadorAcumulado - metaEvaluada;
-                  }
-                }
-                this.seguimiento.cuantitativo.resultados[index] = this.datosResultados.data[index];
-              } else {
-                this.calcularBase(indicador, denominador, numerador, meta, index, true)
-              }
             }
           } else {
             Swal.fire({
@@ -1214,7 +1177,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
               icon: 'warning',
               showConfirmButton: false,
               timer: 3500
-            })
+            });
           }
         } else {
           if (this.trimestreAbr == "T1") {
@@ -1228,16 +1191,16 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
             this.denominadorOriginal = [];
             this.calcular = true;
           }
-          this.calcularBase(indicador, denominador, numerador, meta, index, false)
+          this.calcularBase(indicador, denominador, numerador, meta, index, false);
         }
       } else {
         Swal.fire({
           title: 'Error en la operación',
-          text: `Los datos de numerador y denominador no pueden estar vacios`,
+          text: `Los datos de numerador y denominador no pueden estar vacíos`,
           icon: 'warning',
           showConfirmButton: false,
           timer: 2500
-        })
+        });
       }
     }
   }
