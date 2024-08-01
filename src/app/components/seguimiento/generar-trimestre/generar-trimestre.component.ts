@@ -119,7 +119,6 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
   estados: any[] = [];
   readonlyFormulario: boolean = true;
   readonlyObservacion: boolean = true;
-  denominadorFijo: boolean = true;
   unidad: string = '';
   vigencia: any;
   numeradorOriginal: number[] = [];
@@ -1205,127 +1204,80 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
     }
   }
 
-  calcularBase(
-    indicador: any,
-    denominador: any,
-    numerador: any,
-    meta: any,
-    index: number,
-    ceros: boolean
-  ) {
+  calcularBase(indicador: any, denominador: number, numerador: number, meta: number, index: number, ceros: boolean) {
     this.datosResultados.data[index].divisionCero = false;
-    this.denominadorFijo = indicador.denominador != 'Denominador variable';
+    let esDenominadorFijo = indicador.denominador !== "Denominador variable"
     if (!Number.isNaN(denominador) && !Number.isNaN(numerador)) {
       this.datosIndicadores[index].reporteDenominador = denominador;
       this.datosIndicadores[index].reporteNumerador = numerador;
 
       if (!this.calcular) {
-        this.datosResultados.data[index].acumuladoNumerador -=
-          this.numeradorOriginal[index];
-        if (!this.denominadorFijo) {
-          this.datosResultados.data[index].acumuladoDenominador -=
-            this.denominadorOriginal[index];
+        this.datosResultados.data[index].acumuladoNumerador -= this.numeradorOriginal[index];
+        if (!esDenominadorFijo) {
+          this.datosResultados.data[index].acumuladoDenominador -= this.denominadorOriginal[index];
         }
-        this.datosResultados.data[index].indicadorAcumulado -=
-          this.datosResultados.data[index].indicador;
+        this.datosResultados.data[index].indicadorAcumulado -= this.datosResultados.data[index].indicador;
         this.datosResultados.data[index].indicador = 0;
       }
 
       this.datosResultados.data[index].acumuladoNumerador += numerador;
-      if (!this.denominadorFijo) {
-        this.datosResultados.data[index].acumuladoDenominador += denominador;
-      } else {
+      if (esDenominadorFijo) {
         this.datosResultados.data[index].acumuladoDenominador = denominador;
-      }
-
-      if (denominador != 0) {
-        if (this.datosIndicadores[index].unidad == 'Unidad') {
-          this.datosResultados.data[index].indicador = Math.round(
-            numerador / denominador
-          );
-        } else {
-          this.datosResultados.data[index].indicador =
-            Math.round((numerador / denominador) * 10000) / 10000;
-        }
       } else {
-        this.datosResultados.data[index].indicador =
-          this.datosIndicadores[index].unidad == 'Unidad' ? meta : meta / 100;
+        this.datosResultados.data[index].acumuladoDenominador += denominador;
       }
 
       if (this.datosResultados.data[index].divisionCero && ceros) {
         this.datosResultados.data[index].indicador = 0;
+      } else if (denominador != 0) {
+        let auxiliarDenominador = numerador / denominador;
+        if (this.datosIndicadores[index].unidad == "Unidad") {
+          this.datosResultados.data[index].indicador = Math.round(auxiliarDenominador);
+        } else {
+          this.datosResultados.data[index].indicador = Math.round(auxiliarDenominador * 10_000) / 10_000;
+        }
+      } else {
+        this.datosResultados.data[index].indicador = this.datosIndicadores[index].unidad == "Unidad" ? meta : meta / 100;
       }
 
       if (this.datosResultados.data[index].acumuladoDenominador != 0) {
+        let auxiliarIndicadorAcumulado = this.datosResultados.data[index].acumuladoNumerador / this.datosResultados.data[index].acumuladoDenominador
         if (this.datosIndicadores[index].unidad == 'Unidad') {
-          this.datosResultados.data[index].indicadorAcumulado =
-            Math.round(
-              (this.datosResultados.data[index].acumuladoNumerador /
-                this.datosResultados.data[index].acumuladoDenominador) *
-              100
-            ) / 100;
+          this.datosResultados.data[index].indicadorAcumulado = Math.round(auxiliarIndicadorAcumulado * 100) / 100;
         } else {
-          this.datosResultados.data[index].indicadorAcumulado =
-            Math.round(
-              (this.datosResultados.data[index].acumuladoNumerador /
-                this.datosResultados.data[index].acumuladoDenominador) *
-              10000
-            ) / 10000;
+          this.datosResultados.data[index].indicadorAcumulado = Math.round(auxiliarIndicadorAcumulado * 10_000) / 10_000;
         }
       } else {
-        this.datosResultados.data[index].indicadorAcumulado =
-          this.datosIndicadores[index].unidad == 'Unidad' ? meta : meta / 100;
+        this.datosResultados.data[index].indicadorAcumulado = this.datosIndicadores[index].unidad == 'Unidad' ? meta : meta / 100;
       }
-
-      var indicadorAcumulado =
-        this.datosResultados.data[index].indicadorAcumulado;
-      var metaEvaluada =
-        this.datosIndicadores[index].unidad == 'Unidad' ||
-          this.datosIndicadores[index].unidad == 'Tasa'
-          ? meta
-          : meta / 100;
-      if (indicador.tendencia == 'Creciente') {
-        if (
+      if (!esDenominadorFijo) {
+        this.datosResultados.data[index].indicadorAcumulado = this.datosResultados.data[index].indicadorAcumulado * 0.25;
+      }
+      let indicadorAcumulado = this.datosResultados.data[index].indicadorAcumulado;
+      let auxiliarMeta = this.datosIndicadores[index].unidad == "Unidad" || this.datosIndicadores[index].unidad == "Tasa" ? meta : meta / 100;
+      // Las multiplicaciones y divisiones por mil o 10 mil son para formatear los datos a una cantidad de decimales fijos
+      if (indicador.tendencia == "Creciente") {
+        this.datosResultados.data[index].avanceAcumulado =
           this.datosIndicadores[index].unidad == 'Unidad' ||
-          this.datosIndicadores[index].unidad == 'Tasa'
-        ) {
-          this.datosResultados.data[index].avanceAcumulado =
-            Math.round((indicadorAcumulado / metaEvaluada) * 1000) / 1000;
-        } else {
-          this.datosResultados.data[index].avanceAcumulado =
-            Math.round((indicadorAcumulado / metaEvaluada) * 10000) / 10000;
-        }
-      } else if (indicador.tendencia == 'Decreciente') {
-        if (indicadorAcumulado < metaEvaluada) {
-          this.datosResultados.data[index].avanceAcumulado =
-            Math.round(
-              (1 + (metaEvaluada - indicadorAcumulado) / metaEvaluada) * 10000
-            ) / 10000;
-        } else {
-          this.datosResultados.data[index].avanceAcumulado =
-            Math.round(
-              (1 - (metaEvaluada - indicadorAcumulado) / metaEvaluada) * 10000
-            ) / 10000;
-        }
+            this.datosIndicadores[index].unidad == 'Tasa'
+            ? Math.round((indicadorAcumulado / auxiliarMeta) * 1_000) / 1_000
+            : Math.round((indicadorAcumulado / auxiliarMeta) * 10_000) / 10_000;
+        this.datosResultados.data[index].brechaExistente =
+          indicadorAcumulado > auxiliarMeta
+            ? 0
+            : Math.round((auxiliarMeta - this.datosResultados.data[index].avanceAcumulado) * 10_000) / 10_000;
+      } else if (indicador.tendencia == "Decreciente") {
+        let auxiliarAvance = (auxiliarMeta - indicadorAcumulado) / auxiliarMeta;
+        this.datosResultados.data[index].avanceAcumulado =
+          Math.round(
+            (1 + (indicadorAcumulado < auxiliarMeta ? auxiliarAvance : -auxiliarAvance)) * 10_000
+          ) / 10_000;
+        this.datosResultados.data[index].brechaExistente =
+          indicadorAcumulado < auxiliarMeta
+            ? 0
+            : Math.round((this.datosResultados.data[index].avanceAcumulado - auxiliarMeta) * 10_000) / 10_000;
       }
-
-      if (indicador.tendencia == 'Creciente') {
-        if (indicadorAcumulado > metaEvaluada) {
-          this.datosResultados.data[index].brechaExistente = 0;
-        } else {
-          this.datosResultados.data[index].brechaExistente =
-            Math.round((metaEvaluada - indicadorAcumulado) * 10000) / 10000;
-        }
-      } else if (indicador.tendencia == 'Decreciente') {
-        if (indicadorAcumulado < metaEvaluada) {
-          this.datosResultados.data[index].brechaExistente = 0;
-        } else {
-          this.datosResultados.data[index].brechaExistente =
-            Math.round((indicadorAcumulado - metaEvaluada) * 10000) / 10000;
-        }
-      }
-      this.seguimiento.cuantitativo.resultados[index] =
-        this.datosResultados.data[index];
+      this.seguimiento.cuantitativo.resultados[index] = this.datosResultados.data[index];
     }
     this.numeradorOriginal[index] = numerador;
     this.denominadorOriginal[index] = denominador;
