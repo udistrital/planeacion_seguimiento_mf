@@ -17,7 +17,7 @@ import Swal from 'sweetalert2';
   styleUrls: ['./gestion.component.scss'],
 })
 export class GestionComponent implements OnInit {
-  displayedColumns: string[] = ['index', 'dato', 'activo', 'gestion'];
+  displayedColumns: string[] = ['idactividad', 'index', 'dato', 'activo', 'gestion'];
   dataSource: MatTableDataSource<any>;
   planId: string = '';
   trimestreId: string = '';
@@ -178,6 +178,7 @@ export class GestionComponent implements OnInit {
         next: async (data: any) => {
           if (data) {
             this.seguimiento = data.Data;
+            this.planId = this.planId;
             this.estado = this.seguimiento.estado_seguimiento_id.nombre;
             await this.loadUnidad(this.seguimiento.plan_id.dependencia_id);
             this.loadVigencia(this.seguimiento.plan_id.vigencia)
