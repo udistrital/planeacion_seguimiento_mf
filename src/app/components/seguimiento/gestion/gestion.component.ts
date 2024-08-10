@@ -251,8 +251,10 @@ export class GestionComponent implements OnInit {
         data.Data.forEach((actividad: any, index: number) => {
           if (actividad.estado.nombre === "Con observaciones") {
             actividad.estado.color = "conObservacion";
-          } else if (actividad.estado.nombre === "Actividad avalada" || actividad.estado.nombre === "Actividad Verificada") {
+          } else if (actividad.estado.nombre === "Actividad avalada") {
             actividad.estado.color = "avalada";
+          } else if (actividad.estado.nombre == "Actividad Verificada") {
+            actividad.estado.color = "verificada";
           }
         });
         this.dataSource.data = data.Data;

@@ -21,30 +21,32 @@
       <div class="container-border">
         <h1>&nbsp;&nbsp;&nbsp;&nbsp;Información del Plan</h1>
         <div class="contenedor3c">
-          <div class="row1">
-            <mat-label id="desc-input-label">Número de actividad:</mat-label>
-            <textarea class="unidad" [readonly]="true"
-              placeholder="Actividad">{{seguimiento.informacion.index}}</textarea>
-          </div>
-          <div class="row1" style="grid-row: 2/2;">
-            <mat-label id="desc-input-label">Id de actividad:</mat-label>
-            <textarea class="unidad" [readonly]="true" placeholder="Actividad">{{this.id_actividad}}</textarea>
-          </div>
-          <div class="row1" style="grid-row: 3/3;">
-            <mat-label id="desc-input-label">Ponderación:</mat-label>
-            <textarea class="unidad" [readonly]="true" placeholder="0%">{{seguimiento.informacion.ponderacion/100 |
-              percent}}</textarea>
-          </div>
-          <div class="row1" style="grid-row: 4/4;">
-            <mat-label id="desc-input-label">Periodo de ejecución:</mat-label>
-            <textarea class="unidad" [readonly]="true"
-              placeholder="Periodo">{{seguimiento.informacion.periodo}}</textarea>
+          <div>
+            <div class="row1">
+              <mat-label id="desc-input-label">Número de actividad:</mat-label>
+              <textarea class="unidad" [readonly]="true"
+                placeholder="Actividad">{{seguimiento.informacion.index}}</textarea>
+            </div>
+            <div class="row1" style="grid-row: 2/2;">
+              <mat-label id="desc-input-label">Id de actividad:</mat-label>
+              <textarea class="unidad" [readonly]="true" placeholder="Actividad">{{this.id_actividad}}</textarea>
+            </div>
+            <div class="row1" style="grid-row: 3/3;">
+              <mat-label id="desc-input-label">Ponderación:</mat-label>
+              <textarea class="unidad" [readonly]="true" placeholder="0%">{{seguimiento.informacion.ponderacion/100 |
+                percent}}</textarea>
+            </div>
+            <div class="row1" style="grid-row: 4/4;">
+              <mat-label id="desc-input-label">Periodo de ejecución:</mat-label>
+              <textarea class="unidad" [readonly]="true"
+                placeholder="Periodo">{{seguimiento.informacion.periodo}}</textarea>
+            </div>
           </div>
 
           <div class="content-border"
             style="grid-row: 1/4; grid-column: 2/4; margin: 0px; height: -webkit-fill-available;">
             <h2>&nbsp;&nbsp;&nbsp;&nbsp;Descripción de la actividad general&nbsp;&nbsp;&nbsp;&nbsp;</h2>
-            <textarea class="textareaContenido" autoresize [readonly]="true"
+            <textarea class="textareaContenidoModificable" autoresize [readonly]="true"
               placeholder="* Descripción de la actividad general seleccionada">{{seguimiento.informacion.descripcion}}</textarea>
           </div>
         </div>
@@ -60,7 +62,7 @@
 
           <div class="content-border" style="grid-column: 2/4; margin: 0px; height: -webkit-fill-available;">
             <h2>&nbsp;&nbsp;&nbsp;&nbsp;Actividades específicas&nbsp;&nbsp;&nbsp;&nbsp;</h2>
-            <textarea class="textareaContenido" autoresize [readonly]="true"
+            <textarea class="textareaContenidoModificable" autoresize [readonly]="true"
               placeholder="* Tareas asociadas a la actividad general">{{seguimiento.informacion.tarea}}</textarea>
           </div>
         </div>
@@ -81,7 +83,7 @@
         <div class="contentCuantitativo">
           <div class="container-border">
             <h4>&nbsp;&nbsp;&nbsp;&nbsp;Digite la información *&nbsp;&nbsp;&nbsp;&nbsp;</h4>
-            <textarea class="textareaContenido" autoresize id="reporte"
+            <textarea class="textareaContenidoModificable" autoresize id="reporte"
               placeholder="* Describa las acciones implementadas en el marco de la actividad general, así como  los logros obtenidos."
               required [value]="datosCualitativo.reporte" [(ngModel)]="datosCualitativo.reporte"
               [ngModelOptions]="{standalone: true}" [readonly]="readonlyFormulario"></textarea>
@@ -101,7 +103,7 @@
           style="padding-left: 24px;display: flex;flex-wrap: nowrap;align-items: center;gap: 1%;">
           <div class="container-border" style="width: 80%; margin-left: 0px;">
             <h4>&nbsp;&nbsp;&nbsp;&nbsp;Digite la información *&nbsp;&nbsp;&nbsp;&nbsp;</h4>
-            <textarea class="textareaContenido" autoresize id="productos"
+            <textarea class="textareaContenidoModificable" autoresize id="productos"
               placeholder="* Enliste los productos y evidencias resultantes de las acciones establecidas en el espacio anterior, tenga en cuenta que las evidencias deberán estar cargadas."
               required [value]="datosCualitativo.productos" [(ngModel)]="datosCualitativo.productos"
               [ngModelOptions]="{standalone: true}" [readonly]="readonlyFormulario"></textarea>
@@ -142,7 +144,7 @@
         <div class="contentCuantitativo">
           <div class="container-border">
             <h4>&nbsp;&nbsp;&nbsp;&nbsp;Digite la información *&nbsp;&nbsp;&nbsp;&nbsp;</h4>
-            <textarea class="textareaContenido" autoresize id="dificultades"
+            <textarea class="textareaContenidoModificable" autoresize id="dificultades"
               placeholder="* Establezca en caso de existir, las dificultades asociadas a la implementación de la actividad general y la consecución de las metas planteadas."
               required [value]="datosCualitativo.dificultades" [(ngModel)]="datosCualitativo.dificultades"
               [ngModelOptions]="{standalone: true}" [readonly]="readonlyFormulario"></textarea>
@@ -151,10 +153,15 @@
 
         <div class="container-border" *ngIf="mostrarObservaciones">
           <h4>&nbsp;&nbsp;&nbsp;&nbsp;{{txtObservaciones}}&nbsp;&nbsp;&nbsp;&nbsp;</h4>
-          <textarea class="textareaContenido" autoresize id="observaciones"
+          <textarea  *ngIf="ObservacionesPlaneacion && mostrarObservaciones" class="textareaContenidoModificable" autoresize id="observaciones"
             [placeholder]="txtPlaceHolderObservaciones"
-            formControlName="observaciones" required [value]="datosCualitativo.observaciones" ngModel
-            [(ngModel)]="datosCualitativo.observaciones" [readonly]="readonlyObservacion"></textarea>
+            formControlName="observaciones" required [value]="datosCualitativo.observaciones_planeacion" [ngModelOptions]="{standalone: true}"
+            [(ngModel)]="datosCualitativo.observaciones_planeacion" [readonly]="readonlyObservacion"></textarea>
+          <textarea *ngIf="ObservacionesDependencia && mostrarObservaciones" class="textareaContenidoModificable" autoresize id="observaciones"
+            [placeholder]="txtPlaceHolderObservaciones"
+            formControlName="observaciones" required [value]="datosCualitativo.observaciones_dependencia" [ngModelOptions]="{standalone: true}"
+            [(ngModel)]="datosCualitativo.observaciones_dependencia"
+            [readonly]="readonlyObservacion"></textarea>
         </div>
 
         <div class="container-button3">
@@ -221,8 +228,11 @@
 
             <ng-container matColumnDef="observaciones">
               <td class="rowText" mat-cell *matCellDef="let element">
-                <textarea class="form-control" style="width: 90%; min-height: 50px; max-height:100px;" matInput placeholder="Sin observación"
-                  [readonly]="readonlyObservacion" [value]="element.observaciones" [(ngModel)]="element.observaciones"
+                <textarea *ngIf="ObservacionesPlaneacion" class="form-control" style="width: 90%; min-height: 50px; max-height:100px;" matInput placeholder="Sin observación"
+                  [readonly]="readonlyObservacion" [value]="element.observaciones_planeacion" [(ngModel)]="element.observaciones_planeacion"
+                  [ngModelOptions]="{standalone: true}" required></textarea>
+                <textarea *ngIf="ObservacionesDependencia" class="form-control" style="width: 90%; min-height: 50px; max-height:100px;" matInput placeholder="Sin observación"
+                  [readonly]="readonlyObservacion" [value]="element.observaciones_dependencia" [(ngModel)]="element.observaciones_dependencia"
                   [ngModelOptions]="{standalone: true}" required></textarea>
               </td>
             </ng-container>
