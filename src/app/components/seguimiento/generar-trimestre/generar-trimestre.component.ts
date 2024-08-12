@@ -21,6 +21,7 @@ import { environment } from 'src/environments/environment';
 import Swal from 'sweetalert2';
 import { EvidenciasDialogComponent } from '../evidencias/evidencias-dialog.component';
 import { CodigosService } from '@udistrital/planeacion-utilidades-module';
+import { DataRequestMID } from 'src/app/models/dataRequest';
 
 @Component({
   selector: 'app-generar-trimestre',
@@ -438,11 +439,11 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
               this.planId + `/` + this.indexActividad + `/` + this.trimestreId
             )
             .subscribe(
-              (data: any) => {
+              (data: DataRequestMID) => {
                 if (data) {
-                  this.documentos = data.Data.seguimiento;
+                  this.documentos = data.data.seguimiento;
                   this.seguimiento.evidencia = this.documentos;
-                  this.estadoActividad = data.Data.estadoActividad.nombre;
+                  this.estadoActividad = data.data.estadoActividad.nombre;
                   this.verificarFormulario();
                   Swal.fire({
                     title: 'Documento(s) actualizado(s)',
@@ -534,10 +535,10 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
               this.planId + `/` + this.indexActividad + `/` + this.trimestreId
             )
             .subscribe(
-              (data: any) => {
+              (data: DataRequestMID) => {
                 if (data) {
-                  this.estadoActividad = data.Data.estadoActividad.nombre;
-                  this.documentos = data.Data.seguimiento;
+                  this.estadoActividad = data.data.estadoActividad.nombre;
+                  this.documentos = data.data.seguimiento;
                   this.seguimiento.evidencia = this.documentos;
                   this.verificarFormulario();
 
@@ -627,22 +628,22 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
         this.trimestreId
       )
       .subscribe(
-        async (data: any) => {
-          if (data.Data != '') {
-            this.seguimiento = data.Data;
+        async (data: DataRequestMID) => {
+          if (data.data != '') {
+            this.seguimiento = data.data;
             this.unidad = this.seguimiento.informacion.unidad;
             this.plan = this.seguimiento.informacion.nombre;
             this.id_actividad = this.seguimiento.id_actividad;
-            this.documentos = JSON.parse(JSON.stringify(data.Data.evidencia));
-            this.datosIndicadores = data.Data.cuantitativo.indicadores;
+            this.documentos = JSON.parse(JSON.stringify(data.data.evidencia));
+            this.datosIndicadores = data.data.cuantitativo.indicadores;
             this.datosResultados.data = JSON.parse(
-              JSON.stringify(data.Data.cuantitativo.resultados)
+              JSON.stringify(data.data.cuantitativo.resultados)
             );
 
             this.numeradorOriginal = [];
             this.denominadorOriginal = [];
             let resultados = JSON.parse(
-              JSON.stringify(data.Data.cuantitativo.indicadores)
+              JSON.stringify(data.data.cuantitativo.indicadores)
             );
             resultados.forEach((indicador: any) => {
               this.numeradorOriginal.push(
@@ -653,7 +654,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
               );
             });
 
-            this.datosCualitativo = data.Data.cualitativo;
+            this.datosCualitativo = data.data.cualitativo;
 
             this.estadoActividad = this.seguimiento.estado.nombre;
             this.estadoSeguimiento = this.seguimiento.estadoSeguimiento;
@@ -672,8 +673,8 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
               }
             }
 
-            this.trimestreAbr = data.Data.informacion.trimestre;
-            if (data.Data.informacion.trimestre != 'T1') {
+            this.trimestreAbr = data.data.informacion.trimestre;
+            if (data.data.informacion.trimestre != 'T1') {
               this.calcular = true;
 
               if (this.datosResultados.data[0].indicador != 0) {
@@ -759,7 +760,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
               this.planId + `/` + this.indexActividad + `/` + this.trimestreId
             )
             .subscribe(
-              (data: any) => {
+              (data: DataRequestMID) => {
                 if (data) {
                   this.setCodigoNotificacion();
                   Swal.fire({
@@ -837,7 +838,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
               this.planId + `/` + this.indexActividad + `/` + this.trimestreId
             )
             .subscribe(
-              (data: any) => {
+              (data: DataRequestMID) => {
                 if (data) {
                   this.setCodigoNotificacion();
                   Swal.fire({
@@ -900,7 +901,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
               this.planId + `/` + this.indexActividad + `/` + this.trimestreId
             )
             .subscribe(
-              (data: any) => {
+              (data: DataRequestMID) => {
                 if (data) {
                   this.setCodigoNotificacion();
                   Swal.fire({
@@ -966,9 +967,9 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
               mod,
               this.indexActividad
             )
-            .subscribe((data: any) => {
+            .subscribe((data: DataRequestMID) => {
               if (data) {
-                if (data.Success) {
+                if (data.success) {
                   this.setCodigoNotificacion();
                   Swal.fire({
                     title: 'Seguimiento Generado',
@@ -983,7 +984,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
                     title: 'No es posible generar el reporte',
                     icon: 'error',
                     showConfirmButton: false,
-                    text: data.Data.motivo,
+                    text: data.data.motivo,
                     timer: 4000,
                   });
                 }
@@ -1315,9 +1316,9 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
       showCancelButton: true,
     }).then((result) => {
       if (result.isConfirmed) {
-        this.request.put(environment.SEGUIMIENTO_MID, `actividades/revision_jefe_dependencia`, this.seguimiento, this.planId + `/` + this.indexActividad + `/` + this.trimestreId).subscribe((data: any) => {
+        this.request.put(environment.SEGUIMIENTO_MID, `actividades/revision_jefe_dependencia`, this.seguimiento, this.planId + `/` + this.indexActividad + `/` + this.trimestreId).subscribe((data: DataRequestMID) => {
           if (data) {
-            if (data.Data.Observación) {
+            if (data.data.Observación) {
               Swal.fire({
                 title: 'Información de seguimiento actualizada',
                 text: 'Las observaciones hechas al seguimiento se ha guardado satisfactoriamente',
@@ -1389,10 +1390,10 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
               this.planId + `/` + this.indexActividad + `/` + this.trimestreId
             )
             .subscribe({
-              next: (data: any) => {
+              next: (data: DataRequestMID) => {
                 if (data) {
                   this.setCodigoNotificacion();
-                  if (data.Data.Observación) {
+                  if (data.data.Observación) {
                     Swal.fire({
                       title: 'Información de seguimiento actualizada',
                       text: 'Las observaciones hechas al seguimiento se ha guardado satisfactoriamente',
@@ -1490,7 +1491,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
       showCancelButton: true,
     }).then((result) => {
       if (result.isConfirmed) {
-        this.request.put(environment.SEGUIMIENTO_MID, `actividades/retornar_jefe_dependencia`, this.seguimiento, this.planId + `/` + this.indexActividad + `/` + this.trimestreId).subscribe((data: any) => {
+        this.request.put(environment.SEGUIMIENTO_MID, `actividades/retornar_jefe_dependencia`, this.seguimiento, this.planId + `/` + this.indexActividad + `/` + this.trimestreId).subscribe((data: DataRequestMID) => {
           if (data) {
             Swal.fire({
               title: 'Información de seguimiento actualizada',
@@ -1549,7 +1550,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
               this.planId + `/` + this.indexActividad + `/` + this.trimestreId
             )
             .subscribe(
-              (data: any) => {
+              (data: DataRequestMID) => {
                 if (data) {
                   this.setCodigoNotificacion();
                   Swal.fire({

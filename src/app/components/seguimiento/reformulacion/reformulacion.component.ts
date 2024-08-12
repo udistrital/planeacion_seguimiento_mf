@@ -8,7 +8,7 @@ import { DataRequest } from 'src/app/models/dataRequest';
 import { Dependencia } from 'src/app/models/dependencia';
 import { EstadoPlan } from 'src/app/models/estadoPlan';
 import { Parametro } from 'src/app/models/parametro';
-import Plan from 'src/app/models/plan';
+import PlanResumido from 'src/app/models/plan';
 import {
   Reformulacion,
   ReformulacionStorage,
@@ -31,18 +31,18 @@ export class ReformulacionComponent implements OnInit {
 
   unidades: Dependencia[] = [];
   vigencias: Vigencia[] = [];
-  planes: Plan[] = [];
+  planes: PlanResumido[] = [];
 
   rol!: string;
   unidadSeleccionada: Dependencia | undefined = undefined;
   vigenciaSeleccionada: Vigencia | undefined = undefined;
-  planSeleccionado: Plan | undefined = undefined;
+  planSeleccionado: PlanResumido | undefined = undefined;
 
   columnasMostradas!: string[];
-  informacionTabla: MatTableDataSource<Plan>;
+  informacionTabla: MatTableDataSource<PlanResumido>;
   inputsFiltros!: NodeListOf<HTMLInputElement>;
 
-  planesTabla: Plan[] = [];
+  planesTabla: PlanResumido[] = [];
 
   private autenticationService = new ImplicitAutenticationService();
 
@@ -139,7 +139,7 @@ export class ReformulacionComponent implements OnInit {
                 .subscribe({
                   next: async (data: DataRequest) => {
                     if (data) {
-                      (data.Data as Plan[]).forEach((plan) => {
+                      (data.Data as PlanResumido[]).forEach((plan) => {
                         if (
                           !this.planesTabla.some(
                             (p) =>
@@ -162,7 +162,7 @@ export class ReformulacionComponent implements OnInit {
                       });
                       Swal.close();
                       if (this.planesTabla.length !== 0) {
-                        this.informacionTabla = new MatTableDataSource<Plan>(
+                        this.informacionTabla = new MatTableDataSource<PlanResumido>(
                           this.planesTabla
                         );
                         this.informacionTabla.filterPredicate = (plan, _) =>
@@ -198,7 +198,7 @@ export class ReformulacionComponent implements OnInit {
               const reformulaciones = data.Data as Reformulacion[];
               let estadosReformulacion: Parametro[] = [];
               for (const reformulacion of reformulaciones) {
-                await new Promise<Plan>((resolve) => {
+                await new Promise<PlanResumido>((resolve) => {
                   this.request
                     .get(
                       environment.PLANES_CRUD,
@@ -207,7 +207,7 @@ export class ReformulacionComponent implements OnInit {
                     .subscribe({
                       next: (data: DataRequest) => {
                         if (data.Data) {
-                          let planAux: Plan = data.Data;
+                          let planAux: PlanResumido = data.Data;
                           planAux.dependencia_nombre = this.unidades.find(
                             (u) => u.Id.toString() === planAux.dependencia_id
                           )!.Nombre;
@@ -247,7 +247,7 @@ export class ReformulacionComponent implements OnInit {
               }
               Swal.close();
               if (this.planesTabla.length !== 0) {
-                this.informacionTabla = new MatTableDataSource<Plan>(
+                this.informacionTabla = new MatTableDataSource<PlanResumido>(
                   this.planesTabla
                 );
                 this.informacionTabla.filterPredicate = (plan, _) =>
@@ -428,7 +428,7 @@ export class ReformulacionComponent implements OnInit {
         next: async (data: DataRequest) => {
           if (data) {
             this.planes = [];
-            (data.Data as Plan[]).forEach((plan) => {
+            (data.Data as PlanResumido[]).forEach((plan) => {
               if (!this.planes.some((p) => p.nombre === plan.nombre)) {
                 this.planes.push(plan);
               }
@@ -486,11 +486,11 @@ export class ReformulacionComponent implements OnInit {
     this.planes = [];
   }
 
-  onChangePlan(plan: Plan) {
+  onChangePlan(plan: PlanResumido) {
     this.planSeleccionado = plan;
   }
 
-  consultar(planTraido?: Plan) {
+  consultar(planTraido?: PlanResumido) {
     if (planTraido) {
       const dependencia = this.unidades.find(
         (u) => u.Id.toString() === planTraido.dependencia_id
@@ -545,8 +545,8 @@ export class ReformulacionComponent implements OnInit {
             ).Nombre,
             vigencia: (this.formSelect.get('selectVigencia')?.value as Vigencia)
               .Nombre,
-            plan: (this.formSelect.get('selectPlan')?.value as Plan).nombre,
-            plan_id: (this.formSelect.get('selectPlan')?.value as Plan)._id,
+            plan: (this.formSelect.get('selectPlan')?.value as PlanResumido).nombre,
+            plan_id: (this.formSelect.get('selectPlan')?.value as PlanResumido)._id,
           } as ReformulacionStorage)
         );
         this.router.navigate(['reformulacion', 'solicitud']);
@@ -554,7 +554,7 @@ export class ReformulacionComponent implements OnInit {
     }
   }
 
-  async aprobar({ reformulacion }: Plan) {
+  async aprobar({ reformulacion }: PlanResumido) {
     if (reformulacion) {
       let nuevaReformulacion: Reformulacion = {
         ...reformulacion,
@@ -585,7 +585,7 @@ export class ReformulacionComponent implements OnInit {
       }
     }
   }
-  filtroTabla(p: Plan) {
+  filtroTabla(p: PlanResumido) {
     if (!this.inputsFiltros) {
       this.inputsFiltros = document.querySelectorAll('th > input');
     }
