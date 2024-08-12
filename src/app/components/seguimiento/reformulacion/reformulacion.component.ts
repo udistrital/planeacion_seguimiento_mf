@@ -556,30 +556,59 @@ export class ReformulacionComponent implements OnInit {
 
   async aprobar({ reformulacion }: PlanResumido) {
     if (reformulacion) {
-      let nuevaReformulacion: Reformulacion = {
-        ...reformulacion,
-        activo: false,
-        estado_id: parseInt(this.ID_ESTADO_APROBADO),
-      };
       if (reformulacion.estado_id.toString() === this.ID_ESTADO_FORMULACION) {
         this.request
-          .put(
-            environment.PLANES_CRUD,
-            'reformulacion',
-            nuevaReformulacion,
-            nuevaReformulacion._id
+          .get(
+            environment.SEGUIMIENTO_MID,
+            `reformulacion/validar/${reformulacion.plan_id}`
           )
           .subscribe({
             next: (data) => {
-              if (data.Data) {
-                Swal.fire({
-                  title: 'Reformulación aprobada',
-                  icon: 'success',
-                  showConfirmButton: false,
-                  timer: 2000,
-                });
-                window.location.reload();
+              if (data) {
+                this.request
+                  .get(
+                    environment.SEGUIMIENTO_MID,
+                    `reformulacion/aprobar/${reformulacion._id}`
+                  )
+                  .subscribe({
+                    next: (data) => {
+                      if (data) {
+                        Swal.close();
+                        console.log(data);
+                        Swal.fire({
+                          title: 'Reformulación aprobada',
+                          text: 'La reformulación ha sido procesada exitosamente.',
+                          icon: 'success',
+                          showConfirmButton: false,
+                          timer: 2500,
+                        });
+                        window.location.reload();
+                      }
+                    },
+                    error: (error) => {
+                      console.error(error);
+                      Swal.close();
+                      Swal.fire({
+                        title: 'Error en la operación',
+                        text: `No fue posible realizar la solicitud, ${error.error.message}`,
+                        icon: 'error',
+                        showConfirmButton: false,
+                        timer: 2500,
+                      });
+                    },
+                  });
               }
+            },
+            error: (error) => {
+              console.error(error);
+              Swal.close();
+              Swal.fire({
+                title: 'Error en la operación',
+                text: `No fue posible realizar la solicitud, ${error.error.message}`,
+                icon: 'error',
+                showConfirmButton: false,
+                timer: 2500,
+              });
             },
           });
       }
