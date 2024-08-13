@@ -646,114 +646,94 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
       willOpen: () => {
         Swal.showLoading();
       },
-    });
-    await this.request
-      .get(
-        environment.SEGUIMIENTO_MID,
-        `seguimiento/` +
-        this.planId +
-        `/` +
-        this.indexActividad +
-        `/` +
-        this.trimestreId
-      )
-      .subscribe(
-        async (data: any) => {
-          if (data.Data != '') {
-            this.seguimiento = data.Data;
-            this.unidad = this.seguimiento.informacion.unidad;
-            this.plan = this.seguimiento.informacion.nombre;
-            this.id_actividad = this.seguimiento.id_actividad;
-            this.documentos = JSON.parse(JSON.stringify(data.Data.evidencia));
-            this.datosIndicadores = data.Data.cuantitativo.indicadores;
-            this.datosResultados.data = JSON.parse(
-              JSON.stringify(data.Data.cuantitativo.resultados)
-            );
+    })
+    await this.request.get(environment.SEGUIMIENTO_MID, `seguimiento/` + this.planId + `/` + this.indexActividad + `/` + this.trimestreId).subscribe(async (data: any) => {
+      if (data.Data != '') {
+        this.seguimiento = data.Data;
+        this.unidad = this.seguimiento.informacion.unidad;
+        this.plan = this.seguimiento.informacion.nombre;
+        this.id_actividad = this.seguimiento.id_actividad;
+        this.documentos = JSON.parse(JSON.stringify(data.Data.evidencia));
+        this.datosIndicadores = data.Data.cuantitativo.indicadores;
+        this.datosResultados = JSON.parse(JSON.stringify(data.Data.cuantitativo.resultados));
 
-            this.numeradorOriginal = [];
-            this.denominadorOriginal = [];
-            let resultados = JSON.parse(
-              JSON.stringify(data.Data.cuantitativo.indicadores)
-            );
-            resultados.forEach((indicador: any) => {
-              this.numeradorOriginal.push(
-                indicador.reporteNumerador ? indicador.reporteNumerador : 0
-              );
-              this.denominadorOriginal.push(
-                indicador.reporteDenominador ? indicador.reporteDenominador : 0
-              );
-            });
+        this.numeradorOriginal = [];
+        this.denominadorOriginal = [];
+        let resultados = JSON.parse(JSON.stringify(data.Data.cuantitativo.indicadores));
+        resultados.forEach((indicador: any) => {
+          this.numeradorOriginal.push(indicador.reporteNumerador ? indicador.reporteNumerador : 0);
+          this.denominadorOriginal.push(indicador.reporteDenominador ? indicador.reporteDenominador : 0);
+        });
 
-            this.datosCualitativo = data.Data.cualitativo;
+        this.datosCualitativo = data.Data.cualitativo;
 
-            this.estadoActividad = this.seguimiento.estado.nombre;
-            this.estadoSeguimiento = this.seguimiento.estadoSeguimiento;
-            this.verificarFormulario();
-            this.enviarNotificacion();
+        this.estadoActividad = this.seguimiento.estado.nombre;
+        this.estadoSeguimiento = this.seguimiento.estadoSeguimiento;
+        this.verificarFormulario();
+        this.enviarNotificacion();
 
-            if (this.estadoActividad != 'Sin reporte') {
-              if (this.rol == "JEFE_DEPENDENCIA" || this.rol == "ASISTENTE_DEPENDENCIA") {
-                if (this.datosCualitativo.observaciones_dependencia == "" || this.datosCualitativo.observaciones_dependencia == undefined || this.datosCualitativo.observaciones_dependencia == "Sin observación") {
-                  this.datosCualitativo.observaciones_dependencia = ""
-                } else {
-                  this.mostrarObservaciones = true;
-                }
-              } else if (this.rol == "PLANEACION" || this.rol == "ASISTENTE_PLANEACION") {
-                if (this.datosCualitativo.observaciones_planeacion == "" || this.datosCualitativo.observaciones_planeacion == undefined || this.datosCualitativo.observaciones_planeacion == "Sin observación") {
-                  this.datosCualitativo.observaciones_planeacion = ""
-                } else {
-                  this.mostrarObservaciones = true;
-                }
-              }
+        if (this.estadoActividad != "Sin reporte") {
+          if (this.rol == "JEFE_DEPENDENCIA" || this.rol == "ASISTENTE_DEPENDENCIA") {
+            if (this.datosCualitativo.observaciones_dependencia == "" || this.datosCualitativo.observaciones_dependencia == undefined || this.datosCualitativo.observaciones_dependencia == "Sin observación") {
+              this.datosCualitativo.observaciones_dependencia = ""
+            } else {
+              this.mostrarObservaciones = true;
             }
-
-            this.trimestreAbr = data.Data.informacion.trimestre;
-            if (data.Data.informacion.trimestre != 'T1') {
-              this.calcular = true;
-
-              if (this.datosResultados.data[0].indicador != 0) {
-                this.calcular = false;
-              }
+          } else if (this.rol == "PLANEACION" || this.rol == "ASISTENTE_PLANEACION") {
+            if (this.datosCualitativo.observaciones_planeacion == "" || this.datosCualitativo.observaciones_planeacion == undefined || this.datosCualitativo.observaciones_planeacion == "Sin observación") {
+              this.datosCualitativo.observaciones_planeacion = ""
+            } else {
+              this.mostrarObservaciones = true;
             }
-
-            for (let index = 0; index < this.datosIndicadores.length; index++) {
-              const indicador = this.datosIndicadores[index];
-              if (this.estadoActividad != 'Sin reporte') {
-                if ((indicador.observaciones_planeacion == "" || indicador.observaciones_planeacion == undefined) && (this.rol != "JEFE_DEPENDENCIA" && this.rol != "ASISTENTE_DEPENDENCIA")) {
-                  this.datosIndicadores[index].observaciones_planeacion = "";
-                }
-              }
-
-              if (this.documentos == null) {
-                this.documentos = [];
-              }
-
-              for (let index = 0; index < this.documentos.length; index++) {
-                const documento = this.documentos[index];
-                if (this.estadoActividad != 'Sin reporte') {
-                  if (documento.Observacion == '') {
-                    this.documentos[index].Observacion = '';
-                  } else {
-                    this.mostrarObservaciones = true;
-                  }
-                }
-              }
-
-              Swal.close();
-            }
-          },
-          (error) => {
-            console.error(error);
-            Swal.close();
-            Swal.fire({
-              title: 'Error en la operación',
-              text: `No se encontraron datos registrados`,
-              icon: 'warning',
-              showConfirmButton: false,
-              timer: 2500,
-            });
           }
-      );
+        }
+
+        this.trimestreAbr = data.Data.informacion.trimestre;
+        if (data.Data.informacion.trimestre != "T1") {
+          this.calcular = true;
+
+          if (this.datosResultados.data[0].indicador != 0) {
+            this.calcular = false;
+          }
+        }
+
+        for (let index = 0; index < this.datosIndicadores.length; index++) {
+          const indicador = this.datosIndicadores[index];
+          if (this.estadoActividad != "Sin reporte") {
+            if ((indicador.observaciones_planeacion == "" || indicador.observaciones_planeacion == undefined) && (this.rol != "JEFE_DEPENDENCIA" && this.rol != "ASISTENTE_DEPENDENCIA")) {
+              this.datosIndicadores[index].observaciones_planeacion = "";
+            }
+          }
+        }
+
+        if (this.documentos == null) {
+          this.documentos = [];
+        }
+
+        for (let index = 0; index < this.documentos.length; index++) {
+          const documento = this.documentos[index];
+          if (this.estadoActividad != "Sin reporte") {
+            if (documento.Observacion == "") {
+              this.documentos[index].Observacion = "";
+            } else {
+              this.mostrarObservaciones = true;
+            }
+          }
+        }
+
+        Swal.close();
+      }
+    }, (error) => {
+      console.error(error)
+      Swal.close();
+      Swal.fire({
+        title: 'Error en la operación',
+        text: `No se encontraron datos registrados`,
+        icon: 'warning',
+        showConfirmButton: false,
+        timer: 2500
+      })
+    })
   }
 
   guardarCualitativo() {

@@ -155,11 +155,11 @@
           <h4>&nbsp;&nbsp;&nbsp;&nbsp;{{txtObservaciones}}&nbsp;&nbsp;&nbsp;&nbsp;</h4>
           <textarea  *ngIf="ObservacionesPlaneacion && mostrarObservaciones" class="textareaContenidoModificable" autoresize id="observaciones"
             [placeholder]="txtPlaceHolderObservaciones"
-            formControlName="observaciones" required [value]="datosCualitativo.observaciones_planeacion" [ngModelOptions]="{standalone: true}"
+            formControlName="observaciones" required [value]="datosCualitativo.observaciones_planeacion" ngModel
             [(ngModel)]="datosCualitativo.observaciones_planeacion" [readonly]="readonlyObservacion"></textarea>
           <textarea *ngIf="ObservacionesDependencia && mostrarObservaciones" class="textareaContenidoModificable" autoresize id="observaciones"
             [placeholder]="txtPlaceHolderObservaciones"
-            formControlName="observaciones" required [value]="datosCualitativo.observaciones_dependencia" [ngModelOptions]="{standalone: true}"
+            formControlName="observaciones" required [value]="datosCualitativo.observaciones_dependencia" ngModel
             [(ngModel)]="datosCualitativo.observaciones_dependencia"
             [readonly]="readonlyObservacion"></textarea>
         </div>
