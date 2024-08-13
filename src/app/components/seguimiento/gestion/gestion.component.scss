@@ -48,6 +48,7 @@
 input {
   background: none;
 }
+
 .unidad,
 .plan {
   border: solid 1px;
@@ -86,6 +87,7 @@ input {
 .mdc-button__label {
   color: white;
 }
+
 .background-button {
   border-radius: 8px;
   width: 29%;
@@ -128,4 +130,9 @@ input {
 
 .conObservacion {
   background-color: var(--warning-main);
+}
+
+.verificada {
+  background-color: var(--md-accent-A200);
+  color: white;
 }
