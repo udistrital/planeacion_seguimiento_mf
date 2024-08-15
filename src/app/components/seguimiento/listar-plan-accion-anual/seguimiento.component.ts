@@ -669,19 +669,25 @@ export class ListComponent implements OnInit, AfterViewInit {
     });
 
     this.auxEstadosSeguimientos = [];
-    let posicionTrimestre = 0;
-    let numReformulacion = 0;
-      // Recorre las diferentes versiones para obtener los seguimientos respectivos
-    for (let index = 0; index < this.dataSource.data.length; index++) {
-      const version = this.dataSource.data[index];
+    let posicionTrimestreEnEvaluacion = 0;
+    let plan_actual: any = undefined;
+    this.dataSource.data = []
+    // Recorre las diferentes versiones para obtener los seguimientos respectivos
+    for (let index = 0; index < this.planesMostrar.length; index++) {
+      const version: Plan = this.planesMostrar[index];
       if (
         this.rol != undefined &&
         (this.rol == 'PLANEACION' || this.rol == 'ASISTENTE_PLANEACION')
       ) {
         Swal.update({
-          text: `${index + 1} de ${this.dataSource.data.length}`,
+          text: `${index + 1} de ${this.planesMostrar.length}`,
         });
         Swal.showLoading();
+      }
+      if(plan_actual === undefined){
+        plan_actual = this.planesMostrar[index]
+      } else if(plan_actual.Nombre !== this.planesMostrar[index].Nombre){
+        plan_actual = this.planesMostrar[index]
       }
 
       await new Promise(async (resolver, rechazar) => {
@@ -691,23 +697,14 @@ export class ListComponent implements OnInit, AfterViewInit {
             `reformulacion?query=plan_id:${version._id}`
           )
           .subscribe(async (data: DataRequest) => {
-            // Llenar todo de gris
-            for (let i = 0; i < 4; i++) {
-              this.dataSource.data[index][
-                `t${i + 1}class`
-              ] = 'gris';
-              this.dataSource.data[index][
-                `t${i + 1}estado`
-              ] = 'Inhabilitado';
-            }
-            if (version.reformulacion) {
-              this.dataSource.data[index]['nombre'] = `${this.dataSource.data[index]['nombre']} - Reformulación ${++numReformulacion}`;
-            }
+            plan_actual[`t${posicionTrimestreEnEvaluacion + 1}_plan_id`] = version._id;
             if ((data.Data as Reformulacion[]).length === 0) {
               // Proceso normal
-              let trimestre = this.trimestres[posicionTrimestre];
-              while (posicionTrimestre < 4) {
+              let trimestre = this.trimestres[posicionTrimestreEnEvaluacion];
+              //let habilitadoParaEvaluar = true
+              while (posicionTrimestreEnEvaluacion < 4) {
                 await new Promise(async (resolve, reject) => {
+                  plan_actual[`t${posicionTrimestreEnEvaluacion + 1}_plan_id`] = version._id;
                   this.request
                     .get(
                       environment.PLANES_CRUD,
@@ -769,39 +766,37 @@ export class ListComponent implements OnInit, AfterViewInit {
                         });
                         let strFechaHoy = new Date(auxFechaCol).toISOString();
                         let fechaHoy = new Date(strFechaHoy);
-
                         if (estadoTemp == 'Reporte Avalado') {
-                          this.dataSource.data[index][
-                            `t${posicionTrimestre + 1}class`
+                          plan_actual[
+                            `t${posicionTrimestreEnEvaluacion + 1}class`
                           ] = 'verde';
-                          this.dataSource.data[index]['estado'] = estadoTemp;
+                          plan_actual['estado'] = estadoTemp;
                         } else if (
                           fechaHoy >=
-                            this.trimestres[posicionTrimestre].fecha_inicio &&
+                            this.trimestres[posicionTrimestreEnEvaluacion].fecha_inicio &&
                           fechaHoy <=
-                            this.trimestres[posicionTrimestre].fecha_fin
+                            this.trimestres[posicionTrimestreEnEvaluacion].fecha_fin
                         ) {
-                          this.dataSource.data[index][
-                            `t${posicionTrimestre + 1}class`
+                          plan_actual[
+                            `t${posicionTrimestreEnEvaluacion + 1}class`
                           ] = 'amarillo';
-                          this.dataSource.data[index]['estado'] = estadoTemp;
+                          plan_actual['estado'] = estadoTemp;
                         } else {
-                          this.dataSource.data[index][
-                            `t${posicionTrimestre + 1}class`
+                          plan_actual[
+                            `t${posicionTrimestreEnEvaluacion + 1}class`
                           ] = 'gris';
                         }
-                        this.dataSource.data[index][
-                          `t${posicionTrimestre + 1}estado`
+                        plan_actual[
+                          `t${posicionTrimestreEnEvaluacion + 1}estado`
                         ] = estadoTemp;
-                        this.allPlanes = this.dataSource.data;
                         resolve(true);
                       } else {
                         resolve(false);
                       }
                     });
                 });
-                posicionTrimestre++;
-                trimestre = this.trimestres[posicionTrimestre];
+                posicionTrimestreEnEvaluacion++;
+                trimestre = this.trimestres[posicionTrimestreEnEvaluacion];
               }
               resolver(true);
             } else {
@@ -825,16 +820,11 @@ export class ListComponent implements OnInit, AfterViewInit {
                         posSeguimiento++
                       ) {
                         // Los seguimientos ya estan avalados desde la reformulación
-                        this.dataSource.data[index][
-                          `t${posicionTrimestre + 1}class`
-                        ] = 'verde';
-                        this.dataSource.data[index]['estado'] =
+                        plan_actual[`t${posicionTrimestreEnEvaluacion + 1}class`] = 'verde';
+                        plan_actual['estado'] = 'Reporte Avalado';
+                        plan_actual[`t${posicionTrimestreEnEvaluacion + 1}estado`] =
                           'Reporte Avalado';
-                        this.dataSource.data[index][
-                          `t${posicionTrimestre + 1}estado`
-                        ] = 'Reporte Avalado';
-                        posicionTrimestre++;
-                        this.allPlanes = this.dataSource.data;
+                        posicionTrimestreEnEvaluacion++;
                       }
                       resolve(true);
                     } else {
@@ -843,6 +833,11 @@ export class ListComponent implements OnInit, AfterViewInit {
                   });
               });
               resolver(true);
+            }
+            if (
+              posicionTrimestreEnEvaluacion === 4
+            ) {
+              this.dataSource.data.push(plan_actual);
             }
           });
       });
@@ -859,7 +854,7 @@ export class ListComponent implements OnInit, AfterViewInit {
       this.unidad = unidad;
     }
     if (this.unidadSelected && this.vigenciaSelected) {
-      await this.loadPlanes("unidad");
+      await this.loadPlanes('unidad');
     }
     this.allPlanes = this.dataSource.data;
   }
@@ -965,7 +960,7 @@ export class ListComponent implements OnInit, AfterViewInit {
         if (this.rol != undefined && (this.rol == 'PLANEACION' || this.rol == 'ASISTENTE_PLANEACION')) {
           await this.loadPlanes("vigencia");
         } else {
-          await this.loadPlanes("unidad");
+          await this.loadPlanes('unidad');
         }
       }
     }
@@ -1213,7 +1208,7 @@ export class ListComponent implements OnInit, AfterViewInit {
   gestionSeguimiento(plan: any) {
     if (plan.trimestre != undefined) {
       this.router.navigate([
-        'gestion-seguimiento/' + plan._id + '/' + plan.trimestre,
+      'gestion-seguimiento/'+plan[`${plan.trimestre.toLowerCase()}_plan_id`] + `/${plan.trimestre}`,
       ]);
     } else {
       Swal.fire({
@@ -1246,11 +1241,7 @@ export class ListComponent implements OnInit, AfterViewInit {
       this.dataSource.data[index]['estado'] =
         this.dataSource.data[index][`${trimestre.toLowerCase()}estado`];
     }
-    if(this.dataSource.data[index][`${trimestre.toLowerCase()}estado`] === 'Inhabilitado'){
-      this.dataSource.data[index]['trimestre'] = undefined;
-    } else {
-      this.dataSource.data[index]['trimestre'] = trimestre;
-    }
+    this.dataSource.data[index]['trimestre'] = trimestre;
   }
 
   limpiarCampoFechas() {
