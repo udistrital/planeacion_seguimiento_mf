@@ -285,3 +285,38 @@ ng-container {
   font-family: Arial, Helvetica, sans-serif;
   font-size: 15px;
 }
+
+.textareaContenidoModificable {
+  resize: vertical !important;
+  width: -webkit-fill-available;
+  width: -moz-available;
+  min-height: 90% !important;
+  height: 90%;
+  margin: -5px 0px;
+  border: none;
+  outline: none;
+  text-align: justify;
+  background: inherit;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 15px;
+}
+
+.button-container-actions {
+  display: flex !important;
+  justify-content: center !important;
+  gap: 1%;
+}
+
+.align-button-action {
+  display: flex !important;
+  width: max-content !important;
+  justify-content: center;
+  text-align: center;
+  // background-color: blue;
+}
+
+.background-button-action {
+  border-radius: 8px;
+  height: 40px !important;
+  // background-color: aqua;
+}

@@ -10,7 +10,6 @@ import { RequestManager } from 'src/app/services/requestManager.service';
 import { Notificaciones } from 'src/app/services/notificaciones';
 import { environment } from 'src/environments/environment';
 import Swal from 'sweetalert2';
-import * as CryptoJS from 'crypto-js';
 import * as bigInt from 'big-integer'
 import { DataRequest } from 'src/app/models/dataRequest';
 
@@ -20,7 +19,7 @@ import { DataRequest } from 'src/app/models/dataRequest';
   styleUrls: ['./gestion.component.scss'],
 })
 export class GestionComponent implements OnInit {
-  displayedColumns: string[] = ['index', 'dato', 'activo', 'gestion'];
+  displayedColumns: string[] = ['idactividad', 'index', 'dato', 'activo', 'gestion'];
   dataSource: MatTableDataSource<any>;
   planId: string = '';
   trimestreId: string = '';
@@ -181,6 +180,7 @@ export class GestionComponent implements OnInit {
         next: async (data: any) => {
           if (data) {
             this.seguimiento = data.Data;
+            this.planId = this.planId;
             this.estado = this.seguimiento.estado_seguimiento_id.nombre;
             await this.loadUnidad(this.seguimiento.plan_id.dependencia_id);
             this.loadVigencia(this.seguimiento.plan_id.vigencia)
@@ -251,8 +251,10 @@ export class GestionComponent implements OnInit {
         data.Data.forEach((actividad: any, index: number) => {
           if (actividad.estado.nombre === "Con observaciones") {
             actividad.estado.color = "conObservacion";
-          } else if (actividad.estado.nombre === "Actividad avalada" || actividad.estado.nombre === "Actividad Verificada") {
+          } else if (actividad.estado.nombre === "Actividad avalada") {
             actividad.estado.color = "avalada";
+          } else if (actividad.estado.nombre == "Actividad Verificada") {
+            actividad.estado.color = "verificada";
           }
         });
         this.dataSource.data = data.Data;
@@ -377,6 +379,7 @@ export class GestionComponent implements OnInit {
         this.request.put(environment.SEGUIMIENTO_MID, `seguimiento/revision_jefe_dependencia`, "{}", this.seguimiento._id).subscribe((data: any) => {
           if (data) {
             if (data.Success) {
+              this.codigoNotificacion = "SERJU"; // NOTIFICACION(SERJU)
               Swal.fire({
                 title: 'El reporte se ha enviado satisfactoriamente',
                 icon: 'success',
@@ -686,6 +689,7 @@ export class GestionComponent implements OnInit {
             this.seguimiento.estado_seguimiento_id = data.Data[0]._id;;
             this.request.put(environment.PLANES_CRUD, `seguimiento`, this.seguimiento, this.seguimiento._id).subscribe((data: any) => {
               if (data) {
+                this.codigoNotificacion = "SEAR"; // NOTIFICACION(SEAR)
                 Swal.fire({
                   title: 'Seguimiento en revisión',
                   icon: 'success',

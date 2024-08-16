@@ -20,7 +20,6 @@ import { Notificaciones } from "src/app/services/notificaciones";
 import { environment } from 'src/environments/environment';
 import Swal from 'sweetalert2';
 import { EvidenciasDialogComponent } from '../evidencias/evidencias-dialog.component';
-import * as CryptoJS from 'crypto-js';
 import * as bigInt from 'big-integer';
 
 @Component({
@@ -62,7 +61,8 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
     reporte: '',
     productos: '',
     dificultades: '',
-    observaciones: '',
+    observaciones_planeacion: '',
+    observaciones_dependencia: ''
   };
   formCualitativo: FormGroup;
   FORMATOS = [
@@ -120,7 +120,6 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
   estados: any[] = [];
   readonlyFormulario: boolean = true;
   readonlyObservacion: boolean = true;
-  denominadorFijo: boolean = true;
   unidad: string = '';
   vigencia: any;
   numeradorOriginal: number[] = [];
@@ -131,6 +130,8 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
   txtPlaceHolderObservaciones: string = '';
   codigoNotificacion: string = "";
   id_actividad: any;
+  ObservacionesPlaneacion?: boolean;
+  ObservacionesDependencia?: boolean;
 
   private gestorMethods = new GestorDocumentalMethods();
   private autenticationService = new ImplicitAutenticationService();
@@ -174,6 +175,8 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
     this.formCualitativo = this.formBuilder.group(this.datosCualitativo);
     this.indicadorSelected = false;
     this.mostrarObservaciones = false;
+    this.ObservacionesPlaneacion = false;
+    this.ObservacionesDependencia = false;
   }
 
   ngOnInit(): void { }
@@ -294,6 +297,8 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
           this.estadoSeguimiento === 'En revisión OAPC'
         );
         this.mostrarObservaciones = true;
+        this.ObservacionesPlaneacion = false;
+        this.ObservacionesDependencia = true;
       } else if (
         this.estadoActividad === 'Actividad avalada' ||
         this.estadoActividad === 'Actividad Verificada'
@@ -301,6 +306,15 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
         this.readonlyFormulario = true;
         this.readonlyObservacion = true;
         this.mostrarObservaciones = true;
+        this.ObservacionesPlaneacion = true;
+        this.ObservacionesDependencia = false;
+      }
+      if (this.estadoSeguimiento === 'En revisión OAPC') {
+        this.readonlyFormulario = true;
+        this.readonlyObservacion = false;
+        this.mostrarObservaciones = true;
+        this.ObservacionesPlaneacion = true;
+        this.ObservacionesDependencia = false;
       }
     } else if (this.rol == 'JEFE_DEPENDENCIA') {
       if (
@@ -316,6 +330,8 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
         if (this.estadoSeguimiento === 'En revisión JU') {
           this.readonlyObservacion = !(this.estadoSeguimiento === 'En revisión JU');
           this.mostrarObservaciones = true;
+          this.ObservacionesDependencia = true;
+          this.ObservacionesPlaneacion = false;
         } else {
           this.readonlyObservacion = true;
           this.mostrarObservaciones = false;
@@ -332,9 +348,13 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
         if (this.estadoSeguimiento === 'En revisión JU') {
           this.readonlyObservacion = !(this.estadoSeguimiento === 'En revisión JU');
           this.mostrarObservaciones = true;
+          this.ObservacionesDependencia = true;
+          this.ObservacionesPlaneacion = false;
         } else {
           this.readonlyObservacion = true;
           this.mostrarObservaciones = true;
+          this.ObservacionesDependencia = true;
+          this.ObservacionesPlaneacion = false;
         }
       } else if (
         this.estadoActividad === 'Actividad avalada' ||
@@ -343,6 +363,8 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
         this.readonlyFormulario = true;
         this.readonlyObservacion = true;
         this.mostrarObservaciones = true;
+        this.ObservacionesDependencia = true;
+        this.ObservacionesPlaneacion = false;
       }
     } else if (this.rol == 'ASISTENTE_DEPENDENCIA') {
       if (
@@ -368,6 +390,13 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
         }
         this.readonlyObservacion = true;
         this.mostrarObservaciones = true;
+        if (this.estadoSeguimiento === 'Con observaciones') {
+          this.ObservacionesPlaneacion = true;
+          this.ObservacionesDependencia = false;
+        } else if (this.estadoSeguimiento === 'Revisión Verificada con Observaciones') {
+          this.ObservacionesPlaneacion = false;
+          this.ObservacionesDependencia = true;
+        }
       } else if (
         this.estadoActividad === 'Actividad avalada' ||
         this.estadoActividad === 'Actividad Verificada'
@@ -375,6 +404,13 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
         this.readonlyFormulario = true;
         this.readonlyObservacion = true;
         this.mostrarObservaciones = true;
+        if (this.estadoSeguimiento === 'Actividad avalada') {
+          this.ObservacionesPlaneacion = true;
+          this.ObservacionesDependencia = false;
+        } else if (this.estadoSeguimiento === 'Actividad Verificada') {
+          this.ObservacionesPlaneacion = false;
+          this.ObservacionesDependencia = true;
+        }
       }
     }
 
@@ -610,114 +646,94 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
       willOpen: () => {
         Swal.showLoading();
       },
-    });
-    await this.request
-      .get(
-        environment.SEGUIMIENTO_MID,
-        `seguimiento/` +
-        this.planId +
-        `/` +
-        this.indexActividad +
-        `/` +
-        this.trimestreId
-      )
-      .subscribe(
-        async (data: any) => {
-          if (data.Data != '') {
-            this.seguimiento = data.Data;
-            this.unidad = this.seguimiento.informacion.unidad;
-            this.plan = this.seguimiento.informacion.nombre;
-            this.id_actividad = this.seguimiento.id_actividad;
-            this.documentos = JSON.parse(JSON.stringify(data.Data.evidencia));
-            this.datosIndicadores = data.Data.cuantitativo.indicadores;
-            this.datosResultados.data = JSON.parse(
-              JSON.stringify(data.Data.cuantitativo.resultados)
-            );
+    })
+    await this.request.get(environment.SEGUIMIENTO_MID, `seguimiento/` + this.planId + `/` + this.indexActividad + `/` + this.trimestreId).subscribe(async (data: any) => {
+      if (data.Data != '') {
+        this.seguimiento = data.Data;
+        this.unidad = this.seguimiento.informacion.unidad;
+        this.plan = this.seguimiento.informacion.nombre;
+        this.id_actividad = this.seguimiento.id_actividad;
+        this.documentos = JSON.parse(JSON.stringify(data.Data.evidencia));
+        this.datosIndicadores = data.Data.cuantitativo.indicadores;
+        this.datosResultados = JSON.parse(JSON.stringify(data.Data.cuantitativo.resultados));
 
-            this.numeradorOriginal = [];
-            this.denominadorOriginal = [];
-            let resultados = JSON.parse(
-              JSON.stringify(data.Data.cuantitativo.indicadores)
-            );
-            resultados.forEach((indicador: any) => {
-              this.numeradorOriginal.push(
-                indicador.reporteNumerador ? indicador.reporteNumerador : 0
-              );
-              this.denominadorOriginal.push(
-                indicador.reporteDenominador ? indicador.reporteDenominador : 0
-              );
-            });
+        this.numeradorOriginal = [];
+        this.denominadorOriginal = [];
+        let resultados = JSON.parse(JSON.stringify(data.Data.cuantitativo.indicadores));
+        resultados.forEach((indicador: any) => {
+          this.numeradorOriginal.push(indicador.reporteNumerador ? indicador.reporteNumerador : 0);
+          this.denominadorOriginal.push(indicador.reporteDenominador ? indicador.reporteDenominador : 0);
+        });
 
-            this.datosCualitativo = data.Data.cualitativo;
+        this.datosCualitativo = data.Data.cualitativo;
 
-            this.estadoActividad = this.seguimiento.estado.nombre;
-            this.estadoSeguimiento = this.seguimiento.estadoSeguimiento;
-            this.verificarFormulario();
-            this.enviarNotificacion();
+        this.estadoActividad = this.seguimiento.estado.nombre;
+        this.estadoSeguimiento = this.seguimiento.estadoSeguimiento;
+        this.verificarFormulario();
+        this.enviarNotificacion();
 
-            if (this.estadoActividad != 'Sin reporte') {
-              if (
-                this.datosCualitativo.observaciones == '' ||
-                this.datosCualitativo.observaciones == undefined ||
-                this.datosCualitativo.observaciones == 'Sin observación'
-              ) {
-                this.datosCualitativo.observaciones = '';
-              } else {
-                this.mostrarObservaciones = true;
-              }
+        if (this.estadoActividad != "Sin reporte") {
+          if (this.rol == "JEFE_DEPENDENCIA" || this.rol == "ASISTENTE_DEPENDENCIA") {
+            if (this.datosCualitativo.observaciones_dependencia == "" || this.datosCualitativo.observaciones_dependencia == undefined || this.datosCualitativo.observaciones_dependencia == "Sin observación") {
+              this.datosCualitativo.observaciones_dependencia = ""
+            } else {
+              this.mostrarObservaciones = true;
             }
-
-            this.trimestreAbr = data.Data.informacion.trimestre;
-            if (data.Data.informacion.trimestre != 'T1') {
-              this.calcular = true;
-
-              if (this.datosResultados.data[0].indicador != 0) {
-                this.calcular = false;
-              }
+          } else if (this.rol == "PLANEACION" || this.rol == "ASISTENTE_PLANEACION") {
+            if (this.datosCualitativo.observaciones_planeacion == "" || this.datosCualitativo.observaciones_planeacion == undefined || this.datosCualitativo.observaciones_planeacion == "Sin observación") {
+              this.datosCualitativo.observaciones_planeacion = ""
+            } else {
+              this.mostrarObservaciones = true;
             }
-
-            for (let index = 0; index < this.datosIndicadores.length; index++) {
-              const indicador = this.datosIndicadores[index];
-              if (this.estadoActividad != 'Sin reporte') {
-                if (
-                  (indicador.observaciones == '' || indicador.observaciones == undefined) &&
-                  (this.rol != "JEFE_DEPENDENCIA" && this.rol != "ASISTENTE_DEPENDENCIA")
-                ) {
-                  this.datosIndicadores[index].observaciones = '';
-                }
-              }
-            }
-
-            if (this.documentos == null) {
-              this.documentos = [];
-            }
-
-            for (let index = 0; index < this.documentos.length; index++) {
-              const documento = this.documentos[index];
-              if (this.estadoActividad != 'Sin reporte') {
-                if (documento.Observacion == '') {
-                  this.documentos[index].Observacion = '';
-                } else {
-                  this.mostrarObservaciones = true;
-                }
-              }
-            }
-
-            Swal.close();
           }
-        },
-        (error) => {
-          console.error(error);
-          Swal.close();
-          Swal.fire({
-            title: 'Error en la operación',
-            text: `No se encontraron datos registrados`,
-            icon: 'warning',
-            showConfirmButton: false,
-            timer: 2500,
-          });
         }
-      );
+
+        this.trimestreAbr = data.Data.informacion.trimestre;
+        if (data.Data.informacion.trimestre != "T1") {
+          this.calcular = true;
+
+          if (this.datosResultados.data[0].indicador != 0) {
+            this.calcular = false;
+          }
+        }
+
+        for (let index = 0; index < this.datosIndicadores.length; index++) {
+          const indicador = this.datosIndicadores[index];
+          if (this.estadoActividad != "Sin reporte") {
+            if ((indicador.observaciones_planeacion == "" || indicador.observaciones_planeacion == undefined) && (this.rol != "JEFE_DEPENDENCIA" && this.rol != "ASISTENTE_DEPENDENCIA")) {
+              this.datosIndicadores[index].observaciones_planeacion = "";
+            }
+          }
+        }
+
+        if (this.documentos == null) {
+          this.documentos = [];
+        }
+
+        for (let index = 0; index < this.documentos.length; index++) {
+          const documento = this.documentos[index];
+          if (this.estadoActividad != "Sin reporte") {
+            if (documento.Observacion == "") {
+              this.documentos[index].Observacion = "";
+            } else {
+              this.mostrarObservaciones = true;
+            }
+          }
+        }
+
+        Swal.close();
+      }
+    }, (error) => {
+      console.error(error)
+      Swal.close();
+      Swal.fire({
+        title: 'Error en la operación',
+        text: `No se encontraron datos registrados`,
+        icon: 'warning',
+        showConfirmButton: false,
+        timer: 2500
+      })
+    })
   }
 
   guardarCualitativo() {
@@ -1133,80 +1149,43 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
         const meta = parseFloat(this.datosIndicadores[index].meta);
         this.calcular = false;
 
-        if (denominador == 0.0 && numerador == 0.0) {
-          denominador = 100;
-          numerador = 100;
-          this.datosResultados.data[index].indicadorAcumulado = 1;
-          this.datosResultados.data[index].acumuladoNumerador = this.datosResultados.data[index].acumuladoNumerador;
-          this.datosResultados.data[index].acumuladoDenominador = this.datosResultados.data[index].acumuladoDenominador;
-          this.datosResultados.data[index].indicador = numerador / denominador;
-          var indicadorAcumulado = this.datosResultados.data[index].indicadorAcumulado;
-          var metaEvaluada = meta / 100;
-          this.datosResultados.data[index].avanceAcumulado = this.datosResultados.data[index].indicadorAcumulado / metaEvaluada;
-
-          if (indicador.tendencia == "Creciente") {
-            if (this.datosResultados.data[index].indicadorAcumulado > metaEvaluada) {
-              this.datosResultados.data[index].brechaExistente = 0;
-            } else {
-              this.datosResultados.data[index].brechaExistente = metaEvaluada - indicadorAcumulado;
-            }
-          } else {
-            if (this.datosResultados.data[index].indicadorAcumulado < metaEvaluada) {
-              this.datosResultados.data[index].brechaExistente = 0;
-            } else {
-              this.datosResultados.data[index].brechaExistente = indicadorAcumulado - metaEvaluada;
-            }
-          }
-
-          this.seguimiento.cuantitativo.resultados[index] = this.datosResultados.data[index];
-          continue;
-        }
-
         if (denominador == 0.0) {
           if (numerador == 0.0) {
-            if (indicador.denominador != "Denominador variable") {
+            if (indicador.denominador === "Denominador variable") {
+              denominador = 100;
+              numerador = 100;
+              this.datosResultados.data[index].indicadorAcumulado = 1 * 0.25;
+              this.datosResultados.data[index].acumuladoNumerador = this.datosResultados.data[index].acumuladoNumerador;
+              this.datosResultados.data[index].acumuladoDenominador = this.datosResultados.data[index].acumuladoDenominador;
+              this.datosResultados.data[index].indicador = numerador / denominador;
+              var metaEvaluada = meta / 100;
+              this.datosResultados.data[index].avanceAcumulado = (this.datosResultados.data[index].indicadorAcumulado / metaEvaluada);
+
+              if (indicador.tendencia == "Creciente") {
+                if (this.datosResultados.data[index].indicadorAcumulado > metaEvaluada) {
+                  this.datosResultados.data[index].brechaExistente = 0;
+                } else {
+                  this.datosResultados.data[index].brechaExistente = metaEvaluada - this.datosResultados.data[index].avanceAcumulado;
+                }
+              } else {
+                if (this.datosResultados.data[index].indicadorAcumulado < metaEvaluada) {
+                  this.datosResultados.data[index].brechaExistente = 0;
+                } else {
+                  this.datosResultados.data[index].brechaExistente = this.datosResultados.data[index].avanceAcumulado - metaEvaluada;
+                }
+              }
+
+              this.seguimiento.cuantitativo.resultados[index] = this.datosResultados.data[index];
+            } else {
               Swal.fire({
                 title: 'Error en la operación',
                 text: `No es posible la división entre cero para denominador fijo`,
                 icon: 'warning',
                 showConfirmButton: false,
                 timer: 3500
-              })
+              });
               indicador.reporteDenominador = null;
               indicador.reporteNumerador = null;
-            } else {
-              if (this.trimestreAbr == "T1" || this.datosResultados.data[index].divisionCero) {
-                this.datosResultados.data[index].divisionCero = true;
-                this.datosResultados.data[index].indicadorAcumulado = 1;
-                this.datosResultados.data[index].acumuladoNumerador = 0;
-                this.datosResultados.data[index].acumuladoDenominador = this.datosResultados.data[index].acumuladoDenominador;
-                this.datosResultados.data[index].indicador = 0;
-                this.numeradorOriginal = [];
-                this.denominadorOriginal = [];
-                this.calcular = true;
-
-                var indicadorAcumulado = this.datosResultados.data[index].indicadorAcumulado;
-                var metaEvaluada = meta / 100;
-
-                this.datosResultados.data[index].avanceAcumulado = this.datosResultados.data[index].indicadorAcumulado / metaEvaluada;
-
-                if (indicador.tendencia == "Creciente") {
-                  if (this.datosResultados.data[index].indicadorAcumulado > metaEvaluada) {
-                    this.datosResultados.data[index].brechaExistente = 0;
-                  } else {
-                    this.datosResultados.data[index].brechaExistente = metaEvaluada - indicadorAcumulado;
-                  }
-                } else {
-                  if (this.datosResultados.data[index].indicadorAcumulado < metaEvaluada) {
-                    this.datosResultados.data[index].brechaExistente = 0;
-                  } else {
-                    this.datosResultados.data[index].brechaExistente = indicadorAcumulado - metaEvaluada;
-                  }
-                }
-                this.seguimiento.cuantitativo.resultados[index] = this.datosResultados.data[index];
-              } else {
-                this.calcularBase(indicador, denominador, numerador, meta, index, true)
-              }
             }
           } else {
             Swal.fire({
@@ -1215,7 +1194,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
               icon: 'warning',
               showConfirmButton: false,
               timer: 3500
-            })
+            });
           }
         } else {
           if (this.trimestreAbr == "T1") {
@@ -1229,141 +1208,94 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
             this.denominadorOriginal = [];
             this.calcular = true;
           }
-          this.calcularBase(indicador, denominador, numerador, meta, index, false)
+          this.calcularBase(indicador, denominador, numerador, meta, index, false);
         }
       } else {
         Swal.fire({
           title: 'Error en la operación',
-          text: `Los datos de numerador y denominador no pueden estar vacios`,
+          text: `Los datos de numerador y denominador no pueden estar vacíos`,
           icon: 'warning',
           showConfirmButton: false,
           timer: 2500
-        })
+        });
       }
     }
   }
 
-  calcularBase(
-    indicador: any,
-    denominador: any,
-    numerador: any,
-    meta: any,
-    index: number,
-    ceros: boolean
-  ) {
+  calcularBase(indicador: any, denominador: number, numerador: number, meta: number, index: number, ceros: boolean) {
     this.datosResultados.data[index].divisionCero = false;
-    this.denominadorFijo = indicador.denominador != 'Denominador variable';
+    let esDenominadorFijo = indicador.denominador !== "Denominador variable"
     if (!Number.isNaN(denominador) && !Number.isNaN(numerador)) {
       this.datosIndicadores[index].reporteDenominador = denominador;
       this.datosIndicadores[index].reporteNumerador = numerador;
 
       if (!this.calcular) {
-        this.datosResultados.data[index].acumuladoNumerador -=
-          this.numeradorOriginal[index];
-        if (!this.denominadorFijo) {
-          this.datosResultados.data[index].acumuladoDenominador -=
-            this.denominadorOriginal[index];
+        this.datosResultados.data[index].acumuladoNumerador -= this.numeradorOriginal[index];
+        if (!esDenominadorFijo) {
+          this.datosResultados.data[index].acumuladoDenominador -= this.denominadorOriginal[index];
         }
-        this.datosResultados.data[index].indicadorAcumulado -=
-          this.datosResultados.data[index].indicador;
+        this.datosResultados.data[index].indicadorAcumulado -= this.datosResultados.data[index].indicador;
         this.datosResultados.data[index].indicador = 0;
       }
 
       this.datosResultados.data[index].acumuladoNumerador += numerador;
-      if (!this.denominadorFijo) {
-        this.datosResultados.data[index].acumuladoDenominador += denominador;
-      } else {
+      if (esDenominadorFijo) {
         this.datosResultados.data[index].acumuladoDenominador = denominador;
-      }
-
-      if (denominador != 0) {
-        if (this.datosIndicadores[index].unidad == 'Unidad') {
-          this.datosResultados.data[index].indicador = Math.round(
-            numerador / denominador
-          );
-        } else {
-          this.datosResultados.data[index].indicador =
-            Math.round((numerador / denominador) * 10000) / 10000;
-        }
       } else {
-        this.datosResultados.data[index].indicador =
-          this.datosIndicadores[index].unidad == 'Unidad' ? meta : meta / 100;
+        this.datosResultados.data[index].acumuladoDenominador += denominador;
       }
 
       if (this.datosResultados.data[index].divisionCero && ceros) {
         this.datosResultados.data[index].indicador = 0;
+      } else if (denominador != 0) {
+        let auxiliarDenominador = numerador / denominador;
+        if (this.datosIndicadores[index].unidad == "Unidad") {
+          this.datosResultados.data[index].indicador = Math.round(auxiliarDenominador);
+        } else {
+          this.datosResultados.data[index].indicador = Math.round(auxiliarDenominador * 10_000) / 10_000;
+        }
+      } else {
+        this.datosResultados.data[index].indicador = this.datosIndicadores[index].unidad == "Unidad" ? meta : meta / 100;
       }
 
       if (this.datosResultados.data[index].acumuladoDenominador != 0) {
+        let auxiliarIndicadorAcumulado = this.datosResultados.data[index].acumuladoNumerador / this.datosResultados.data[index].acumuladoDenominador
         if (this.datosIndicadores[index].unidad == 'Unidad') {
-          this.datosResultados.data[index].indicadorAcumulado =
-            Math.round(
-              (this.datosResultados.data[index].acumuladoNumerador /
-                this.datosResultados.data[index].acumuladoDenominador) *
-              100
-            ) / 100;
+          this.datosResultados.data[index].indicadorAcumulado = Math.round(auxiliarIndicadorAcumulado * 100) / 100;
         } else {
-          this.datosResultados.data[index].indicadorAcumulado =
-            Math.round(
-              (this.datosResultados.data[index].acumuladoNumerador /
-                this.datosResultados.data[index].acumuladoDenominador) *
-              10000
-            ) / 10000;
+          this.datosResultados.data[index].indicadorAcumulado = Math.round(auxiliarIndicadorAcumulado * 10_000) / 10_000;
         }
       } else {
-        this.datosResultados.data[index].indicadorAcumulado =
-          this.datosIndicadores[index].unidad == 'Unidad' ? meta : meta / 100;
+        this.datosResultados.data[index].indicadorAcumulado = this.datosIndicadores[index].unidad == 'Unidad' ? meta : meta / 100;
       }
-
-      var indicadorAcumulado =
-        this.datosResultados.data[index].indicadorAcumulado;
-      var metaEvaluada =
-        this.datosIndicadores[index].unidad == 'Unidad' ||
-          this.datosIndicadores[index].unidad == 'Tasa'
-          ? meta
-          : meta / 100;
-      if (indicador.tendencia == 'Creciente') {
-        if (
+      if (!esDenominadorFijo) {
+        this.datosResultados.data[index].indicadorAcumulado = this.datosResultados.data[index].indicadorAcumulado * 0.25;
+      }
+      let indicadorAcumulado = this.datosResultados.data[index].indicadorAcumulado;
+      let auxiliarMeta = this.datosIndicadores[index].unidad == "Unidad" || this.datosIndicadores[index].unidad == "Tasa" ? meta : meta / 100;
+      // Las multiplicaciones y divisiones por mil o 10 mil son para formatear los datos a una cantidad de decimales fijos
+      if (indicador.tendencia == "Creciente") {
+        this.datosResultados.data[index].avanceAcumulado =
           this.datosIndicadores[index].unidad == 'Unidad' ||
-          this.datosIndicadores[index].unidad == 'Tasa'
-        ) {
-          this.datosResultados.data[index].avanceAcumulado =
-            Math.round((indicadorAcumulado / metaEvaluada) * 1000) / 1000;
-        } else {
-          this.datosResultados.data[index].avanceAcumulado =
-            Math.round((indicadorAcumulado / metaEvaluada) * 10000) / 10000;
-        }
-      } else if (indicador.tendencia == 'Decreciente') {
-        if (indicadorAcumulado < metaEvaluada) {
-          this.datosResultados.data[index].avanceAcumulado =
-            Math.round(
-              (1 + (metaEvaluada - indicadorAcumulado) / metaEvaluada) * 10000
-            ) / 10000;
-        } else {
-          this.datosResultados.data[index].avanceAcumulado =
-            Math.round(
-              (1 - (metaEvaluada - indicadorAcumulado) / metaEvaluada) * 10000
-            ) / 10000;
-        }
+            this.datosIndicadores[index].unidad == 'Tasa'
+            ? Math.round((indicadorAcumulado / auxiliarMeta) * 1_000) / 1_000
+            : Math.round((indicadorAcumulado / auxiliarMeta) * 10_000) / 10_000;
+        this.datosResultados.data[index].brechaExistente =
+          indicadorAcumulado > auxiliarMeta
+            ? 0
+            : Math.round((auxiliarMeta - this.datosResultados.data[index].avanceAcumulado) * 10_000) / 10_000;
+      } else if (indicador.tendencia == "Decreciente") {
+        let auxiliarAvance = (auxiliarMeta - indicadorAcumulado) / auxiliarMeta;
+        this.datosResultados.data[index].avanceAcumulado =
+          Math.round(
+            (1 + (indicadorAcumulado < auxiliarMeta ? auxiliarAvance : -auxiliarAvance)) * 10_000
+          ) / 10_000;
+        this.datosResultados.data[index].brechaExistente =
+          indicadorAcumulado < auxiliarMeta
+            ? 0
+            : Math.round((this.datosResultados.data[index].avanceAcumulado - auxiliarMeta) * 10_000) / 10_000;
       }
-
-      if (indicador.tendencia == 'Creciente') {
-        if (indicadorAcumulado > metaEvaluada) {
-          this.datosResultados.data[index].brechaExistente = 0;
-        } else {
-          this.datosResultados.data[index].brechaExistente =
-            Math.round((metaEvaluada - indicadorAcumulado) * 10000) / 10000;
-        }
-      } else if (indicador.tendencia == 'Decreciente') {
-        if (indicadorAcumulado < metaEvaluada) {
-          this.datosResultados.data[index].brechaExistente = 0;
-        } else {
-          this.datosResultados.data[index].brechaExistente =
-            Math.round((indicadorAcumulado - metaEvaluada) * 10000) / 10000;
-        }
-      }
-      this.seguimiento.cuantitativo.resultados[index] =
-        this.datosResultados.data[index];
+      this.seguimiento.cuantitativo.resultados[index] = this.datosResultados.data[index];
     }
     this.numeradorOriginal[index] = numerador;
     this.denominadorOriginal[index] = denominador;
@@ -1396,6 +1328,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
       if (result.isConfirmed) {
         this.request.put(environment.SEGUIMIENTO_MID, `actividades/revision_jefe_dependencia`, this.seguimiento, this.planId + `/` + this.indexActividad + `/` + this.trimestreId).subscribe((data: any) => {
           if (data) {
+            this.setCodigoNotificacion();
             if (data.Data.Observación) {
               Swal.fire({
                 title: 'Información de seguimiento actualizada',
@@ -1522,41 +1455,72 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
   }
 
   verificarObservaciones() {
-    if (
-      this.seguimiento.cualitativo.observaciones != '' &&
-      this.seguimiento.cualitativo.observaciones != 'Sin observación' &&
-      this.seguimiento.cualitativo.observaciones != undefined
-    ) {
-      return true;
-    }
-
-    for (
-      let index = 0;
-      index < this.seguimiento.cuantitativo.indicadores.length;
-      index++
-    ) {
-      const indicador = this.seguimiento.cuantitativo.indicadores[index];
+    if (this.rol === 'PLANEACION' || this.rol === 'ASISTENTE_PLANEACION') {
       if (
-        indicador.observaciones != '' &&
-        indicador.observaciones != 'Sin observación' &&
-        indicador.observaciones != undefined
+        this.seguimiento.cualitativo.observaciones_planeacion != "" &&
+        this.seguimiento.cualitativo.observaciones_planeacion != "Sin observación" &&
+        this.seguimiento.cualitativo.observaciones_planeacion != undefined
       ) {
         return true;
       }
-    }
 
-    for (let index = 0; index < this.seguimiento.evidencia.length; index++) {
-      const evidencia = this.seguimiento.evidencia[index];
+      for (let index = 0; index < this.seguimiento.cuantitativo.indicadores.length; index++) {
+        const indicador = this.seguimiento.cuantitativo.indicadores[index];
+        if (
+          indicador.observaciones_planeacion != "" &&
+          indicador.observaciones_planeacion != "Sin observación" &&
+          indicador.observaciones_planeacion != undefined
+        ) {
+          return true;
+        }
+      }
+
+      for (let index = 0; index < this.seguimiento.evidencia.length; index++) {
+        const evidencia = this.seguimiento.evidencia[index];
+        if (
+          evidencia.Observacion != "" &&
+          evidencia.Observacion != "Sin observación" &&
+          evidencia.Observacion != undefined
+        ) {
+          return true;
+        }
+      }
+
+      return false;
+    } else if (this.rol === 'JEFE_DEPENDENCIA' || this.rol === 'ASISTENTE_DEPENDENCIA') {
       if (
-        evidencia.Observacion != '' &&
-        evidencia.Observacion != 'Sin observación' &&
-        evidencia.Observacion != undefined
+        this.seguimiento.cualitativo.observaciones_dependencia != "" &&
+        this.seguimiento.cualitativo.observaciones_dependencia != "Sin observación" &&
+        this.seguimiento.cualitativo.observaciones_dependencia != undefined
       ) {
         return true;
       }
-    }
 
-    return false;
+      for (let index = 0; index < this.seguimiento.cuantitativo.indicadores.length; index++) {
+        const indicador = this.seguimiento.cuantitativo.indicadores[index];
+        if (
+          indicador.observaciones_dependencia != "" &&
+          indicador.observaciones_dependencia != "Sin observación" &&
+          indicador.observaciones_dependencia != undefined
+        ) {
+          return true;
+        }
+      }
+
+      for (let index = 0; index < this.seguimiento.evidencia.length; index++) {
+        const evidencia = this.seguimiento.evidencia[index];
+        if (
+          evidencia.Observacion != "" &&
+          evidencia.Observacion != "Sin observación" &&
+          evidencia.Observacion != undefined
+        ) {
+          return true;
+        }
+      }
+
+      return false
+    }
+    return false
   }
 
   retornarRevisionJefeDependencia() {
@@ -1571,6 +1535,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
       if (result.isConfirmed) {
         this.request.put(environment.SEGUIMIENTO_MID, `actividades/retornar_jefe_dependencia`, this.seguimiento, this.planId + `/` + this.indexActividad + `/` + this.trimestreId).subscribe((data: any) => {
           if (data) {
+            this.setCodigoNotificacion();
             Swal.fire({
               title: 'Información de seguimiento actualizada',
               text: 'Se ha actualizado el estado de la actividad satisfactoriamente',
