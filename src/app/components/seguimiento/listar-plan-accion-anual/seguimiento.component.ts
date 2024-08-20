@@ -686,8 +686,7 @@ export class ListComponent implements OnInit, AfterViewInit {
             this.request
               .get(
                 environment.PLANES_CRUD,
-                `seguimiento?query=activo:true,tipo_seguimiento_id:${await this.codigosService.getId('PLANES_CRUD', 'tipo-seguimiento', 'S_SP')}
-                ,plan_id:` + plan._id + `,periodo_seguimiento_id:` + trimestre.id).subscribe(async (data: DataRequest) => {
+                `seguimiento?query=activo:true,tipo_seguimiento_id:${await this.codigosService.getId('PLANES_CRUD', 'tipo-seguimiento', 'S_SP')},plan_id:` + plan._id + `,periodo_seguimiento_id:` + trimestre.id).subscribe(async (data: DataRequest) => {
                   if (data.Data.length != 0) {
                     let estadoTemp;
                     if (
