@@ -11,7 +11,7 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
-import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatPaginatorIntl, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 import { ListComponent } from './components/seguimiento/listar-plan-accion-anual/seguimiento.component';
@@ -21,6 +21,7 @@ import { VisualizarDocumentoDialogComponent } from './components/seguimiento/gen
 import { EvidenciasDialogComponent } from './components/seguimiento/evidencias/evidencias-dialog.component';
 import { ReformulacionComponent } from './components/seguimiento/reformulacion/reformulacion.component';
 import { SolicitudComponent } from './components/seguimiento/reformulacion/solicitud/solicitud.component';
+import { TranslationPaginator } from './services/translationPaginator';
 
 @NgModule({
   declarations: [
@@ -48,7 +49,7 @@ import { SolicitudComponent } from './components/seguimiento/reformulacion/solic
     ReactiveFormsModule,
     BrowserAnimationsModule,
   ],
-  providers: [],
+  providers: [{ provide: MatPaginatorIntl, useClass: TranslationPaginator }],
   bootstrap: [AppComponent],
 })
 export class AppModule {}
