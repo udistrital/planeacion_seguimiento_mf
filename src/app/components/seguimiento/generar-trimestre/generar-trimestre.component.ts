@@ -629,6 +629,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
       )
       .subscribe(
         async (data: DataRequestMID) => {
+          console.log(data)
           if (data.data != '') {
             this.seguimiento = data.data;
             this.unidad = this.seguimiento.informacion.unidad;

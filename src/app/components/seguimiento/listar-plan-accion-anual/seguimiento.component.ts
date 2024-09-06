@@ -684,9 +684,7 @@ export class ListComponent implements OnInit, AfterViewInit {
         });
         Swal.showLoading();
       }
-      if(plan_actual === undefined){
-        plan_actual = this.planesMostrar[index]
-      } else if(plan_actual.Nombre !== this.planesMostrar[index].Nombre){
+      if(plan_actual === undefined || plan_actual.Nombre !== this.planesMostrar[index].Nombre){
         plan_actual = this.planesMostrar[index]
       }
 
@@ -819,6 +817,7 @@ export class ListComponent implements OnInit, AfterViewInit {
                         posSeguimiento < seguimientos.length;
                         posSeguimiento++
                       ) {
+                        plan_actual[`t${posicionTrimestreEnEvaluacion + 1}_plan_id`] = version._id;
                         // Los seguimientos ya estan avalados desde la reformulación
                         plan_actual[`t${posicionTrimestreEnEvaluacion + 1}class`] = 'verde';
                         plan_actual['estado'] = 'Reporte Avalado';
