@@ -1197,6 +1197,14 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
             this.numeradorOriginal = [];
             this.denominadorOriginal = [];
             this.calcular = true;
+          } else {
+            // En caso de una reformulación:
+            // Realizar comparación con actividades de planes padre para saber si empezar de cero con el trimestre respectivo
+            // 1. Averiguar si es una reformulación
+            // 2. Obtener planes padre que hayan sido avalados
+            // 3. Obtener las actividades de esos planes
+            // 4. Comparar las actividades con el seguimiento anterior para saber si se modifico una actividad o no, para con esto empezar de cero o no
+            console.log(this.plan)
           }
           this.calcularBase(indicador, denominador, numerador, meta, index, false);
         }
