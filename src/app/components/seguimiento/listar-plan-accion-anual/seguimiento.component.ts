@@ -30,6 +30,10 @@ import { CodigosService } from '@udistrital/planeacion-utilidades-module';
   styleUrls: ['./seguimiento.component.scss'],
 })
 export class ListComponent implements OnInit, AfterViewInit {
+  CODIGO_TIPO_PLAN_PROYECTO!: string;
+  CODIGO_ESTADO_S_SP!: string;
+  CODIGO_ESTADO_A_SP!: string;
+
   displayedColumns: string[] = [
     'unidad',
     'vigencia',
@@ -134,6 +138,10 @@ export class ListComponent implements OnInit, AfterViewInit {
   }
 
   async ngOnInit() {
+    this.CODIGO_TIPO_PLAN_PROYECTO = await this.codigosService.getId('PLANES_CRUD', 'tipo-plan', 'PR_SP');
+    this.CODIGO_ESTADO_S_SP = await this.codigosService.getId('PLANES_CRUD', 'tipo-seguimiento', 'S_SP');
+    this.CODIGO_ESTADO_A_SP = await this.codigosService.getId('PLANES_CRUD', 'estado-plan', 'A_SP');
+
     if (this.rol == 'JEFE_DEPENDENCIA' || this.rol == 'ASISTENTE_DEPENDENCIA') {
       await this.validarUnidad();
     } else {
@@ -318,8 +326,7 @@ export class ListComponent implements OnInit, AfterViewInit {
   }
 
   async filterPlanes(data: any) {
-    const CODIGO_TIPO_PLAN_PROYECTO: string = await this.codigosService.getId('PLANES_CRUD', 'tipo-plan', 'PR_SP')
-    var dataAux = data.filter((e: { tipo_plan_id: string; }) => e.tipo_plan_id != CODIGO_TIPO_PLAN_PROYECTO);
+    var dataAux = data.filter((e: { tipo_plan_id: string; }) => e.tipo_plan_id != this.CODIGO_TIPO_PLAN_PROYECTO);
     return dataAux.filter((e: { activo: boolean; }) => e.activo == true);
   }
 
@@ -402,7 +409,7 @@ export class ListComponent implements OnInit, AfterViewInit {
                         };
                         let body = {
                           periodo_id: periodos[i].Id,
-                          tipo_seguimiento_id: await this.codigosService.getId('PLANES_CRUD', 'tipo-seguimiento', 'S_SP'),
+                          tipo_seguimiento_id: this.CODIGO_ESTADO_S_SP,
                           planes_interes: JSON.stringify([plan]),
                           unidades_interes: JSON.stringify([unidad]),
                           activo: true,
@@ -507,7 +514,7 @@ export class ListComponent implements OnInit, AfterViewInit {
                       } else {
                         let body = {
                           periodo_id: periodos[i].Id,
-                          tipo_seguimiento_id: await this.codigosService.getId('PLANES_CRUD', 'tipo-seguimiento', 'S_SP'),
+                          tipo_seguimiento_id: this.CODIGO_ESTADO_S_SP,
                           activo: true,
                         };
                         await new Promise((resolve, reject) => {
@@ -686,7 +693,7 @@ export class ListComponent implements OnInit, AfterViewInit {
             this.request
               .get(
                 environment.PLANES_CRUD,
-                `seguimiento?query=activo:true,tipo_seguimiento_id:${await this.codigosService.getId('PLANES_CRUD', 'tipo-seguimiento', 'S_SP')},plan_id:` + plan._id + `,periodo_seguimiento_id:` + trimestre.id).subscribe(async (data: DataRequest) => {
+                `seguimiento?query=activo:true,tipo_seguimiento_id:${this.CODIGO_ESTADO_S_SP},plan_id:` + plan._id + `,periodo_seguimiento_id:` + trimestre.id).subscribe(async (data: DataRequest) => {
                   if (data.Data.length != 0) {
                     let estadoTemp;
                     if (
@@ -850,7 +857,7 @@ export class ListComponent implements OnInit, AfterViewInit {
     if (tipo == 'unidad') {
       return await new Promise(async (resolve, reject) => {
         this.request
-          .get(environment.PLANES_CRUD, `plan?query=activo:true,estado_plan_id:${await this.codigosService.getId('PLANES_CRUD', 'estado-plan', 'A_SP')},vigencia:${this.vigencia.Id},dependencia_id:${this.unidad.Id}`).subscribe({
+          .get(environment.PLANES_CRUD, `plan?query=activo:true,estado_plan_id:${this.CODIGO_ESTADO_A_SP},vigencia:${this.vigencia.Id},dependencia_id:${this.unidad.Id}`).subscribe({
             next: async (data: DataRequest) => {
               if (data?.Data.length != 0) {
                 data.Data.sort(function (
@@ -902,7 +909,7 @@ export class ListComponent implements OnInit, AfterViewInit {
         this.request
           .get(
             environment.PLANES_CRUD,
-            `plan?query=activo:true,estado_plan_id:${await this.codigosService.getId('PLANES_CRUD', 'estado-plan', 'A_SP')},vigencia:${this.vigencia.Id},dependencia_id:${this.unidad.Id}`).subscribe({
+            `plan?query=activo:true,estado_plan_id:${this.CODIGO_ESTADO_A_SP},vigencia:${this.vigencia.Id},dependencia_id:${this.unidad.Id}`).subscribe({
               next: async (data: DataRequest) => {
                 if (data) {
                   if (data.Data.length != 0) {
