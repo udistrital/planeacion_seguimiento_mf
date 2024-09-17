@@ -63,3 +63,7 @@ mat-hint {
 div>mat-label {
   color: var(--primary);
 }
+
+button.mat-mdc-raised-button[color="primary"] {
+  color: white;
+}

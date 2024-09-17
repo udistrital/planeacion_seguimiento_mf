@@ -125,14 +125,14 @@ input {
 }
 
 .avalada {
-  background-color: var(--success-main);
+  background-color: var(--success-main) !important;
 }
 
 .conObservacion {
-  background-color: var(--warning-main);
+  background-color: var(--warning-main) !important;
 }
 
 .verificada {
-  background-color: var(--md-accent-A200);
-  color: white;
+  background-color: var(--md-accent-A200) !important;
+  color: white !important;
 }
