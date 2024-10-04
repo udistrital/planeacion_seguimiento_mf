@@ -8,6 +8,7 @@ type Indicador = {
   reporteNumerador?: string;
   reporteDenominador?: string;
   detalleReporte?: string;
-  observaciones?: string;
+  observaciones_dependencia?: string;
+  observaciones_planeacion?: string;
 };
 export default Indicador;
