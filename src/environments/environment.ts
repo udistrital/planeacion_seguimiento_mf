@@ -14,6 +14,7 @@ export const environment = {
   //SERVICES PLANEACIÓN
   // PLANES_CRUD: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/planes_crud/',
   PLANES_CRUD: 'http://localhost:8080/',
+  PLANEACION_MID: 'http://pruebasapi2.intranetoas.udistrital.edu.co:8524/v1/',
   // FORMULACION_MID: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/planeacion_formulacion_mid/v1/',
   FORMULACION_MID: 'http://localhost:8524/v1/',
   // SEGUIMIENTO_MID: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/planeacion_seguimiento_mid/v1/',

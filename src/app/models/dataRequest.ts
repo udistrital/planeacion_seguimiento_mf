@@ -6,8 +6,8 @@ export type DataRequest = {
 };
 
 export type DataRequestMID = {
-  data: any[] | any;
-  message: string;
-  status: string;
-  success: boolean;
+  Data: any[] | any;
+  Message: string;
+  Status: string;
+  Success: boolean;
 };

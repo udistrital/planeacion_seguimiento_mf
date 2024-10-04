@@ -5,7 +5,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ImplicitAutenticationService, ServiceCookies } from '@udistrital/planeacion-utilidades-module';
 import { navigateToUrl } from 'single-spa';
-import { DataRequestMID } from 'src/app/models/dataRequest';
+import { DataRequest, DataRequestMID } from 'src/app/models/dataRequest';
 import Indicador from 'src/app/models/indicador';
 import { Notificaciones } from 'src/app/services/notificaciones';
 import { RequestManager } from 'src/app/services/requestManager.service';
@@ -178,7 +178,7 @@ export class GestionComponent implements OnInit {
       .subscribe({
         next: async (data: DataRequestMID) => {
           if (data) {
-            this.seguimiento = data.data;
+            this.seguimiento = data.Data;
             this.planId = this.planId;
             this.estado = this.seguimiento.estado_seguimiento_id.nombre;
             await this.loadUnidad(this.seguimiento.plan_id.dependencia_id);
@@ -245,9 +245,10 @@ export class GestionComponent implements OnInit {
   }
 
   loadActividades() {
-    this.request.get(environment.SEGUIMIENTO_MID, `actividades/` + this.seguimiento._id).subscribe((data: DataRequestMID) => {
+    // this.request.get(environment.SEGUIMIENTO_MID, `actividades/` + this.seguimiento._id).subscribe((data: DataRequestMID) => {
+    this.request.get(environment.PLANEACION_MID, `seguimiento/get_actividades/` + this.seguimiento._id).subscribe((data: DataRequest) => {
       if (data) {
-        data.data.forEach((actividad: any, index: number) => {
+        data.Data.forEach((actividad: any, index: number) => {
           if (actividad.estado.nombre === "Con observaciones") {
             actividad.estado.color = "conObservacion";
           } else if (actividad.estado.nombre === "Actividad avalada") {
@@ -256,7 +257,7 @@ export class GestionComponent implements OnInit {
             actividad.estado.color = "verificada";
           }
         });
-        this.dataSource.data = data.data;
+        this.dataSource.data = data.Data;
         Swal.close();
       }
     }, (error) => {
@@ -291,7 +292,7 @@ export class GestionComponent implements OnInit {
             )
             .subscribe((data: DataRequestMID) => {
               if (data) {
-                if (data.success) {
+                if (data.Success) {
                   if (this.estado == 'En reporte') {
                     this.codigoNotificacion = "SER"; // NOTIFICACION(SER)
                   } else if (this.estado == 'Revisión Verificada con Observaciones') {
@@ -311,7 +312,7 @@ export class GestionComponent implements OnInit {
                   Swal.fire({
                     title: 'Error en la operación',
                     icon: 'error',
-                    text: `${JSON.stringify(data.message)}`,
+                    text: `${JSON.stringify(data.Message)}`,
                     showConfirmButton: false,
                     timer: 2500
                   })
@@ -377,7 +378,7 @@ export class GestionComponent implements OnInit {
       if (result.isConfirmed) {
         this.request.put(environment.SEGUIMIENTO_MID, `seguimiento/revision_jefe_dependencia`, "{}", this.seguimiento._id).subscribe((data: DataRequestMID) => {
           if (data) {
-            if (data.success) {
+            if (data.Success) {
               this.codigoNotificacion = "SERJU"; // NOTIFICACION(SERJU)
               Swal.fire({
                 title: 'El reporte se ha enviado satisfactoriamente',
@@ -389,7 +390,7 @@ export class GestionComponent implements OnInit {
               });
             } else {
               let message: string = '<b>ID - Actividad</b><br/>';
-              let actividades: any = data.data.actividades;
+              let actividades: any = data.Data.actividades;
               let llaves: string[] = Object.keys(actividades);
               for (let llave of llaves) {
                 message += llave + ' - ' + actividades[llave] + '<br/>';
@@ -477,7 +478,7 @@ export class GestionComponent implements OnInit {
             )
             .subscribe((data: DataRequestMID) => {
               if (data) {
-                if (data.success) {
+                if (data.Success) {
                   this.codigoNotificacion = "SEROAPC"; // NOTIFICACION(SEROAPC)
                   Swal.fire({
                     title: 'El reporte se ha enviado satisfactoriamente',
@@ -489,7 +490,7 @@ export class GestionComponent implements OnInit {
                   });
                 } else {
                   let message: string = '<b>ID - Actividad</b><br/>';
-                  let actividades: any = data.data.actividades;
+                  let actividades: any = data.Data.actividades;
                   let llaves: string[] = Object.keys(actividades);
                   for (let llave of llaves) {
                     message += llave + ' - ' + actividades[llave] + '<br/>';
@@ -794,7 +795,7 @@ export class GestionComponent implements OnInit {
             )
             .subscribe((data: DataRequestMID) => {
               if (data) {
-                if (data.success) {
+                if (data.Success) {
                   Swal.fire({
                     title: 'El reporte se ha enviado satisfactoriamente',
                     icon: 'success',
@@ -805,7 +806,7 @@ export class GestionComponent implements OnInit {
                   });
                 } else {
                   let message: string = '<b>ID - Actividad</b><br/>';
-                  let actividades: any = data.data.actividades;
+                  let actividades: any = data.Data.actividades;
                   let llaves: string[] = Object.keys(actividades);
                   for (let llave of llaves) {
                     message += llave + ' - ' + actividades[llave] + '<br/>';
