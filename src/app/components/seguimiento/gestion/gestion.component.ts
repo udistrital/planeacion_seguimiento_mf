@@ -5,13 +5,12 @@ import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ImplicitAutenticationService, ServiceCookies } from '@udistrital/planeacion-utilidades-module';
 import { navigateToUrl } from 'single-spa';
+import { DataRequest, DataRequestMID } from 'src/app/models/dataRequest';
 import Indicador from 'src/app/models/indicador';
-import { RequestManager } from 'src/app/services/requestManager.service';
 import { Notificaciones } from 'src/app/services/notificaciones';
+import { RequestManager } from 'src/app/services/requestManager.service';
 import { environment } from 'src/environments/environment';
 import Swal from 'sweetalert2';
-import * as bigInt from 'big-integer'
-import { DataRequest } from 'src/app/models/dataRequest';
 
 @Component({
   selector: 'app-gestion',
@@ -177,9 +176,10 @@ export class GestionComponent implements OnInit {
         `seguimiento/${this.planId}/${this.trimestreId}/estado`
       )
       .subscribe({
-        next: async (data: any) => {
+        next: async (data: DataRequestMID) => {
+          console.log(data)
           if (data) {
-            this.seguimiento = data.Data;
+            this.seguimiento = data.data;
             this.planId = this.planId;
             this.estado = this.seguimiento.estado_seguimiento_id.nombre;
             await this.loadUnidad(this.seguimiento.plan_id.dependencia_id);
@@ -246,7 +246,8 @@ export class GestionComponent implements OnInit {
   }
 
   loadActividades() {
-    this.request.get(environment.SEGUIMIENTO_MID, `actividades/` + this.seguimiento._id).subscribe((data: any) => {
+    // this.request.get(environment.SEGUIMIENTO_MID, `actividades/` + this.seguimiento._id).subscribe((data: DataRequestMID) => {
+    this.request.get(environment.PLANEACION_MID, `seguimiento/get_actividades/` + this.seguimiento._id).subscribe((data: DataRequest) => {
       if (data) {
         data.Data.forEach((actividad: any, index: number) => {
           if (actividad.estado.nombre === "Con observaciones") {
@@ -290,9 +291,9 @@ export class GestionComponent implements OnInit {
               '{}',
               this.seguimiento._id
             )
-            .subscribe((data: any) => {
+            .subscribe((data: DataRequestMID) => {
               if (data) {
-                if (data.Success) {
+                if (data.success) {
                   if (this.estado == 'En reporte') {
                     this.codigoNotificacion = "SER"; // NOTIFICACION(SER)
                   } else if (this.estado == 'Revisión Verificada con Observaciones') {
@@ -312,7 +313,7 @@ export class GestionComponent implements OnInit {
                   Swal.fire({
                     title: 'Error en la operación',
                     icon: 'error',
-                    text: `${JSON.stringify(data.Message)}`,
+                    text: `${JSON.stringify(data.message)}`,
                     showConfirmButton: false,
                     timer: 2500
                   })
@@ -376,9 +377,9 @@ export class GestionComponent implements OnInit {
       showCancelButton: true
     }).then((result) => {
       if (result.isConfirmed) {
-        this.request.put(environment.SEGUIMIENTO_MID, `seguimiento/revision_jefe_dependencia`, "{}", this.seguimiento._id).subscribe((data: any) => {
+        this.request.put(environment.SEGUIMIENTO_MID, `seguimiento/revision_jefe_dependencia`, "{}", this.seguimiento._id).subscribe((data: DataRequestMID) => {
           if (data) {
-            if (data.Success) {
+            if (data.success) {
               this.codigoNotificacion = "SERJU"; // NOTIFICACION(SERJU)
               Swal.fire({
                 title: 'El reporte se ha enviado satisfactoriamente',
@@ -390,7 +391,7 @@ export class GestionComponent implements OnInit {
               });
             } else {
               let message: string = '<b>ID - Actividad</b><br/>';
-              let actividades: any = data.Data.actividades;
+              let actividades: any = data.data.actividades;
               let llaves: string[] = Object.keys(actividades);
               for (let llave of llaves) {
                 message += llave + ' - ' + actividades[llave] + '<br/>';
@@ -476,9 +477,9 @@ export class GestionComponent implements OnInit {
               '{}',
               this.seguimiento._id + '/revision'
             )
-            .subscribe((data: any) => {
+            .subscribe((data: DataRequestMID) => {
               if (data) {
-                if (data.Success) {
+                if (data.success) {
                   this.codigoNotificacion = "SEROAPC"; // NOTIFICACION(SEROAPC)
                   Swal.fire({
                     title: 'El reporte se ha enviado satisfactoriamente',
@@ -490,7 +491,7 @@ export class GestionComponent implements OnInit {
                   });
                 } else {
                   let message: string = '<b>ID - Actividad</b><br/>';
-                  let actividades: any = data.Data.actividades;
+                  let actividades: any = data.data.actividades;
                   let llaves: string[] = Object.keys(actividades);
                   for (let llave of llaves) {
                     message += llave + ' - ' + actividades[llave] + '<br/>';
@@ -595,9 +596,7 @@ export class GestionComponent implements OnInit {
               .get(
                 environment.PLANES_CRUD,
                 `seguimiento?query=activo:true,plan_id:` +
-                this.planId +
-                `,periodo_seguimiento_id:` +
-                this.trimestre.Id
+                this.planId
               )
               .subscribe(
                 (data: any) => {
@@ -795,9 +794,9 @@ export class GestionComponent implements OnInit {
               '{}',
               this.seguimiento._id
             )
-            .subscribe((data: any) => {
+            .subscribe((data: DataRequestMID) => {
               if (data) {
-                if (data.Success) {
+                if (data.success) {
                   Swal.fire({
                     title: 'El reporte se ha enviado satisfactoriamente',
                     icon: 'success',
@@ -808,7 +807,7 @@ export class GestionComponent implements OnInit {
                   });
                 } else {
                   let message: string = '<b>ID - Actividad</b><br/>';
-                  let actividades: any = data.Data.actividades;
+                  let actividades: any = data.data.actividades;
                   let llaves: string[] = Object.keys(actividades);
                   for (let llave of llaves) {
                     message += llave + ' - ' + actividades[llave] + '<br/>';

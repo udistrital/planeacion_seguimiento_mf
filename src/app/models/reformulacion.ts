@@ -15,4 +15,5 @@ export type Reformulacion = {
   fecha_modificacion: Date;
   observaciones: string;
   plan_id: string;
+  periodo: string;
 };
