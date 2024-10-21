@@ -177,8 +177,9 @@ export class GestionComponent implements OnInit {
       )
       .subscribe({
         next: async (data: DataRequestMID) => {
+          console.log(data)
           if (data) {
-            this.seguimiento = data.Data;
+            this.seguimiento = data.data;
             this.planId = this.planId;
             this.estado = this.seguimiento.estado_seguimiento_id.nombre;
             await this.loadUnidad(this.seguimiento.plan_id.dependencia_id);
@@ -292,7 +293,7 @@ export class GestionComponent implements OnInit {
             )
             .subscribe((data: DataRequestMID) => {
               if (data) {
-                if (data.Success) {
+                if (data.success) {
                   if (this.estado == 'En reporte') {
                     this.codigoNotificacion = "SER"; // NOTIFICACION(SER)
                   } else if (this.estado == 'Revisión Verificada con Observaciones') {
@@ -312,7 +313,7 @@ export class GestionComponent implements OnInit {
                   Swal.fire({
                     title: 'Error en la operación',
                     icon: 'error',
-                    text: `${JSON.stringify(data.Message)}`,
+                    text: `${JSON.stringify(data.message)}`,
                     showConfirmButton: false,
                     timer: 2500
                   })
@@ -378,7 +379,7 @@ export class GestionComponent implements OnInit {
       if (result.isConfirmed) {
         this.request.put(environment.SEGUIMIENTO_MID, `seguimiento/revision_jefe_dependencia`, "{}", this.seguimiento._id).subscribe((data: DataRequestMID) => {
           if (data) {
-            if (data.Success) {
+            if (data.success) {
               this.codigoNotificacion = "SERJU"; // NOTIFICACION(SERJU)
               Swal.fire({
                 title: 'El reporte se ha enviado satisfactoriamente',
@@ -390,7 +391,7 @@ export class GestionComponent implements OnInit {
               });
             } else {
               let message: string = '<b>ID - Actividad</b><br/>';
-              let actividades: any = data.Data.actividades;
+              let actividades: any = data.data.actividades;
               let llaves: string[] = Object.keys(actividades);
               for (let llave of llaves) {
                 message += llave + ' - ' + actividades[llave] + '<br/>';
@@ -478,7 +479,7 @@ export class GestionComponent implements OnInit {
             )
             .subscribe((data: DataRequestMID) => {
               if (data) {
-                if (data.Success) {
+                if (data.success) {
                   this.codigoNotificacion = "SEROAPC"; // NOTIFICACION(SEROAPC)
                   Swal.fire({
                     title: 'El reporte se ha enviado satisfactoriamente',
@@ -490,7 +491,7 @@ export class GestionComponent implements OnInit {
                   });
                 } else {
                   let message: string = '<b>ID - Actividad</b><br/>';
-                  let actividades: any = data.Data.actividades;
+                  let actividades: any = data.data.actividades;
                   let llaves: string[] = Object.keys(actividades);
                   for (let llave of llaves) {
                     message += llave + ' - ' + actividades[llave] + '<br/>';
@@ -795,7 +796,7 @@ export class GestionComponent implements OnInit {
             )
             .subscribe((data: DataRequestMID) => {
               if (data) {
-                if (data.Success) {
+                if (data.success) {
                   Swal.fire({
                     title: 'El reporte se ha enviado satisfactoriamente',
                     icon: 'success',
@@ -806,7 +807,7 @@ export class GestionComponent implements OnInit {
                   });
                 } else {
                   let message: string = '<b>ID - Actividad</b><br/>';
-                  let actividades: any = data.Data.actividades;
+                  let actividades: any = data.data.actividades;
                   let llaves: string[] = Object.keys(actividades);
                   for (let llave of llaves) {
                     message += llave + ' - ' + actividades[llave] + '<br/>';

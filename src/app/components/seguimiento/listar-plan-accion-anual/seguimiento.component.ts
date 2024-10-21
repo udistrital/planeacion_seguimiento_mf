@@ -390,8 +390,8 @@ export class ListComponent implements OnInit, AfterViewInit {
             next: async (data: DataRequestMID) => {
               console.log(data)
               if (data) {
-                if (data.Data != '' && data.Data != null) {
-                  let periodos = data.Data;
+                if (data.data != '' && data.data != null) {
+                  let periodos = data.data;
                   if (periodos.length > 0) {
                     this.trimestres = [
                       {} as Trimestre,
