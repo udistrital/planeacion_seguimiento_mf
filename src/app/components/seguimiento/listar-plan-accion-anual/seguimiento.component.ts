@@ -692,162 +692,116 @@ export class ListComponent implements OnInit, AfterViewInit {
         });
         Swal.showLoading();
       }
-      if(plan_actual === undefined || plan_actual.Nombre !== this.planesMostrar[index].Nombre){
-        plan_actual = this.planesMostrar[index]
+      if (
+        plan_actual === undefined ||
+        plan_actual.Nombre !== this.planesMostrar[index].Nombre
+      ) {
+        plan_actual = this.planesMostrar[index];
       }
 
-      await new Promise(async (resolver, rechazar) => {
-        this.request
-          .get(
-            environment.PLANES_CRUD,
-            `reformulacion?query=plan_id:${version._id}`
-          )
-          .subscribe(async (data: DataRequest) => {
-            plan_actual[`t${posicionTrimestreEnEvaluacion + 1}_plan_id`] = version._id;
-            if ((data.Data as Reformulacion[]).length === 0) {
-              // Proceso normal
-              let trimestre = this.trimestres[posicionTrimestreEnEvaluacion];
-              //let habilitadoParaEvaluar = true
-              while (posicionTrimestreEnEvaluacion < 4) {
-                await new Promise(async (resolve, reject) => {
-                  plan_actual[`t${posicionTrimestreEnEvaluacion + 1}_plan_id`] = version._id;
-                  this.request
-                    .get(
-                      environment.PLANES_CRUD,
-                      `seguimiento?query=activo:true,tipo_seguimiento_id:${await this.codigosService.getId(
-                        'PLANES_CRUD',
-                        'tipo-seguimiento',
-                        'S_SP'
-                      )},plan_id:${version._id},periodo_seguimiento_id:${
-                        trimestre.id
-                      }`
-                    )
-                    .subscribe(async (data: DataRequest) => {
-                      if (data.Data.length != 0) {
-                        let estadoTemp;
-                        if (
-                          this.auxEstadosSeguimientos.some(
-                            (estado) =>
-                              estado.id == data.Data[0].estado_seguimiento_id
-                          ) &&
-                          this.auxEstadosSeguimientos.length > 0
-                        ) {
-                          estadoTemp = this.auxEstadosSeguimientos.find(
-                            (estado) =>
-                              estado.id == data.Data[0].estado_seguimiento_id
-                          ).nombre;
-                        } else {
-                          await new Promise((resolve, reject) => {
-                            this.request
-                              .get(
-                                environment.PLANES_CRUD,
-                                `estado-seguimiento/` +
-                                  data.Data[0].estado_seguimiento_id
-                              )
-                              .subscribe((estado: DataRequest) => {
-                                if (estado && estado.Data != null) {
-                                  estadoTemp = estado.Data.nombre;
-                                  this.auxEstadosSeguimientos.push({
-                                    id: estado.Data._id,
-                                    nombre: estado.Data.nombre,
-                                  });
-                                  resolve(true);
-                                } else {
-                                  Swal.fire({
-                                    title: 'Error en la operación',
-                                    text: `No se encontraron datos de estado`,
-                                    icon: 'warning',
-                                    showConfirmButton: false,
-                                    timer: 2500,
-                                  });
-                                  reject(false);
-                                }
-                              });
-                          });
-                        }
+      plan_actual[`t${posicionTrimestreEnEvaluacion + 1}_plan_id`] =
+        version._id;
 
-                        let auxFecha = new Date();
-                        let auxFechaCol = auxFecha.toLocaleString('en-US', {
-                          timeZone: 'America/Mexico_City',
+      for (
+          let index = posicionTrimestreEnEvaluacion;
+          index < 4;
+          index++
+        ) {
+          await new Promise(async (resolve, reject) => {
+            this.request
+              .get(
+                environment.PLANES_CRUD,
+                `seguimiento?query=activo:true,tipo_seguimiento_id:${await this.codigosService.getId(
+                  'PLANES_CRUD',
+                  'tipo-seguimiento',
+                  'S_SP'
+                )},plan_id:${version._id},periodo_seguimiento_id:${
+                  this.trimestres[index].id
+                }`
+              )
+              .subscribe(async (data: DataRequest) => {
+                if (data.Data.length !== 0) {
+                  let estadoTemp;
+                  plan_actual[`t${posicionTrimestreEnEvaluacion + 1}_plan_id`] =
+                    version._id;
+                  if (
+                    this.auxEstadosSeguimientos.some(
+                      (estado) =>
+                        estado.id == data.Data[0].estado_seguimiento_id
+                    ) &&
+                    this.auxEstadosSeguimientos.length > 0
+                  ) {
+                    estadoTemp = this.auxEstadosSeguimientos.find(
+                      (estado) =>
+                        estado.id == data.Data[0].estado_seguimiento_id
+                    ).nombre;
+                  } else {
+                    await new Promise((resolve, reject) => {
+                      this.request
+                        .get(
+                          environment.PLANES_CRUD,
+                          `estado-seguimiento/${data.Data[0].estado_seguimiento_id}`
+                        )
+                        .subscribe((estado: DataRequest) => {
+                          if (estado && estado.Data != null) {
+                            estadoTemp = estado.Data.nombre;
+                            this.auxEstadosSeguimientos.push({
+                              id: estado.Data._id,
+                              nombre: estado.Data.nombre,
+                            });
+                            resolve(true);
+                          } else {
+                            Swal.fire({
+                              title: 'Error en la operación',
+                              text: `No se encontraron datos de estado`,
+                              icon: 'warning',
+                              showConfirmButton: false,
+                              timer: 2500,
+                            });
+                            reject(false);
+                          }
                         });
-                        let strFechaHoy = new Date(auxFechaCol).toISOString();
-                        let fechaHoy = new Date(strFechaHoy);
-                        if (estadoTemp == 'Reporte Avalado') {
-                          plan_actual[
-                            `t${posicionTrimestreEnEvaluacion + 1}class`
-                          ] = 'verde';
-                          plan_actual['estado'] = estadoTemp;
-                        } else if (
-                          fechaHoy >=
-                            this.trimestres[posicionTrimestreEnEvaluacion].fecha_inicio &&
-                          fechaHoy <=
-                            this.trimestres[posicionTrimestreEnEvaluacion].fecha_fin
-                        ) {
-                          plan_actual[
-                            `t${posicionTrimestreEnEvaluacion + 1}class`
-                          ] = 'amarillo';
-                          plan_actual['estado'] = estadoTemp;
-                        } else {
-                          plan_actual[
-                            `t${posicionTrimestreEnEvaluacion + 1}class`
-                          ] = 'gris';
-                        }
-                        plan_actual[
-                          `t${posicionTrimestreEnEvaluacion + 1}estado`
-                        ] = estadoTemp;
-                        resolve(true);
-                      } else {
-                        resolve(false);
-                      }
                     });
-                });
-                posicionTrimestreEnEvaluacion++;
-                trimestre = this.trimestres[posicionTrimestreEnEvaluacion];
-              }
-              resolver(true);
-            } else {
-              // Trae el seguimiento del plan anterior
-              await new Promise(async (resolve, reject) => {
-                this.request
-                  .get(
-                    environment.PLANES_CRUD,
-                    `seguimiento?query=activo:true,tipo_seguimiento_id:${await this.codigosService.getId(
-                      'PLANES_CRUD',
-                      'tipo-seguimiento',
-                      'S_SP'
-                    )},plan_id:${version._id}`
-                  )
-                  .subscribe((data: DataRequest) => {
-                    if ((data.Data as any[]).length !== 0) {
-                      let seguimientos = data.Data as any[];
-                      for (
-                        let posSeguimiento = 0;
-                        posSeguimiento < seguimientos.length;
-                        posSeguimiento++
-                      ) {
-                        plan_actual[`t${posicionTrimestreEnEvaluacion + 1}_plan_id`] = version._id;
-                        // Los seguimientos ya estan avalados desde la reformulación
-                        plan_actual[`t${posicionTrimestreEnEvaluacion + 1}class`] = 'verde';
-                        plan_actual['estado'] = 'Reporte Avalado';
-                        plan_actual[`t${posicionTrimestreEnEvaluacion + 1}estado`] =
-                          'Reporte Avalado';
-                        posicionTrimestreEnEvaluacion++;
-                      }
-                      resolve(true);
-                    } else {
-                      resolve(false);
-                    }
+                  }
+
+                  let auxFecha = new Date();
+                  let auxFechaCol = auxFecha.toLocaleString('en-US', {
+                    timeZone: 'America/Mexico_City',
                   });
+                  let strFechaHoy = new Date(auxFechaCol).toISOString();
+                  let fechaHoy = new Date(strFechaHoy);
+                  if (estadoTemp == 'Reporte Avalado') {
+                    plan_actual[`t${posicionTrimestreEnEvaluacion + 1}class`] =
+                      'verde';
+                    plan_actual['estado'] = estadoTemp;
+                  } else if (
+                    fechaHoy >=
+                      this.trimestres[posicionTrimestreEnEvaluacion]
+                        .fecha_inicio &&
+                    fechaHoy <=
+                      this.trimestres[posicionTrimestreEnEvaluacion].fecha_fin
+                  ) {
+                    plan_actual[`t${posicionTrimestreEnEvaluacion + 1}class`] =
+                      'amarillo';
+                    plan_actual['estado'] = estadoTemp;
+                  } else {
+                    plan_actual[`t${posicionTrimestreEnEvaluacion + 1}class`] =
+                      'gris';
+                  }
+                  plan_actual[`t${posicionTrimestreEnEvaluacion + 1}estado`] =
+                    estadoTemp;
+                  posicionTrimestreEnEvaluacion++;
+
+                  resolve(true);
+                } else {
+                  resolve(false);
+                }
               });
-              resolver(true);
-            }
-            if (
-              posicionTrimestreEnEvaluacion === 4
-            ) {
-              this.dataSource.data.push(plan_actual);
-            }
           });
-      });
+        }
+      if (posicionTrimestreEnEvaluacion === 4) {
+        this.dataSource.data.push(plan_actual);
+      }
     }
     Swal.close();
   }
