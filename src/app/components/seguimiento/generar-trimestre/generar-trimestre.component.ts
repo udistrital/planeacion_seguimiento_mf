@@ -655,20 +655,19 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
         Swal.showLoading();
       },
     })
-    this.request.get(environment.SEGUIMIENTO_MID, `seguimiento/` + this.planId + `/` + this.indexActividad + `/` + this.trimestreId).subscribe(async (data: DataRequestMID) => {
+    this.request.get(environment.SEGUIMIENTO_MID, `seguimiento/${this.planId}/${this.indexActividad}/${this.trimestreId}`).subscribe(async (data: DataRequestMID) => {
       if (data.data != '') {
         this.seguimiento = data.data;
         this.unidad = this.seguimiento.informacion.unidad;
         this.plan = this.seguimiento.informacion.nombre;
         this.id_actividad = this.seguimiento.id_actividad;
-        this.documentos = JSON.parse(JSON.stringify(data.data.evidencia));
+        this.documentos = data.data.evidencia;
         this.datosIndicadores = data.data.cuantitativo.indicadores;
-        this.datosResultados = JSON.parse(JSON.stringify(data.data.cuantitativo.resultados));
+        this.datosResultados = new MatTableDataSource(data.data.cuantitativo.resultados);
 
         this.numeradorOriginal = [];
         this.denominadorOriginal = [];
-        let resultados = JSON.parse(JSON.stringify(data.data.cuantitativo.indicadores));
-        resultados.forEach((indicador: any) => {
+        this.datosIndicadores.forEach((indicador: any) => {
           this.numeradorOriginal.push(indicador.reporteNumerador ? indicador.reporteNumerador : 0);
           this.denominadorOriginal.push(indicador.reporteDenominador ? indicador.reporteDenominador : 0);
         });
@@ -1157,6 +1156,8 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
         const meta = parseFloat(this.datosIndicadores[index].meta);
         this.calcular = false;
 
+        console.log(this.datosResultados)
+        console.log(this.datosResultados.data)
         if (denominador == 0.0) {
           if (numerador == 0.0) {
             if (indicador.denominador === "Denominador variable") {
