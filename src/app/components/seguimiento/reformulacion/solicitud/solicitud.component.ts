@@ -84,11 +84,20 @@ export class SolicitudComponent implements OnInit {
       this.rol = 'ASISTENTE_DEPENDENCIA';
     }
 
-    this.ID_ESTADO_APROBADO = await this.codigosService.getId('PARAMETROS_SERVICE', 'parametro', 'RPA-A');
-    this.ID_ESTADO_RECHAZADO = await this.codigosService.getId('PARAMETROS_SERVICE','parametro','RPA-R');
-    this.ID_ESTADO_FORMULADO = await this.codigosService.getId('PARAMETROS_SERVICE','parametro','RPA-F');
+
+    this.ID_ESTADO_APROBADO = await this.codigosService.getId('PARAMETROS_SERVICE', 'parametro', 'RPA-A-SP');
+    this.ID_ESTADO_RECHAZADO = await this.codigosService.getId('PARAMETROS_SERVICE','parametro','RPA-R-SP');
+    this.ID_ESTADO_FORMULADO = await this.codigosService.getId('PARAMETROS_SERVICE','parametro','RPA-F-SP');
 
     if (this.reformulacionStorage.reformulacion) {
+      Swal.fire({
+        title: 'Cargando información',
+        timerProgressBar: true,
+        showConfirmButton: false,
+        willOpen: () => {
+          Swal.showLoading();
+        },
+      });
       this.cargarReformulacion(this.reformulacionStorage.reformulacion);
     } else {
       this.request
@@ -99,6 +108,14 @@ export class SolicitudComponent implements OnInit {
         .subscribe({
           next: async (data: DataRequest) => {
             if ((data?.Data as Reformulacion[]).length > 0) {
+              Swal.fire({
+                title: 'Cargando información',
+                timerProgressBar: true,
+                showConfirmButton: false,
+                willOpen: () => {
+                  Swal.showLoading();
+                },
+              });
               this.cargarReformulacion(data.Data[0]);
             } else {
               this.formVisualizacionPlan.get('estado')!.setValue('Habilitado');
@@ -119,17 +136,15 @@ export class SolicitudComponent implements OnInit {
       .subscribe({
         next: (data: DataRequest) => {
           this.estado = data.Data;
-          console.log('this.estado', this.estado);
           this.formVisualizacionPlan
             .get('estado')!
             .setValue(this.estado.Nombre);
+          Swal.close();
         },
       });
-    console.log(this.reformulacionActual.archivos);
     this.fileName = JSON.parse(this.reformulacionActual.archivos)[
       'documentos'
     ][0]['nombre'];
-    console.log(JSON.parse(this.reformulacionActual.archivos)['documentos'][0]);
   }
   solicitarReformulacion() {
     if (this.archivoCodificado !== '') {
@@ -139,7 +154,7 @@ export class SolicitudComponent implements OnInit {
         confirmButtonText: `Sí`,
         cancelButtonText: `No`,
         showCancelButton: true,
-      }).then((result) => {
+      }).then(async (result) => {
         if (result.isConfirmed) {
           Swal.fire({
             title: 'Solicitud en proceso',
@@ -152,7 +167,13 @@ export class SolicitudComponent implements OnInit {
           const bodyRequest = {
             documento: [
               {
-                IdTipoDocumento: 87,
+                IdTipoDocumento: parseInt(
+                  await this.codigosService.getId(
+                    'DOCUMENTO_SERVICE',
+                    'tipo_documento',
+                    'DSPA'
+                  )
+                ),
                 nombre: this.fileName,
                 metadatos: {
                   dato_a: 'Soporte planeacion',
@@ -166,7 +187,7 @@ export class SolicitudComponent implements OnInit {
             observaciones: this.observaciones,
           };
           this.request
-            .post(environment.SEGUIMIENTO_MID, `reformulacion`, bodyRequest)
+            .post(environment.SEGUIMIENTO_MID, `reformulacion/`, bodyRequest)
             .subscribe({
               next: (data) => {
                 if (data) {
@@ -178,6 +199,17 @@ export class SolicitudComponent implements OnInit {
                     showConfirmButton: false,
                     timer: 2500,
                   });
+                  localStorage.setItem(
+                    'reformulacion',
+                    JSON.stringify({
+                      dependencia: this.reformulacionStorage.dependencia,
+                      vigencia: this.reformulacionStorage.vigencia,
+                      plan: this.reformulacionStorage.plan,
+                      plan_id: this.reformulacionStorage.plan_id,
+                      reformulacion: data.data,
+                    } as ReformulacionStorage)
+                  );
+                  window.location.reload();
                 }
               },
               error: (error) => {
@@ -185,7 +217,7 @@ export class SolicitudComponent implements OnInit {
                 Swal.close();
                 Swal.fire({
                   title: 'Error en la operación',
-                  text: 'No fue posible realizar la solicitud.',
+                  text: `No fue posible realizar la solicitud, ${error.error.message}`,
                   icon: 'error',
                   showConfirmButton: false,
                   timer: 2500,
@@ -336,15 +368,107 @@ export class SolicitudComponent implements OnInit {
     (document.getElementById('archivo') as HTMLInputElement).click();
   }
 
-  actualizarReformulacion(activo: boolean, estado_id: number) {
+  aprobarReformulacion() {
+    Swal.fire({
+      title: '¿Desea aprobar la reformulación?',
+      icon: 'question',
+      confirmButtonText: `Sí`,
+      cancelButtonText: `No`,
+      showCancelButton: true,
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        Swal.fire({
+          title: 'Validando si el plan se puede reformular...',
+          timerProgressBar: true,
+          showConfirmButton: false,
+          willOpen: () => {
+            Swal.showLoading();
+          },
+        });
+
+        this.request
+          .get(
+            environment.SEGUIMIENTO_MID,
+            `reformulacion/validar/${this.reformulacionActual.plan_id}`
+          )
+          .subscribe({
+            next: (data) => {
+              if (data) {
+                this.request
+                  .get(
+                    environment.SEGUIMIENTO_MID,
+                    `reformulacion/aprobar/${this.reformulacionActual._id}`
+                  )
+                  .subscribe({
+                    next: (data) => {
+                      if (data) {
+                        Swal.close();
+                        console.log(data);
+                        Swal.fire({
+                          title: 'Reformulación aprobada',
+                          text: 'La reformulación ha sido procesada exitosamente.',
+                          icon: 'success',
+                          showConfirmButton: false,
+                          timer: 2500,
+                        });
+                        localStorage.setItem(
+                          'reformulacion',
+                          JSON.stringify({
+                            dependencia: this.reformulacionStorage.dependencia,
+                            vigencia: this.reformulacionStorage.vigencia,
+                            plan: this.reformulacionStorage.plan,
+                            plan_id: this.reformulacionStorage.plan_id,
+                            reformulacion: data.data,
+                          } as ReformulacionStorage)
+                        );
+                        window.location.reload();
+                      }
+                    },
+                    error: (error) => {
+                      console.error(error);
+                      Swal.close();
+                      Swal.fire({
+                        title: 'Error en la operación',
+                        text: `No fue posible realizar la solicitud, ${error.error.message}`,
+                        icon: 'error',
+                        showConfirmButton: false,
+                        timer: 2500,
+                      });
+                    },
+                  });
+              }
+            },
+            error: (error) => {
+              console.error(error);
+              Swal.close();
+              Swal.fire({
+                title: 'Error en la operación',
+                text: `No fue posible realizar la solicitud, ${error.error.message}`,
+                icon: 'error',
+                showConfirmButton: false,
+                timer: 2500,
+              });
+            },
+          });
+      } else if (result.dismiss === Swal.DismissReason.cancel) {
+        Swal.fire({
+          title: 'Solicitud de reformulación cancelada',
+          icon: 'error',
+          showConfirmButton: false,
+          timer: 2500,
+        });
+      }
+    });
+  }
+  rechazarReformulacion() {
     this.request
       .put(
         environment.PLANES_CRUD,
         'reformulacion',
         {
           ...this.reformulacionActual,
-          activo,
-          estado_id,
+          activo: false,
+          estado_id: Number.parseInt(this.ID_ESTADO_RECHAZADO),
         } as Reformulacion,
         this.reformulacionActual._id
       )
@@ -352,12 +476,8 @@ export class SolicitudComponent implements OnInit {
         next: (data) => {
           if (data) {
             Swal.fire({
-              title: `Reformulación ${
-                estado_id.toString() === this.ID_ESTADO_APROBADO
-                  ? 'Aprobada'
-                  : 'Rechazada'
-              }`,
-              text: 'La reformulación ha sido procesada exitosamente.',
+              title: `Reformulación Rechazada`,
+              text: 'La solicitud ha sido procesada exitosamente.',
               icon: 'success',
               showConfirmButton: false,
               timer: 2500,
@@ -367,17 +487,5 @@ export class SolicitudComponent implements OnInit {
           }
         },
       });
-  }
-  aprobarReformulacion() {
-    this.actualizarReformulacion(
-      false,
-      Number.parseInt(this.ID_ESTADO_APROBADO)
-    );
-  }
-  rechazarReformulacion() {
-    this.actualizarReformulacion(
-      false,
-      Number.parseInt(this.ID_ESTADO_RECHAZADO)
-    );
   }
 }
