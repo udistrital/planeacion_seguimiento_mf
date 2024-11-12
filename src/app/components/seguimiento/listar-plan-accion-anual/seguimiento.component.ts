@@ -388,7 +388,6 @@ export class ListComponent implements OnInit, AfterViewInit {
           .get(environment.SEGUIMIENTO_MID, `periodos/${this.vigencia.Id}`)
           .subscribe({
             next: async (data: DataRequestMID) => {
-              console.log(data)
               if (data) {
                 if (data.data != '' && data.data != null) {
                   let periodos = data.data;

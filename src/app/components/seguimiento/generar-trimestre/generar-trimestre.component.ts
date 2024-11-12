@@ -1156,8 +1156,6 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
         const meta = parseFloat(this.datosIndicadores[index].meta);
         this.calcular = false;
 
-        console.log(this.datosResultados)
-        console.log(this.datosResultados.data)
         if (denominador == 0.0) {
           if (numerador == 0.0) {
             if (indicador.denominador === "Denominador variable") {
@@ -1206,6 +1204,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
             });
           }
         } else {
+          console.log("Trimestre: ",this.trimestreAbr)
           if (this.trimestreAbr == "T1") {
             this.datosResultados.data[index].indicadorAcumulado = 0;
             this.datosResultados.data[index].acumuladoNumerador = 0;
@@ -1216,14 +1215,6 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
             this.numeradorOriginal = [];
             this.denominadorOriginal = [];
             this.calcular = true;
-          } else {
-            // En caso de una reformulación:
-            // Realizar comparación con actividades de planes padre para saber si empezar de cero con el trimestre respectivo
-            // 1. Averiguar si es una reformulación
-            // 2. Obtener planes padre que hayan sido avalados
-            // 3. Obtener las actividades de esos planes
-            // 4. Comparar las actividades con el seguimiento anterior para saber si se modifico una actividad o no, para con esto empezar de cero o no
-            console.log(this.plan)
           }
           this.calcularBase(indicador, denominador, numerador, meta, index, false);
         }

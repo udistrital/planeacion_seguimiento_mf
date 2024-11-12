@@ -177,7 +177,6 @@ export class GestionComponent implements OnInit {
       )
       .subscribe({
         next: async (data: DataRequestMID) => {
-          console.log(data)
           if (data) {
             this.seguimiento = data.data;
             this.planId = this.planId;
@@ -861,7 +860,6 @@ export class GestionComponent implements OnInit {
 
   async validacionActividades() {
     let actividades = this.allActividades;
-    console.log(actividades);
     let aux = true;
     let actividadAvalada: any;
     await new Promise((resolve) => {
