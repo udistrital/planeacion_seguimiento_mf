@@ -20,7 +20,8 @@ import { Notificaciones } from "src/app/services/notificaciones";
 import { environment } from 'src/environments/environment';
 import Swal from 'sweetalert2';
 import { EvidenciasDialogComponent } from '../evidencias/evidencias-dialog.component';
-import * as bigInt from 'big-integer';
+import { CodigosService } from '@udistrital/planeacion-utilidades-module';
+import { DataRequestMID } from 'src/app/models/dataRequest';
 
 @Component({
   selector: 'app-generar-trimestre',
@@ -135,6 +136,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
 
   private gestorMethods = new GestorDocumentalMethods();
   private autenticationService = new ImplicitAutenticationService();
+  private codigosService = new CodigosService();
 
   constructor(
     private activatedRoute: ActivatedRoute,
@@ -475,11 +477,11 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
               this.planId + `/` + this.indexActividad + `/` + this.trimestreId
             )
             .subscribe(
-              (data: any) => {
+              (data: DataRequestMID) => {
                 if (data) {
-                  this.documentos = data.Data.seguimiento;
+                  this.documentos = data.data.seguimiento;
                   this.seguimiento.evidencia = this.documentos;
-                  this.estadoActividad = data.Data.estadoActividad.nombre;
+                  this.estadoActividad = data.data.estadoActividad.nombre;
                   this.verificarFormulario();
                   Swal.fire({
                     title: 'Documento(s) actualizado(s)',
@@ -537,7 +539,13 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
 
           let documento = [
             {
-              IdTipoDocumento: 60,
+              IdTipoDocumento: parseInt(
+                await this.codigosService.getId(
+                  'DOCUMENTO_SERVICE',
+                  'tipo_documento',
+                  'DSPA'
+                )
+              ),
               nombre: aux.name,
               metadatos: {
                 dato_a: 'Soporte planeacion',
@@ -565,10 +573,10 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
               this.planId + `/` + this.indexActividad + `/` + this.trimestreId
             )
             .subscribe(
-              (data: any) => {
+              (data: DataRequestMID) => {
                 if (data) {
-                  this.estadoActividad = data.Data.estadoActividad.nombre;
-                  this.documentos = data.Data.seguimiento;
+                  this.estadoActividad = data.data.estadoActividad.nombre;
+                  this.documentos = data.data.seguimiento;
                   this.seguimiento.evidencia = this.documentos;
                   this.verificarFormulario();
 
@@ -647,25 +655,24 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
         Swal.showLoading();
       },
     })
-    await this.request.get(environment.SEGUIMIENTO_MID, `seguimiento/` + this.planId + `/` + this.indexActividad + `/` + this.trimestreId).subscribe(async (data: any) => {
-      if (data.Data != '') {
-        this.seguimiento = data.Data;
+    this.request.get(environment.SEGUIMIENTO_MID, `seguimiento/${this.planId}/${this.indexActividad}/${this.trimestreId}`).subscribe(async (data: DataRequestMID) => {
+      if (data.data != '') {
+        this.seguimiento = data.data;
         this.unidad = this.seguimiento.informacion.unidad;
         this.plan = this.seguimiento.informacion.nombre;
         this.id_actividad = this.seguimiento.id_actividad;
-        this.documentos = JSON.parse(JSON.stringify(data.Data.evidencia));
-        this.datosIndicadores = data.Data.cuantitativo.indicadores;
-        this.datosResultados = JSON.parse(JSON.stringify(data.Data.cuantitativo.resultados));
+        this.documentos = data.data.evidencia;
+        this.datosIndicadores = data.data.cuantitativo.indicadores;
+        this.datosResultados = new MatTableDataSource(data.data.cuantitativo.resultados);
 
         this.numeradorOriginal = [];
         this.denominadorOriginal = [];
-        let resultados = JSON.parse(JSON.stringify(data.Data.cuantitativo.indicadores));
-        resultados.forEach((indicador: any) => {
+        this.datosIndicadores.forEach((indicador: any) => {
           this.numeradorOriginal.push(indicador.reporteNumerador ? indicador.reporteNumerador : 0);
           this.denominadorOriginal.push(indicador.reporteDenominador ? indicador.reporteDenominador : 0);
         });
 
-        this.datosCualitativo = data.Data.cualitativo;
+        this.datosCualitativo = data.data.cualitativo;
 
         this.estadoActividad = this.seguimiento.estado.nombre;
         this.estadoSeguimiento = this.seguimiento.estadoSeguimiento;
@@ -675,24 +682,24 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
         if (this.estadoActividad != "Sin reporte") {
           if (this.rol == "JEFE_DEPENDENCIA" || this.rol == "ASISTENTE_DEPENDENCIA") {
             if (this.datosCualitativo.observaciones_dependencia == "" || this.datosCualitativo.observaciones_dependencia == undefined || this.datosCualitativo.observaciones_dependencia == "Sin observación") {
-              this.datosCualitativo.observaciones_dependencia = ""
+              this.datosCualitativo.observaciones_dependencia = "";
             } else {
               this.mostrarObservaciones = true;
             }
           } else if (this.rol == "PLANEACION" || this.rol == "ASISTENTE_PLANEACION") {
             if (this.datosCualitativo.observaciones_planeacion == "" || this.datosCualitativo.observaciones_planeacion == undefined || this.datosCualitativo.observaciones_planeacion == "Sin observación") {
-              this.datosCualitativo.observaciones_planeacion = ""
+              this.datosCualitativo.observaciones_planeacion = "";
             } else {
               this.mostrarObservaciones = true;
             }
           }
         }
 
-        this.trimestreAbr = data.Data.informacion.trimestre;
-        if (data.Data.informacion.trimestre != "T1") {
+        this.trimestreAbr = data.data.informacion.trimestre;
+        if (data.data.informacion.trimestre != "T1") {
           this.calcular = true;
 
-          if (this.datosResultados.data[0].indicador != 0) {
+          if (data.data.cuantitativo.resultados[0].indicador != 0) {
             this.calcular = false;
           }
         }
@@ -724,7 +731,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
         Swal.close();
       }
     }, (error) => {
-      console.error(error)
+      console.error(error);
       Swal.close();
       Swal.fire({
         title: 'Error en la operación',
@@ -732,7 +739,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
         icon: 'warning',
         showConfirmButton: false,
         timer: 2500
-      })
+      });
     })
   }
 
@@ -770,7 +777,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
               this.planId + `/` + this.indexActividad + `/` + this.trimestreId
             )
             .subscribe(
-              (data: any) => {
+              (data: DataRequestMID) => {
                 if (data) {
                   this.setCodigoNotificacion();
                   Swal.fire({
@@ -848,7 +855,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
               this.planId + `/` + this.indexActividad + `/` + this.trimestreId
             )
             .subscribe(
-              (data: any) => {
+              (data: DataRequestMID) => {
                 if (data) {
                   this.setCodigoNotificacion();
                   Swal.fire({
@@ -911,7 +918,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
               this.planId + `/` + this.indexActividad + `/` + this.trimestreId
             )
             .subscribe(
-              (data: any) => {
+              (data: DataRequestMID) => {
                 if (data) {
                   this.setCodigoNotificacion();
                   Swal.fire({
@@ -977,9 +984,9 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
               mod,
               this.indexActividad
             )
-            .subscribe((data: any) => {
+            .subscribe((data: DataRequestMID) => {
               if (data) {
-                if (data.Success) {
+                if (data.success) {
                   this.setCodigoNotificacion();
                   Swal.fire({
                     title: 'Seguimiento Generado',
@@ -994,7 +1001,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
                     title: 'No es posible generar el reporte',
                     icon: 'error',
                     showConfirmButton: false,
-                    text: data.Data.motivo,
+                    text: data.data.motivo,
                     timer: 4000,
                   });
                 }
@@ -1197,6 +1204,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
             });
           }
         } else {
+          console.log("Trimestre: ",this.trimestreAbr)
           if (this.trimestreAbr == "T1") {
             this.datosResultados.data[index].indicadorAcumulado = 0;
             this.datosResultados.data[index].acumuladoNumerador = 0;
@@ -1326,10 +1334,10 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
       showCancelButton: true,
     }).then((result) => {
       if (result.isConfirmed) {
-        this.request.put(environment.SEGUIMIENTO_MID, `actividades/revision_jefe_dependencia`, this.seguimiento, this.planId + `/` + this.indexActividad + `/` + this.trimestreId).subscribe((data: any) => {
+        this.request.put(environment.SEGUIMIENTO_MID, `actividades/revision_jefe_dependencia`, this.seguimiento, this.planId + `/` + this.indexActividad + `/` + this.trimestreId).subscribe((data: DataRequestMID) => {
           if (data) {
             this.setCodigoNotificacion();
-            if (data.Data.Observación) {
+            if (data.data.Observación) {
               Swal.fire({
                 title: 'Información de seguimiento actualizada',
                 text: 'Las observaciones hechas al seguimiento se ha guardado satisfactoriamente',
@@ -1401,10 +1409,10 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
               this.planId + `/` + this.indexActividad + `/` + this.trimestreId
             )
             .subscribe({
-              next: (data: any) => {
+              next: (data: DataRequestMID) => {
                 if (data) {
                   this.setCodigoNotificacion();
-                  if (data.Data.Observación) {
+                  if (data.data.Observación) {
                     Swal.fire({
                       title: 'Información de seguimiento actualizada',
                       text: 'Las observaciones hechas al seguimiento se ha guardado satisfactoriamente',
@@ -1533,7 +1541,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
       showCancelButton: true,
     }).then((result) => {
       if (result.isConfirmed) {
-        this.request.put(environment.SEGUIMIENTO_MID, `actividades/retornar_jefe_dependencia`, this.seguimiento, this.planId + `/` + this.indexActividad + `/` + this.trimestreId).subscribe((data: any) => {
+        this.request.put(environment.SEGUIMIENTO_MID, `actividades/retornar_jefe_dependencia`, this.seguimiento, this.planId + `/` + this.indexActividad + `/` + this.trimestreId).subscribe((data: DataRequestMID) => {
           if (data) {
             this.setCodigoNotificacion();
             Swal.fire({
@@ -1593,7 +1601,7 @@ export class GenerarTrimestreComponent implements OnInit, AfterViewInit {
               this.planId + `/` + this.indexActividad + `/` + this.trimestreId
             )
             .subscribe(
-              (data: any) => {
+              (data: DataRequestMID) => {
                 if (data) {
                   this.setCodigoNotificacion();
                   Swal.fire({
