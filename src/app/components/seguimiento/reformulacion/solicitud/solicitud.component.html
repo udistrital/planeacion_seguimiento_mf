@@ -52,14 +52,23 @@
                   (click)="activarCargarArchivo()">Cargar
                   Archivo</button>
               </div>
-              <div>
+              <div *ngIf="!estado">
                 <button mat-icon-button (click)="visualizarArchivo()">
                   <!-- <mat-icon>remove_red_eye</mat-icon> -->
                   <img src="https://cdn-icons-png.flaticon.com/512/2356/2356572.png" alt="visualizacion">
                 </button>
                 <button class="background-button" mat-raised-button color="primary"
-                  (click)="visualizarArchivo()">Visualizar Archivo</button>
+                (click)="visualizarArchivo()">Visualizar Archivo</button>
               </div>
+              <div *ngIf="estado">
+                <button mat-icon-button (click)="visualizarArchivo()">
+                  <!-- <mat-icon>remove_red_eye</mat-icon> -->
+                  <img class="icono-solo" src="https://cdn-icons-png.flaticon.com/512/2356/2356572.png" alt="visualizacion">
+                </button>
+                <button class="background-button" mat-raised-button color="primary"
+                (click)="visualizarArchivo()">Visualizar Archivo</button>
+              </div>
+
             </div>
           </div>
         </div>
@@ -72,7 +81,7 @@
       </div>
     </div>
     <div class="container-button">
-      <button *ngIf="rol!=='PLANEACION'" class="background-button" mat-raised-button color="primary"
+      <button *ngIf="rol!=='PLANEACION' && estado === undefined" class="background-button" mat-raised-button color="primary"
         (click)="solicitarReformulacion()">Enviar Solicitud De Reformulación</button>
       <button *ngIf="rol==='PLANEACION' && estado && estado.Id.toString() === ID_ESTADO_FORMULADO" class="background-button"
         mat-raised-button color="primary" (click)="aprobarReformulacion()">Aprobar</button>

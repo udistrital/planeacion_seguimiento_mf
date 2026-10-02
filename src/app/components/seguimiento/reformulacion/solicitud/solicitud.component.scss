@@ -139,7 +139,7 @@ input {
           display: flex;
           flex-direction: column;
           button {
-            width: 95%;
+            width: auto;
             color: var(--md-primary-contrast-700);
           }
           .mdc-icon-button {
@@ -148,9 +148,12 @@ input {
           img,
           .mat-icon {
             font-size: 5rem;
-            width: 100%;
+            width: 50%;
             height: auto;
             color: #0a0a0a;
+          }
+          .icono-solo {
+            width: 25%;
           }
         }
       }
